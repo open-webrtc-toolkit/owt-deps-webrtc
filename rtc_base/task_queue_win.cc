@@ -434,7 +434,7 @@ bool TaskQueue::Impl::ThreadState::ProcessQueuedMessages() {
         }
         default:
           // BUGBUG: workaroud for unit test failure on unexpected WM.
-          LOG(LS_ERROR) << "Unexpected window message received.";
+          RTC_LOG(LS_ERROR) << "Unexpected window message received.";
           //RTC_NOTREACHED();
           break;
       }
