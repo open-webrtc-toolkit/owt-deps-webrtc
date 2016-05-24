@@ -145,7 +145,14 @@ bool WebRtcVideoCapturer::Init(const Device& device) {
     char vcm_name[256];
     if (info->GetDeviceName(index, vcm_name, arraysize(vcm_name), vcm_id,
                             arraysize(vcm_id)) != -1) {
+#if defined(WEBRTC_WIN)
+      // Comparing ID will be more rebust. Wrapped with WEBRTC_WIN to minimize
+      // the effects to other platforms. |device.id| may not correct on other
+      // platforms.
+      if (device.id == reinterpret_cast<char*>(vcm_id)) {
+#else
       if (device.name == reinterpret_cast<char*>(vcm_name)) {
+#endif
         found = true;
         break;
       }
