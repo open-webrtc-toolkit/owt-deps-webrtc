@@ -61,23 +61,23 @@ config("rtc_base_all_dependent_config") {
   }
 }
 
-if (is_linux && !build_with_chromium) {
-  # Provides the same functionality as the //crypto:platform target, which
-  # WebRTC cannot use as we don't sync src/crypto from Chromium.
-  group("linux_system_ssl") {
-    deps = [
-      "//third_party/boringssl",
-    ]
-  }
-}
+#if (is_linux && !build_with_chromium) {
+#  # Provides the same functionality as the //crypto:platform target, which
+#  # WebRTC cannot use as we don't sync src/crypto from Chromium.
+#  group("linux_system_ssl") {
+#    deps = [
+#      "//third_party/boringssl",
+#    ]
+#  }
+#}
 
-if (!rtc_build_ssl) {
-  config("external_ssl_library") {
-    assert(rtc_ssl_root != "",
-           "You must specify rtc_ssl_root when rtc_build_ssl==0.")
-    include_dirs = [ rtc_ssl_root ]
-  }
-}
+#if (!rtc_build_ssl) {
+# config("external_ssl_library") {
+#   assert(rtc_ssl_root != "",
+#          "You must specify rtc_ssl_root when rtc_build_ssl==0.")
+#   include_dirs = [ rtc_ssl_root ]
+# }
+#}
 
 source_set("protobuf_utils") {
   sources = [
@@ -406,76 +406,76 @@ rtc_static_library("rtc_base") {
     "gunit_prod.h",
     "helpers.cc",
     "helpers.h",
-    "httpbase.cc",
-    "httpbase.h",
-    "httpcommon-inl.h",
-    "httpcommon.cc",
-    "httpcommon.h",
-    "ipaddress.cc",
-    "ipaddress.h",
+#   "httpbase.cc",
+#   "httpbase.h",
+#   "httpcommon-inl.h",
+#   "httpcommon.cc",
+#   "httpcommon.h",
+#   "ipaddress.cc",
+#   "ipaddress.h",
     "messagedigest.cc",
     "messagedigest.h",
     "messagehandler.cc",
     "messagehandler.h",
     "messagequeue.cc",
     "messagequeue.h",
-    "nethelpers.cc",
-    "nethelpers.h",
-    "network.cc",
-    "network.h",
-    "networkmonitor.cc",
-    "networkmonitor.h",
-    "nullsocketserver.cc",
-    "nullsocketserver.h",
-    "openssl.h",
-    "openssladapter.cc",
-    "openssladapter.h",
-    "openssldigest.cc",
-    "openssldigest.h",
-    "opensslidentity.cc",
-    "opensslidentity.h",
-    "opensslstreamadapter.cc",
-    "opensslstreamadapter.h",
-    "physicalsocketserver.cc",
-    "physicalsocketserver.h",
-    "proxyinfo.cc",
-    "proxyinfo.h",
-    "ratelimiter.cc",
-    "ratelimiter.h",
-    "rtccertificate.cc",
-    "rtccertificate.h",
-    "rtccertificategenerator.cc",
-    "rtccertificategenerator.h",
-    "sha1.cc",
-    "sha1.h",
-    "sha1digest.cc",
-    "sha1digest.h",
-    "sharedexclusivelock.cc",
-    "sharedexclusivelock.h",
-    "signalthread.cc",
-    "signalthread.h",
-    "sigslot.cc",
-    "sigslot.h",
-    "sigslotrepeater.h",
-    "socket.h",
-    "socketadapters.cc",
-    "socketadapters.h",
-    "socketaddress.cc",
-    "socketaddress.h",
-    "socketaddresspair.cc",
-    "socketaddresspair.h",
-    "socketfactory.h",
-    "socketserver.h",
-    "socketstream.cc",
-    "socketstream.h",
-    "ssladapter.cc",
-    "ssladapter.h",
-    "sslfingerprint.cc",
-    "sslfingerprint.h",
-    "sslidentity.cc",
-    "sslidentity.h",
-    "sslstreamadapter.cc",
-    "sslstreamadapter.h",
+#   "nethelpers.cc",
+#   "nethelpers.h",
+#   "network.cc",
+#   "network.h",
+#   "networkmonitor.cc",
+#   "networkmonitor.h",
+#   "nullsocketserver.cc",
+#   "nullsocketserver.h",
+#   "openssl.h",
+#   "openssladapter.cc",
+#   "openssladapter.h",
+#   "openssldigest.cc",
+#   "openssldigest.h",
+#   "opensslidentity.cc",
+#   "opensslidentity.h",
+#   "opensslstreamadapter.cc",
+#   "opensslstreamadapter.h",
+#   "physicalsocketserver.cc",
+#   "physicalsocketserver.h",
+#   "proxyinfo.cc",
+#   "proxyinfo.h",
+#   "ratelimiter.cc",
+#   "ratelimiter.h",
+#   "rtccertificate.cc",
+#   "rtccertificate.h",
+#   "rtccertificategenerator.cc",
+#   "rtccertificategenerator.h",
+#   "sha1.cc",
+#   "sha1.h",
+#   "sha1digest.cc",
+#   "sha1digest.h",
+#   "sharedexclusivelock.cc",
+#   "sharedexclusivelock.h",
+#   "signalthread.cc",
+#   "signalthread.h",
+#   "sigslot.cc",
+#   "sigslot.h",
+#   "sigslotrepeater.h",
+#   "socket.h",
+#   "socketadapters.cc",
+#   "socketadapters.h",
+#   "socketaddress.cc",
+#   "socketaddress.h",
+#   "socketaddresspair.cc",
+#   "socketaddresspair.h",
+#   "socketfactory.h",
+#   "socketserver.h",
+#   "socketstream.cc",
+#   "socketstream.h",
+#   "ssladapter.cc",
+#   "ssladapter.h",
+#   "sslfingerprint.cc",
+#   "sslfingerprint.h",
+#   "sslidentity.cc",
+#   "sslidentity.h",
+#   "sslstreamadapter.cc",
+#   "sslstreamadapter.h",
     "stream.cc",
     "stream.h",
     "thread.cc",
@@ -500,8 +500,8 @@ rtc_static_library("rtc_base") {
     configs += [ ":rtc_base_warnings_config" ]
     sources += [
       "callback.h",
-      "json.cc",
-      "json.h",
+#     "json.cc",
+#     "json.h",
       "logsinks.cc",
       "logsinks.h",
       "mathutils.h",
@@ -540,11 +540,11 @@ rtc_static_library("rtc_base") {
     }
   }  # !build_with_chromium
 
-  if (rtc_build_ssl) {
-    deps += [ "//third_party/boringssl" ]
-  } else {
-    configs += [ ":external_ssl_library" ]
-  }
+# if (rtc_build_ssl) {
+#   deps += [ "//third_party/boringssl" ]
+# } else {
+#   configs += [ ":external_ssl_library" ]
+# }
 
   if (is_android) {
     sources += [

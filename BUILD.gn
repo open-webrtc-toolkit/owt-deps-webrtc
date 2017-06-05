@@ -12,8 +12,8 @@ group("default") {
   testonly = true
   deps = [
     "//webrtc",
-    "//webrtc/examples",
-    "//webrtc/tools",
+    #"//webrtc/examples",
+    #"//webrtc/tools",
   ]
   if (rtc_include_tests) {
     deps += [ "//webrtc:webrtc_tests" ]
