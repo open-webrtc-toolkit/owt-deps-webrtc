@@ -9,7 +9,8 @@ TOOLS="${ROOT}/src/tools-woogeen"
 
 REBUILD=false
 
-export PATH=${TOOLS}/depto_tools:$PATH
+download_dir=${TOOLS}/tmp
+export PATH=${download_dir}/depto_tools:$PATH
 
 usage() {
   echo

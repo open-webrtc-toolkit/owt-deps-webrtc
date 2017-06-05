@@ -40,7 +40,7 @@ repo=https://chromium.googlesource.com/chromium/tools/depot_tools.git
 commit=be812619bdaa990418316ca1cefac5de8bbd3adb
 name=depto_tools
 dst=depto_tools
-download_project ${repo} ${commit} ${download_dir} ${name} ${TOOLS}/${dst}
+download_project ${repo} ${commit} ${download_dir} ${name} ${download_dir}/${dst}
 
 # third_party/yasm
 module_name=yasm
