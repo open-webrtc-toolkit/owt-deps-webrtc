@@ -1,0 +1,19 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index bcb66b6..5cd405b 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -120,10 +120,10 @@ static_library("libyuv_internal") {
+   defines = []
+   deps = []
+ 
+-  if (!is_ios) {
+-    defines += [ "HAVE_JPEG" ]
+-    deps += [ "//third_party:jpeg" ]
+-  }
++  #if (!is_ios) {
++  #  defines += [ "HAVE_JPEG" ]
++  #  deps += [ "//third_party:jpeg" ]
++  #}
+ 
+   if (libyuv_use_neon) {
+     deps += [ ":libyuv_neon" ]

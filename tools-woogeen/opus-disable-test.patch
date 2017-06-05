@@ -1,0 +1,15 @@
+--- a/BUILD.gn	2017-06-02 22:17:57.999087165 +0800
++++ b/BUILD.gn	2017-06-02 22:18:53.640090921 +0800
+@@ -441,6 +441,7 @@ executable("opus_demo") {
+   ]
+ }
+ 
++if (false) {
+ test("test_opus_api") {
+   sources = [
+     "src/tests/test_opus_api.c",
+@@ -518,3 +519,4 @@ test("test_opus_padding") {
+     ":opus",
+   ]
+ }
++}
