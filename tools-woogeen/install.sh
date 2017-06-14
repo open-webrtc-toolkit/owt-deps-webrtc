@@ -20,7 +20,7 @@ download_third_party_module() {
 
     wget ${repo}/+archive/${commit}/${module_name}.tar.gz -O ${download_dir}/${download_name}.${commit}.tar.gz
     mkdir -p ${dst}
-    tar -zxf ${download_dir}/${download_name}.${commit}.tar.gz -C ${dst}
+    tar -m -zxf ${download_dir}/${download_name}.${commit}.tar.gz -C ${dst}
 }
 
 download_project() {
@@ -32,7 +32,7 @@ download_project() {
 
     wget ${repo}/+archive/${commit}.tar.gz -O ${download_dir}/${download_name}.${commit}.tar.gz
     mkdir -p ${dst}
-    tar -zxf ${download_dir}/${download_name}.${commit}.tar.gz -C ${dst}
+    tar -m -zxf ${download_dir}/${download_name}.${commit}.tar.gz -C ${dst}
 }
 
 # depto_tools
