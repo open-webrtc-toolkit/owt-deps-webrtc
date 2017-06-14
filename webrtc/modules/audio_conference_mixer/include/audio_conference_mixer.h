@@ -69,6 +69,11 @@ public:
     // downsampling of audio contributing to the mixed audio.
     virtual int32_t SetMinimumMixingFrequency(Frequency freq) = 0;
 
+    // woogeen vad
+    virtual int32_t RegisterMixerVadCallback(AudioMixerVadReceiver *vadReceiver,
+                                        const uint32_t amountOf10MsBetweenCallbacks) = 0;
+    virtual int32_t UnRegisterMixerVadCallback() = 0;
+
 protected:
     AudioConferenceMixer() {}
 };

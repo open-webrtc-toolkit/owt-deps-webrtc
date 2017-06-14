@@ -65,7 +65,7 @@ public:
     MixHistory* _mixHistory;
 protected:
     MixerParticipant();
-    virtual ~MixerParticipant();
+    virtual ~MixerParticipant() = 0;
 };
 
 class AudioMixerOutputReceiver
@@ -82,6 +82,26 @@ protected:
     AudioMixerOutputReceiver() {}
     virtual ~AudioMixerOutputReceiver() {}
 };
+
+// woogeen vad
+struct ParticipantVadStatistics
+{
+    int32_t id;
+    uint32_t energy;
+};
+
+class AudioMixerVadReceiver
+{
+public:
+    virtual void VadParticipants(
+        const ParticipantVadStatistics *statistics,
+        const uint32_t size) = 0;
+
+protected:
+    AudioMixerVadReceiver() {}
+    virtual ~AudioMixerVadReceiver() {}
+};
+
 }  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INCLUDE_AUDIO_CONFERENCE_MIXER_DEFINES_H_

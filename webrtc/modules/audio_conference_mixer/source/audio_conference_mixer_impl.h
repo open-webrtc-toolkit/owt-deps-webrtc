@@ -85,6 +85,11 @@ public:
     bool AnonymousMixabilityStatus(
         const MixerParticipant& participant) const override;
 
+    // woogeen vad
+    int32_t RegisterMixerVadCallback(AudioMixerVadReceiver *vadReceiver,
+                                        const uint32_t amountOf10MsBetweenCallbacks) override;
+    int32_t UnRegisterMixerVadCallback() override;
+
 private:
     enum{DEFAULT_AUDIO_FRAME_POOLSIZE = 50};
 
@@ -186,6 +191,19 @@ private:
 
     // Used for inhibiting saturation in mixing.
     std::unique_ptr<AudioProcessing> _limiter;
+
+    // woogeen vad
+    enum {kMaximumVadParticipants = 128};
+
+    void UpdateVadStatistics(AudioFrameList* mixList);
+
+    bool _vadEnabled;
+    AudioMixerVadReceiver* _vadReceiver;
+    uint32_t _amountOf10MsBetweenVadCallbacks;
+
+    uint32_t _amountOf10MsUntilNextVadCallback;
+    size_t _vadStatisticsAmount;
+    ParticipantVadStatistics _vadStatistics[kMaximumVadParticipants];
 };
 }  // namespace webrtc
 

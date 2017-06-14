@@ -124,7 +124,12 @@ AudioConferenceMixerImpl::AudioConferenceMixerImpl(int id)
       use_limiter_(true),
       _timeStamp(0),
       _timeScheduler(kProcessPeriodicityInMs),
-      _processCalls(0) {}
+      _processCalls(0),
+      _vadEnabled(false),
+      _vadReceiver(NULL),
+      _amountOf10MsBetweenVadCallbacks(0),
+      _amountOf10MsUntilNextVadCallback(0),
+      _vadStatisticsAmount(0) {}
 
 bool AudioConferenceMixerImpl::Init() {
     Config config;
@@ -255,66 +260,133 @@ void AudioConferenceMixerImpl::Process() {
         UpdateMixedStatus(mixedParticipantsMap);
     }
 
-    // Get an AudioFrame for mixing from the memory pool.
-    AudioFrame* mixedAudio = NULL;
-    if(_audioFramePool->PopMemory(mixedAudio) == -1) {
+    AudioFrame* generalFrame = NULL;
+    if(_audioFramePool->PopMemory(generalFrame) == -1) {
         WEBRTC_TRACE(kTraceMemory, kTraceAudioMixerServer, _id,
                      "failed PopMemory() call");
         assert(false);
         return;
     }
 
+    AudioFrame* uniqueFrames[kMaximumAmountOfMixedParticipants];
+    for (size_t i = 0; i < mixList.size(); ++i) {
+        if(_audioFramePool->PopMemory(uniqueFrames[i]) == -1) {
+            WEBRTC_TRACE(kTraceMemory, kTraceAudioMixerServer, _id,
+                    "failed PopMemory() call");
+            assert(false);
+            return;
+        }
+    }
+
     {
         rtc::CritScope cs(&_crit);
+
+        // woogeen vad
+        _vadStatisticsAmount = 0;
+        if(_vadEnabled && _amountOf10MsUntilNextVadCallback-- == 0) {
+            _amountOf10MsUntilNextVadCallback = _amountOf10MsBetweenVadCallbacks;
+
+            if (mixList.size() + additionalFramesList.size() <= kMaximumVadParticipants) {
+                AudioFrameList vadParticipantList;
+
+                if (mixList.size() > 0)
+                    vadParticipantList.insert(vadParticipantList.end(), mixList.begin(), mixList.end());
+
+                if (additionalFramesList.size() > 0)
+                    vadParticipantList.insert(vadParticipantList.end(), additionalFramesList.begin(), additionalFramesList.end());
+
+                UpdateVadStatistics(&vadParticipantList);
+            } else {
+                WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, _id,
+                        "vad participants exceeded MaximumAmount(%d)", kMaximumVadParticipants);
+            }
+        }
 
         // TODO(henrike): it might be better to decide the number of channels
         //                with an API instead of dynamically.
 
         // Find the max channels over all mixing lists.
-        const size_t num_mixed_channels = std::max(MaxNumChannels(&mixList),
+        size_t num_mixed_channels;
+
+        // force dual channels for 48000hz output
+        if (_outputFrequency < 48000)
+            num_mixed_channels = std::max(MaxNumChannels(&mixList),
             std::max(MaxNumChannels(&additionalFramesList),
                      MaxNumChannels(&rampOutList)));
-
-        mixedAudio->UpdateFrame(-1, _timeStamp, NULL, 0, _outputFrequency,
-                                AudioFrame::kNormalSpeech,
-                                AudioFrame::kVadPassive, num_mixed_channels);
-
-        _timeStamp += static_cast<uint32_t>(_sampleSize);
+        else
+            num_mixed_channels = 2;
 
         // We only use the limiter if it supports the output sample rate and
         // we're actually mixing multiple streams.
-        use_limiter_ =
+        use_limiter_ = false && // disable limiter
             _numMixedParticipants > 1 &&
             _outputFrequency <= AudioProcessing::kMaxNativeSampleRateHz;
 
-        MixFromList(mixedAudio, mixList);
-        MixAnonomouslyFromList(mixedAudio, additionalFramesList);
-        MixAnonomouslyFromList(mixedAudio, rampOutList);
+        // 1. mix AnonomouslyFromList
+        generalFrame->UpdateFrame(-1, _timeStamp, NULL, 0, _outputFrequency,
+                AudioFrame::kNormalSpeech,
+                AudioFrame::kVadPassive, num_mixed_channels);
 
-        if(mixedAudio->samples_per_channel_ == 0) {
-            // Nothing was mixed, set the audio samples to silence.
-            mixedAudio->samples_per_channel_ = _sampleSize;
-            AudioFrameOperations::Mute(mixedAudio);
-        } else {
-            // Only call the limiter if we have something to mix.
-            LimitMixedAudio(mixedAudio);
+        MixAnonomouslyFromList(generalFrame, additionalFramesList);
+        MixAnonomouslyFromList(generalFrame, rampOutList);
+
+        // 2. mix workList and anonomouslyMixerdFrame
+        for (size_t i = 0; i <= mixList.size(); ++i) {
+            AudioFrameList workList = mixList;
+            int id = -1;
+            AudioFrame* mixedAudio = NULL;
+
+            if (i == mixList.size()) {
+                mixedAudio = generalFrame;
+            } else {
+                mixedAudio = uniqueFrames[i];
+                AudioFrameList::iterator it = workList.begin();
+                advance(it, i);
+                id = (*it).frame->id_;
+                workList.erase(it);
+
+                mixedAudio->CopyFrom(*generalFrame);
+            }
+
+            MixFromList(mixedAudio, workList);
+
+            if(mixedAudio->samples_per_channel_ == 0) {
+                // Nothing was mixed, set the audio samples to silence.
+                mixedAudio->samples_per_channel_ = _sampleSize;
+                AudioFrameOperations::Mute(mixedAudio);
+            } else {
+                // Only call the limiter if we have something to mix.
+                LimitMixedAudio(mixedAudio);
+            }
+
+            mixedAudio->id_ = id;
+            mixedAudio->timestamp_ = _timeStamp;
+            _timeStamp += static_cast<uint32_t>(_sampleSize);
         }
     }
 
     {
         rtc::CritScope cs(&_cbCrit);
         if(_mixReceiver != NULL) {
-            const AudioFrame** dummy = NULL;
             _mixReceiver->NewMixedAudio(
                 _id,
-                *mixedAudio,
-                dummy,
-                0);
+                *generalFrame,
+                const_cast<const AudioFrame**>(uniqueFrames),
+                mixList.size());
+        }
+
+        if((_vadReceiver != NULL) && _vadStatisticsAmount > 0) {
+            _vadReceiver->VadParticipants(
+                    _vadStatistics,
+                    _vadStatisticsAmount);
         }
     }
 
     // Reclaim all outstanding memory.
-    _audioFramePool->PushMemory(mixedAudio);
+    _audioFramePool->PushMemory(generalFrame);
+    for (size_t i = 0; i < mixList.size(); ++i) {
+        _audioFramePool->PushMemory(uniqueFrames[i]);
+    }
     ClearAudioFrameList(&mixList);
     ClearAudioFrameList(&rampOutList);
     ClearAudioFrameList(&additionalFramesList);
@@ -466,7 +538,7 @@ int32_t AudioConferenceMixerImpl::SetMinimumMixingFrequency(
         freq = kSwbInHz;
     }
 
-    if((freq == kNbInHz) || (freq == kWbInHz) || (freq == kSwbInHz) ||
+    if((freq == kNbInHz) || (freq == kWbInHz) || (freq == kSwbInHz) || (freq == kFbInHz ) ||
        (freq == kLowestPossible)) {
         _minimumMixingFreq=freq;
         return 0;
@@ -922,4 +994,65 @@ bool AudioConferenceMixerImpl::LimitMixedAudio(AudioFrame* mixedAudio) const {
     }
     return true;
 }
+
+// woogeen vad
+int32_t AudioConferenceMixerImpl::RegisterMixerVadCallback(
+        AudioMixerVadReceiver *vadReceiver,
+        const uint32_t amountOf10MsBetweenCallbacks) {
+    if(amountOf10MsBetweenCallbacks == 0) {
+        WEBRTC_TRACE(
+            kTraceWarning,
+            kTraceAudioMixerServer,
+            _id,
+            "amountOf10MsBetweenCallbacks(%d) needs to be larger than 0",
+            amountOf10MsBetweenCallbacks
+            );
+        return -1;
+    }
+    {
+        rtc::CritScope cs(&_cbCrit);
+        if(_vadReceiver != NULL) {
+            WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, _id,
+                         "Mixer vad callback already registered");
+            return -1;
+        }
+        _vadReceiver  = vadReceiver;
+    }
+    {
+        rtc::CritScope cs(&_crit);
+        _amountOf10MsBetweenVadCallbacks = amountOf10MsBetweenCallbacks;
+        _vadEnabled = true;
+    }
+    return 0;
+}
+
+int32_t AudioConferenceMixerImpl::UnRegisterMixerVadCallback() {
+    {
+        rtc::CritScope cs(&_crit);
+        if(!_vadEnabled)
+            return -1;
+
+        _vadEnabled = false;
+        _amountOf10MsBetweenVadCallbacks = 0;
+    }
+    {
+        rtc::CritScope cs(&_cbCrit);
+        _vadReceiver = NULL;
+    }
+    return 0;
+}
+
+void AudioConferenceMixerImpl::UpdateVadStatistics(AudioFrameList* mixList) {
+    _vadStatisticsAmount = 0;
+    for (AudioFrameList::iterator iter = mixList->begin();
+         iter != mixList->end();
+         ++iter) {
+        if((*iter).frame->vad_activity_ == AudioFrame::kVadActive) {
+            _vadStatistics[_vadStatisticsAmount].id = (*iter).frame->id_;
+            _vadStatistics[_vadStatisticsAmount].energy = CalculateEnergy(*(*iter).frame);
+            _vadStatisticsAmount++;
+        }
+    }
+}
+
 }  // namespace webrtc
