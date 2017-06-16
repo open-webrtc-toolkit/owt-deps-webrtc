@@ -98,6 +98,8 @@ class TraceImpl : public Trace {
   const std::unique_ptr<FileWrapper> trace_file_ GUARDED_BY(crit_);
   std::string trace_file_path_ GUARDED_BY(crit_);
   rtc::CriticalSection crit_;
+
+  bool is_stderr_;
 };
 
 }  // namespace webrtc

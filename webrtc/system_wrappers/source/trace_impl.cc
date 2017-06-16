@@ -68,7 +68,8 @@ TraceImpl::TraceImpl()
     : callback_(NULL),
       row_count_text_(0),
       file_count_text_(0),
-      trace_file_(FileWrapper::Create()) {
+      trace_file_(FileWrapper::Create()),
+      is_stderr_(false) {
 }
 
 TraceImpl::~TraceImpl() {
@@ -290,6 +291,8 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
   trace_file_path_.clear();
 
   if (file_name_utf8) {
+    is_stderr_ = false;
+
     if (add_file_counter) {
       file_count_text_ = 1;
 
@@ -306,6 +309,12 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
         return -1;
       }
       trace_file_path_ = file_name_utf8;
+    }
+  } else {
+    is_stderr_ = true;
+
+    if (!trace_file_->OpenFromFileHandle(stderr)) {
+      return -1;
     }
   }
   row_count_text_ = 0;
@@ -363,7 +372,7 @@ void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
   if (!trace_file_->is_open())
     return;
 
-  if (row_count_text_ > WEBRTC_TRACE_MAX_FILE_SIZE) {
+  if (!is_stderr_ && row_count_text_ > WEBRTC_TRACE_MAX_FILE_SIZE) {
     // wrap file
     row_count_text_ = 0;
     trace_file_->Flush();
