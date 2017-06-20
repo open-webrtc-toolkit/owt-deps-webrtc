@@ -57,7 +57,7 @@ bool IsOpusRateValid(int rate) {
 }  // namespace
 
 // Not yet used payload-types.
-// 83,  82,  81, 80, 79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69, 68,
+// 82,  81, 80, 79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69, 68,
 // 67, 66, 65
 
 const CodecInst ACMCodecDB::database_[] = {
@@ -75,6 +75,7 @@ const CodecInst ACMCodecDB::database_[] = {
   {111, "L16", 8000, 80, 2, 128000},
   {112, "L16", 16000, 160, 2, 256000},
   {113, "L16", 32000, 320, 2, 512000},
+  {83, "L16", 48000, 480, 2, 768000},
   // G.711, PCM mu-law and A-law.
   // Mono
   {0, "PCMU", 8000, 160, 1, 64000},
@@ -133,6 +134,7 @@ const ACMCodecDB::CodecSettings ACMCodecDB::codec_settings_[] = {
     {4, {80, 160, 240, 320}, 0, 2},
     {4, {160, 320, 480, 640}, 0, 2},
     {2, {320, 640}, 0, 2},
+    {2, {480, 960}, 0, 2},
     // G.711, PCM mu-law and A-law.
     // Mono
     {6, {80, 160, 240, 320, 400, 480}, 0, 2},
@@ -191,7 +193,7 @@ const NetEqDecoder ACMCodecDB::neteq_decoders_[] = {
     NetEqDecoder::kDecoderPCM16Bswb32kHz,
     // Stereo
     NetEqDecoder::kDecoderPCM16B_2ch, NetEqDecoder::kDecoderPCM16Bwb_2ch,
-    NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch,
+    NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch, NetEqDecoder::kDecoderPCM16Bswb48kHz_2ch,
     // G.711, PCM mu-las and A-law.
     // Mono
     NetEqDecoder::kDecoderPCMu, NetEqDecoder::kDecoderPCMa,
