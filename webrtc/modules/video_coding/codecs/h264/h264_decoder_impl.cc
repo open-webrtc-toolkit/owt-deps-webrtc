@@ -176,7 +176,7 @@ void H264DecoderImpl::AVFreeBuffer2(void* opaque, uint8_t* data) {
   delete video_frame;
 }
 
-H264DecoderImpl::H264DecoderImpl() : pool_(true),
+H264DecoderImpl::H264DecoderImpl() : pool_(false),
                                      decoded_image_callback_(nullptr),
                                      has_reported_init_(false),
                                      has_reported_error_(false) {
