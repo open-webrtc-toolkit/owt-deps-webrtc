@@ -92,7 +92,7 @@ rtc_include_opus=true
 
 fi
 
-ninja -C out video_coding audio_coding audio_conference_mixer metrics_default field_trial_default
+ninja -C out video_coding audio_coding audio_conference_mixer metrics_default field_trial_default rtp_rtcp remote_bitrate_estimator bitrate_controller congestion_controller rtc_event_log_impl
 
 if [ -e "${ROOT}/libwebrtc.a" ];
 then

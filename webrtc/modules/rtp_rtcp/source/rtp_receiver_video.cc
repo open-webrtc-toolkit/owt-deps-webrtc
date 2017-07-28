@@ -119,6 +119,13 @@ int32_t RTPReceiverVideo::InvokeOnInitializeDecoder(
     const PayloadUnion& specific_payload) const {
   // TODO(pbos): Remove as soon as audio can handle a changing payload type
   // without this callback.
+  // jianlin: added back this for M59 since MCU needs this to register decoder
+  if (-1 ==
+      callback->OnInitializeDecoder(
+          payload_type, payload_name, kVideoPayloadTypeFrequency, 1, 0)) {
+    return -1;
+  }
+
   return 0;
 }
 
