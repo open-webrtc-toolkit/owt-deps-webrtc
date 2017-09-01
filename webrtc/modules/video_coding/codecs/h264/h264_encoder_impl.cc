@@ -500,4 +500,26 @@ VideoEncoder::ScalingSettings H264EncoderImpl::GetScalingSettings() const {
   return VideoEncoder::ScalingSettings(true);
 }
 
+int32_t H264EncoderImpl::SetResolution(uint32_t width, uint32_t height)
+{
+    width_ = width;
+    height_ = height;
+
+    SEncParamExt encoder_params = CreateEncoderParams();
+    if (openh264_encoder_->SetOption(ENCODER_OPTION_SVC_ENCODE_PARAM_EXT, &encoder_params) != 0) {
+        return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    // Initialize encoded image. Default buffer size: size of unencoded data.
+    encoded_image_._size =
+        CalcBufferSize(kI420, width_, height_);
+    encoded_image_._buffer = new uint8_t[encoded_image_._size];
+    encoded_image_buffer_.reset(encoded_image_._buffer);
+    encoded_image_._completeFrame = true;
+    encoded_image_._encodedWidth = 0;
+    encoded_image_._encodedHeight = 0;
+    encoded_image_._length = 0;
+    return WEBRTC_VIDEO_CODEC_OK;
+}
+
 }  // namespace webrtc

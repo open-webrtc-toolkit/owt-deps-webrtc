@@ -186,6 +186,11 @@ class VideoEncoder {
   virtual int32_t SetPeriodicKeyFrames(bool enable) { return -1; }
   virtual bool SupportsNativeHandle() const { return false; }
   virtual const char* ImplementationName() const { return "unknown"; }
+
+  // Update for dynamic resolution encoding, by Jianhui
+  virtual int32_t SetResolution(uint32_t width, uint32_t height) {
+    return -1;
+  }
 };
 
 }  // namespace webrtc

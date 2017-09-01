@@ -61,6 +61,8 @@ class VP8EncoderImpl : public VP8Encoder {
 
   const char* ImplementationName() const override;
 
+  int32_t SetResolution(uint32_t width, uint32_t height) override;
+
  private:
   void SetupTemporalLayers(int num_streams,
                            int num_temporal_layers,

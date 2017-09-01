@@ -66,6 +66,8 @@ class H264EncoderImpl : public H264Encoder {
     return packetization_mode_;
   }
 
+  int32_t SetResolution(uint32_t width, uint32_t height) override;
+
  private:
   bool IsInitialized() const;
   SEncParamExt CreateEncoderParams() const;

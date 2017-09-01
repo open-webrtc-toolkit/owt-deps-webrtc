@@ -65,6 +65,8 @@ class VP9EncoderImpl : public VP9Encoder {
     bool is_keyframe = false;
   };
 
+  int32_t SetResolution(uint32_t width, uint32_t height) override;
+
  private:
   // Determine number of encoder threads to use.
   int NumberOfThreads(int width, int height, int number_of_cores);

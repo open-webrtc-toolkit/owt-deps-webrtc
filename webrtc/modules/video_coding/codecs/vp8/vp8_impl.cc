@@ -925,6 +925,11 @@ int VP8EncoderImpl::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+int32_t VP8EncoderImpl::SetResolution(uint32_t width, uint32_t height)
+{
+    return UpdateCodecFrameSize(width, height);
+}
+
 VP8DecoderImpl::VP8DecoderImpl()
     : use_postproc_arm_(webrtc::field_trial::FindFullName(
                             kVp8PostProcArmFieldTrial) == "Enabled"),

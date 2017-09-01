@@ -833,6 +833,34 @@ const char* VP9EncoderImpl::ImplementationName() const {
   return "libvpx";
 }
 
+int32_t VP9EncoderImpl::SetResolution(uint32_t width, uint32_t height)
+{
+  codec_.width = width;
+  codec_.height = height;
+  if (codec_.numberOfSimulcastStreams <= 1) {
+    // For now scaling is only used for single-layer streams.
+    codec_.simulcastStream[0].width = width;
+    codec_.simulcastStream[0].height = height;
+  }
+  // Update the cpu_speed setting for resolution change.
+  vpx_codec_control(encoder_, VP8E_SET_CPUUSED,
+                    GetCpuSpeed(codec_.width, codec_.height));
+  raw_->w = codec_.width;
+  raw_->h = codec_.height;
+  raw_->d_w = codec_.width;
+  raw_->d_h = codec_.height;
+  vpx_img_set_rect(raw_, 0, 0, codec_.width, codec_.height);
+
+  // Update encoder context for new frame size.
+  // Change of frame size will automatically trigger a key frame.
+  config_->g_w = codec_.width;
+  config_->g_h = codec_.height;
+  if (vpx_codec_enc_config_set(encoder_, config_)) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
 bool VP9Decoder::IsSupported() {
   return true;
 }
