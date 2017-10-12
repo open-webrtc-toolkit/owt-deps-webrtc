@@ -227,7 +227,10 @@ size_t RtpPacketizerH264::PacketizeStapA(size_t fragment_index) {
 
     // Next fragment.
     ++fragment_index;
-    if (fragment_index == input_fragments_.size())
+    // FIXME: we now disable STAP-A for better compatiblity with some
+    // remote endpoints which doesn't support it. woogeen
+    //if (fragment_index == input_fragments_.size())
+    if(true)
       break;
     fragment = &input_fragments_[fragment_index];
 
