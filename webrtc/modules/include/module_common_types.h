@@ -29,6 +29,20 @@
 
 namespace webrtc {
 
+#ifndef DISABLE_H265
+// H265 packtization types we support: single,  aggregated, and fragmented.
+enum H265PacketizationTypes {
+    kH265SingleNalu,
+    kH265AP,
+    kH265FU,
+};
+
+struct RTPVideoHeaderH265 {
+    uint8_t nalu_type;
+    H265PacketizationTypes packetization_type;
+};
+#endif
+
 struct RTPAudioHeader {
   uint8_t numEnergy;                  // number of valid entries in arrOfEnergy
   uint8_t arrOfEnergy[kRtpCsrcSize];  // one energy byte (0-9) per channel
@@ -40,6 +54,9 @@ union RTPVideoTypeHeader {
   RTPVideoHeaderVP8 VP8;
   RTPVideoHeaderVP9 VP9;
   RTPVideoHeaderH264 H264;
+#ifndef DISABLE_H265
+  RTPVideoHeaderH265 H265;
+#endif
 };
 
 enum RtpVideoCodecTypes {
@@ -47,7 +64,10 @@ enum RtpVideoCodecTypes {
   kRtpVideoGeneric,
   kRtpVideoVp8,
   kRtpVideoVp9,
-  kRtpVideoH264
+  kRtpVideoH264,
+#ifndef DISABLE_H265
+  kRtpVideoH265
+#endif
 };
 // Since RTPVideoHeader is used as a member of a union, it can't have a
 // non-trivial default constructor.

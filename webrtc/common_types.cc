@@ -95,9 +95,24 @@ const VideoCodecH264& VideoCodec::H264() const {
   return codec_specific_.H264;
 }
 
+#ifndef DISABLE_H265
+VideoCodecH265* VideoCodec::H265() {
+  RTC_DCHECK_EQ(codecType, kVideoCodecH265);
+  return &codec_specific_.H265;
+}
+
+const VideoCodecH265& VideoCodec::H265() const {
+  RTC_DCHECK_EQ(codecType, kVideoCodecH265);
+  return codec_specific_.H265;
+}
+#endif
+
 static const char* kPayloadNameVp8 = "VP8";
 static const char* kPayloadNameVp9 = "VP9";
 static const char* kPayloadNameH264 = "H264";
+#ifndef DISABLE_H265
+static const char* kPayloadNameH265 = "H265";
+#endif
 static const char* kPayloadNameI420 = "I420";
 static const char* kPayloadNameRED = "RED";
 static const char* kPayloadNameULPFEC = "ULPFEC";
@@ -115,6 +130,10 @@ rtc::Optional<const char*> CodecTypeToPayloadName(VideoCodecType type) {
       return rtc::Optional<const char*>(kPayloadNameVp9);
     case kVideoCodecH264:
       return rtc::Optional<const char*>(kPayloadNameH264);
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      return rtc::Optional<const char*>(kPayloadNameH265);
+#endif
     case kVideoCodecI420:
       return rtc::Optional<const char*>(kPayloadNameI420);
     case kVideoCodecRED:
@@ -135,6 +154,10 @@ rtc::Optional<VideoCodecType> PayloadNameToCodecType(const std::string& name) {
     return rtc::Optional<VideoCodecType>(kVideoCodecVP9);
   if (CodecNamesEq(name.c_str(), kPayloadNameH264))
     return rtc::Optional<VideoCodecType>(kVideoCodecH264);
+#ifndef DISABLE_H265
+  if (CodecNamesEq(name.c_str(), kPayloadNameH265))
+    return rtc::Optional<VideoCodecType>(kVideoCodecH265);
+#endif
   if (CodecNamesEq(name.c_str(), kPayloadNameI420))
     return rtc::Optional<VideoCodecType>(kVideoCodecI420);
   if (CodecNamesEq(name.c_str(), kPayloadNameRED))

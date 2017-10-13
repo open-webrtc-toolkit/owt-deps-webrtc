@@ -57,6 +57,9 @@ void RtpFrameReferenceFinder::ManageFrame(
     //                 should be changed to use kVideoCodecGeneric instead.
     case kVideoCodecUnknown:
     case kVideoCodecH264:
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+#endif
     case kVideoCodecI420:
     case kVideoCodecGeneric:
       ManageFrameGeneric(std::move(frame), kNoPictureId);

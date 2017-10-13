@@ -511,12 +511,25 @@ struct VideoCodecH264 {
   size_t ppsLen;
   H264::Profile profile;
 };
+#ifndef DISABLE_H265
+struct VideoCodecH265 {
+    bool           frameDroppingOn;
+    int            keyFrameInterval;
+    const uint8_t* spsData;
+    size_t         spsLen;
+    const uint8_t* ppsData;
+    size_t         ppsLen;
+};
+#endif
 
 // Video codec types
 enum VideoCodecType {
   kVideoCodecVP8,
   kVideoCodecVP9,
   kVideoCodecH264,
+#ifndef DISABLE_H265
+  kVideoCodecH265,
+#endif
   kVideoCodecI420,
   kVideoCodecRED,
   kVideoCodecULPFEC,
@@ -533,6 +546,9 @@ union VideoCodecUnion {
   VideoCodecVP8 VP8;
   VideoCodecVP9 VP9;
   VideoCodecH264 H264;
+#ifndef DISABLE_H265
+  VideoCodecH265 H265;
+#endif
 };
 
 // Simulcast is when the same stream is encoded multiple times with different
@@ -597,7 +613,10 @@ class VideoCodec {
   const VideoCodecVP9& VP9() const;
   VideoCodecH264* H264();
   const VideoCodecH264& H264() const;
-
+#ifndef DISABLE_H265
+  VideoCodecH265* H265();
+  const VideoCodecH265& H265() const;
+#endif
  private:
   // TODO(hta): Consider replacing the union with a pointer type.
   // This will allow removing the VideoCodec* types from this file.

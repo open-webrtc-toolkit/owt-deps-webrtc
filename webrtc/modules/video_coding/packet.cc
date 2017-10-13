@@ -132,6 +132,24 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       }
       codec = kVideoCodecH264;
       return;
+#ifndef DISABLE_H265
+    case kRtpVideoH265:
+      is_first_packet_in_frame = videoHeader.is_first_packet_in_frame;
+      if (is_first_packet_in_frame)
+        insertStartCode = true;
+      if (is_first_packet_in_frame && markerBit) {
+        completeNALU = kNaluComplete;
+      } else if (is_first_packet_in_frame) {
+        completeNALU = kNaluStart;
+      } else if (markerBit) {
+        completeNALU = kNaluEnd;
+      } else {
+        completeNALU = kNaluIncomplete;
+      }
+      codec = kVideoCodecH265;
+      return;
+#endif
+
     case kRtpVideoGeneric:
     case kRtpVideoNone:
       codec = kVideoCodecUnknown;

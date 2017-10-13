@@ -16,13 +16,19 @@
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp9.h"
-
+#ifndef DISABLE_H265
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h265.h"
+#endif
 namespace webrtc {
 RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
                                      size_t max_payload_len,
                                      const RTPVideoTypeHeader* rtp_type_header,
                                      FrameType frame_type) {
   switch (type) {
+#ifndef DISABLE_H265
+    case kRtpVideoH265:
+      return new RtpPacketizerH265(frame_type, max_payload_len);
+#endif
     case kRtpVideoH264:
       RTC_CHECK(rtp_type_header);
       return new RtpPacketizerH264(max_payload_len,
@@ -43,6 +49,10 @@ RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
 
 RtpDepacketizer* RtpDepacketizer::Create(RtpVideoCodecTypes type) {
   switch (type) {
+#ifndef DISABLE_H265
+    case kRtpVideoH265:
+      return new RtpDepacketizerH265();
+#endif
     case kRtpVideoH264:
       return new RtpDepacketizerH264();
     case kRtpVideoVp8:

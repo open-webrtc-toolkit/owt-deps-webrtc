@@ -71,6 +71,23 @@ VideoCodecH264 VideoEncoder::GetDefaultH264Settings() {
   return h264_settings;
 }
 
+#ifndef DISABLE_H265
+VideoCodecH265 VideoEncoder::GetDefaultH265Settings() {
+    VideoCodecH265 h265_settings;
+    memset(&h265_settings, 0, sizeof(h265_settings));
+
+    //h265_settings.profile = kProfileBase;
+    h265_settings.frameDroppingOn = true;
+    h265_settings.keyFrameInterval = 3000;
+    h265_settings.spsData = nullptr;
+    h265_settings.spsLen = 0;
+    h265_settings.ppsData = nullptr;
+    h265_settings.ppsLen = 0;
+
+    return h265_settings;
+}
+#endif
+
 VCMDecoderMapItem::VCMDecoderMapItem(VideoCodec* settings,
                                      int number_of_cores,
                                      bool require_key_frame)
@@ -159,6 +176,21 @@ void VCMCodecDataBase::Codec(VideoCodecType codec_type, VideoCodec* settings) {
       settings->qpMax = 56;
       *(settings->H264()) = VideoEncoder::GetDefaultH264Settings();
       return;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      strncpy(settings->plName, "H265", 5);
+      settings->codecType = kVideoCodecH265;
+      settings->plType = kDefaultPayloadType;
+      settings->startBitrate = kDefaultStartBitrateKbps;
+      settings->minBitrate = VCM_MIN_BITRATE;
+      settings->maxBitrate = 0;
+      settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
+      settings->width = VCM_DEFAULT_CODEC_WIDTH;
+      settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      settings->numberOfSimulcastStreams = 0;
+      *(settings->H265()) = VideoEncoder::GetDefaultH265Settings();
+      return;
+#endif
     case kVideoCodecI420:
       strncpy(settings->plName, "I420", 5);
       settings->codecType = kVideoCodecI420;
@@ -344,6 +376,14 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
         return true;
       }
       break;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+        if (memcmp(&new_send_codec.H265(), send_codec_.H265(),
+            sizeof(new_send_codec.H265())) != 0) {
+        return true;
+      }
+      break;
+#endif
     case kVideoCodecGeneric:
       break;
     // Known codecs without payload-specifics

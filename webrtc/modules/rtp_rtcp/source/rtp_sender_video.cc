@@ -83,6 +83,10 @@ RtpUtility::Payload* RTPSenderVideo::CreateVideoPayload(
     video_type = kRtpVideoVp9;
   } else if (RtpUtility::StringCompare(payload_name, "H264", 4)) {
     video_type = kRtpVideoH264;
+#ifndef DISABLE_H265
+  } else if (RtpUtility::StringCompare(payload_name, "H265", 4)) {
+    video_type = kRtpVideoH265;
+#endif
   } else if (RtpUtility::StringCompare(payload_name, "I420", 4)) {
     video_type = kRtpVideoGeneric;
   } else {

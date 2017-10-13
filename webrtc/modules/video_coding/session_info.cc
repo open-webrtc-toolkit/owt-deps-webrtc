@@ -184,6 +184,9 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
   // TODO(pbos): Remove H264 parsing from this step and use a fragmentation
   // header supplied by the H264 depacketizer.
   const size_t kH264NALHeaderLengthInBytes = 1;
+#ifndef DISABLE_H265
+  const size_t kH265NALHeaderLengthInBytes = 2;
+#endif
   const size_t kLengthFieldLength = 2;
   if (packet.video_header.codec == kRtpVideoH264 &&
       packet.video_header.codecHeader.H264.packetization_type == kH264StapA) {
@@ -208,6 +211,37 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
     packet.sizeBytes = required_length;
     return packet.sizeBytes;
   }
+#ifndef DISABLE_H265
+  else if (packet.video_header.codec == kRtpVideoH265 &&
+      packet.video_header.codecHeader.H265.packetization_type ==
+          kH265AP) {
+      // Similar to H264, for H265 aggregation packets, we rely on jitter buffer to
+      // remove the two length bytes between each NAL unit, and potentially add start
+      // codes.
+      size_t required_length = 0;
+      const uint8_t* nalu_ptr = packet_buffer + kH265NALHeaderLengthInBytes; //skip payloadhdr
+      while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+          size_t length = BufferToUWord16(nalu_ptr);
+          required_length += length + (packet.insertStartCode ? kH265StartCodeLengthBytes : 0);
+          nalu_ptr += kLengthFieldLength + length;
+      }
+      ShiftSubsequentPackets(packet_it, required_length);
+      nalu_ptr = packet_buffer + kH265NALHeaderLengthInBytes;
+      uint8_t* frame_buffer_ptr = frame_buffer + offset;
+      while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+          size_t length = BufferToUWord16(nalu_ptr);
+          nalu_ptr += kLengthFieldLength;
+          //since H265 shares the same start code as H264, use the same Insert
+          //function to handle start code.
+          frame_buffer_ptr += Insert(nalu_ptr, length, packet.insertStartCode,
+              const_cast<uint8_t*>(frame_buffer_ptr));
+          nalu_ptr += length;
+      }
+      packet.sizeBytes = required_length;
+      return packet.sizeBytes;
+  }
+#endif
+
   ShiftSubsequentPackets(
       packet_it, packet.sizeBytes +
                      (packet.insertStartCode ? kH264StartCodeLengthBytes : 0));
@@ -465,7 +499,23 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
          IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
       last_packet_seq_num_ = packet.seqNum;
     }
-  } else {
+  }
+#ifndef DISABLE_H265
+  else if (packet.codec == kVideoCodecH265) {
+      frame_type_ = packet.frameType;
+      if (packet.is_first_packet_in_frame &&
+          (first_packet_seq_num_ == -1 ||
+              IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum))) {
+          first_packet_seq_num_ = packet.seqNum;
+      }
+      if (packet.markerBit &&
+          (last_packet_seq_num_ == -1 ||
+              IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
+          last_packet_seq_num_ = packet.seqNum;
+      }
+  }
+#endif
+  else {
     // Only insert media packets between first and last packets (when
     // available).
     // Placing check here, as to properly account for duplicate packets.

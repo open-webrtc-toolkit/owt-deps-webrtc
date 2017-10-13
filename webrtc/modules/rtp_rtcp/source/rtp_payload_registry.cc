@@ -66,6 +66,10 @@ RtpVideoCodecTypes ConvertToRtpVideoCodecType(VideoCodecType type) {
       return kRtpVideoVp9;
     case kVideoCodecH264:
       return kRtpVideoH264;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      return kRtpVideoH265;
+#endif
     case kVideoCodecRED:
     case kVideoCodecULPFEC:
       return kRtpVideoNone;

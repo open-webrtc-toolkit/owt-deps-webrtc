@@ -30,6 +30,10 @@ size_t EncodedImage::GetBufferPaddingBytes(VideoCodecType codec_type) {
       return 0;
     case kVideoCodecH264:
       return kBufferPaddingBytesH264;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      return 0;
+#endif
     case kVideoCodecI420:
     case kVideoCodecRED:
     case kVideoCodecULPFEC:
