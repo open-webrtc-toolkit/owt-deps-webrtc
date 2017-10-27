@@ -74,14 +74,25 @@ bool ParseHevcSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   parsed_payload->type.Video.width = 0;
   parsed_payload->type.Video.height = 0;
   parsed_payload->type.Video.codec = kRtpVideoH265;
-  parsed_payload->type.Video.isFirstPacket = true;
+  //parsed_payload->type.Video.isFirstPacket = true;
   RTPVideoHeaderH265* h265_header =
       &parsed_payload->type.Video.codecHeader.H265;
 
+  if (payload_data_length <= 4)
+       return false;
+
+  if ((payload_data[0] == 0 && payload_data[1] == 0 && payload_data[2] == 1) ||
+       (payload_data[0] == 0 && payload_data[1] == 0 && payload_data[2] == 0 && payload_data[3] == 1)) {
+       uint8_t single_nal_type = (payload_data[2] == 1) ? ((payload_data[3] >> 1) & 0x7F) : ((payload_data[4] >> 1) & 0x7F);
+       h265_header->packetization_type = kH265SingleNalu;
+       h265_header->nalu_type = single_nal_type;
+       parsed_payload->frame_type = kVideoFrameKey;
+       return true;
+  }
   const uint8_t* nalu_start = payload_data + kHevcNalHeaderSize;
   size_t nalu_length = payload_data_length - kHevcNalHeaderSize;
   //nal type is at bit 6:1
-  uint8_t nal_type = (payload_data[0] >>1) & kHevcTypeMask;
+  uint8_t nal_type = (payload_data[0] >>1) & 0x7F;
   if (nal_type == kHevcAp) {
     // Skip the PayloadHdr. Also for simplicity, we don't support the DONL/DOND inclusion
     // in aggregation packet.
@@ -124,7 +135,8 @@ bool ParseHevcSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
       parsed_payload->frame_type = kVideoFrameKey;
       break;
     default:
-      parsed_payload->frame_type = kVideoFrameDelta;
+      parsed_payload->frame_type = kVideoFrameKey;
+      //parsed_payload->frame_type = kVideoFrameDelta;
       break;
   }
   return true;
@@ -161,12 +173,13 @@ bool ParseHevcFuNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   if (original_nal_type == kIdrNLp || original_nal_type == kIdrWRadl) {
     parsed_payload->frame_type = kVideoFrameKey;
   } else {
-    parsed_payload->frame_type = kVideoFrameDelta;
+    parsed_payload->frame_type = kVideoFrameKey;
+    //parsed_payload->frame_type = kVideoFrameDelta;
   }
   parsed_payload->type.Video.width = 0;
   parsed_payload->type.Video.height = 0;
   parsed_payload->type.Video.codec = kRtpVideoH265;
-  parsed_payload->type.Video.isFirstPacket = first_fragment;
+  //parsed_payload->type.Video.isFirstPacket = first_fragment;
   RTPVideoHeaderH265* h265_header =
       &parsed_payload->type.Video.codecHeader.H265;
   h265_header->packetization_type = kH265FU;
@@ -266,7 +279,8 @@ int RtpPacketizerH265::PacketizeAp(size_t fragment_index) {
 
     // Next fragment.
     ++fragment_index;
-    if (fragment_index == input_fragments_.size())
+    //if (fragment_index == input_fragments_.size())
+    if (true)
       break;
     fragment = &input_fragments_[fragment_index];
 

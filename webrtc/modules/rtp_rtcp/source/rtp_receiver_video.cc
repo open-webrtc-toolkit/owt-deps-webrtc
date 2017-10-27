@@ -18,6 +18,7 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/trace_event.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_cvo.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
@@ -99,6 +100,10 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
 
   rtp_header->type.Video.playout_delay =
       rtp_header->header.extension.playout_delay;
+#ifndef DISABLE_H265
+  if (rtp_header->type.Video.codec == webrtc::kRtpVideoH265)
+    rtp_header->type.Video.is_first_packet_in_frame = is_first_packet;
+#endif
   return data_callback_->OnReceivedPayloadData(parsed_payload.payload,
                                                parsed_payload.payload_length,
                                                rtp_header) == 0
