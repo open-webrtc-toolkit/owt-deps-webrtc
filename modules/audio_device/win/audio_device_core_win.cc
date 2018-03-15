@@ -510,7 +510,9 @@ AudioDeviceWindowsCore::AudioDeviceWindowsCore()
   assert(NULL != _ptrEnumerator);
 
   // DMO initialization for built-in WASAPI AEC.
-  {
+  if (_builtInAecEnabled) {
+    // BUGBUG: on some hosts the AEC DMO is not correctly released.
+    // so we only create AEC DMO upon application request.
     IMediaObject* ptrDMO = NULL;
     hr = CoCreateInstance(CLSID_CWMAudioAEC, NULL, CLSCTX_INPROC_SERVER,
                           IID_IMediaObject, reinterpret_cast<void**>(&ptrDMO));
