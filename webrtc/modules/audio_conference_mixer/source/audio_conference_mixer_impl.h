@@ -193,7 +193,7 @@ private:
     std::unique_ptr<AudioProcessing> _limiter;
 
     // woogeen vad
-    enum {kMaximumVadParticipants = 128};
+    enum {kMaximumVadParticipants = 1024};
 
     void UpdateVadStatistics(AudioFrameList* mixList);
 
@@ -201,9 +201,11 @@ private:
     AudioMixerVadReceiver* _vadReceiver;
     uint32_t _amountOf10MsBetweenVadCallbacks;
 
-    uint32_t _amountOf10MsUntilNextVadCallback;
-    size_t _vadStatisticsAmount;
-    ParticipantVadStatistics _vadStatistics[kMaximumVadParticipants];
+    uint32_t _amountOf10MsAll;
+    uint32_t _amountOf10MsRemainder;
+    std::map<int32_t, int64_t> _vadParticipantEnergyList;
+
+    std::vector<ParticipantVadStatistics> _vadStatistics;
 };
 }  // namespace webrtc
 

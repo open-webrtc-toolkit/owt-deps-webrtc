@@ -128,8 +128,8 @@ AudioConferenceMixerImpl::AudioConferenceMixerImpl(int id)
       _vadEnabled(false),
       _vadReceiver(NULL),
       _amountOf10MsBetweenVadCallbacks(0),
-      _amountOf10MsUntilNextVadCallback(0),
-      _vadStatisticsAmount(0) {}
+      _amountOf10MsAll(0),
+      _amountOf10MsRemainder(0) {}
 
 bool AudioConferenceMixerImpl::Init() {
     Config config;
@@ -278,13 +278,17 @@ void AudioConferenceMixerImpl::Process() {
         }
     }
 
+    bool fireVadCallback = false;
     {
         rtc::CritScope cs(&_crit);
 
         // woogeen vad
-        _vadStatisticsAmount = 0;
-        if(_vadEnabled && _amountOf10MsUntilNextVadCallback-- == 0) {
-            _amountOf10MsUntilNextVadCallback = _amountOf10MsBetweenVadCallbacks;
+        if(_vadEnabled) {
+            if (_amountOf10MsRemainder == 0) {
+                _amountOf10MsAll = _amountOf10MsBetweenVadCallbacks;
+                _amountOf10MsRemainder = _amountOf10MsBetweenVadCallbacks;
+                _vadParticipantEnergyList.clear();
+            }
 
             if (mixList.size() + additionalFramesList.size() <= kMaximumVadParticipants) {
                 AudioFrameList vadParticipantList;
@@ -297,7 +301,7 @@ void AudioConferenceMixerImpl::Process() {
 
                 UpdateVadStatistics(&vadParticipantList);
             } else {
-                WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, _id,
+                WEBRTC_TRACE(kTraceError, kTraceAudioMixerServer, _id,
                         "vad participants exceeded MaximumAmount(%d)", kMaximumVadParticipants);
             }
         }
@@ -363,6 +367,20 @@ void AudioConferenceMixerImpl::Process() {
             mixedAudio->timestamp_ = _timeStamp;
             _timeStamp += static_cast<uint32_t>(_sampleSize);
         }
+
+        // woogeen vad
+        if(_vadEnabled && --_amountOf10MsRemainder == 0) {
+            _vadStatistics.resize(_vadParticipantEnergyList.size());
+
+            size_t i = 0;
+            for (auto& item : _vadParticipantEnergyList) {
+                _vadStatistics[i].id        = item.first;
+                _vadStatistics[i].energy    = item.second / _amountOf10MsAll;
+
+                i++;
+            }
+            fireVadCallback = true;
+        }
     }
 
     {
@@ -375,10 +393,10 @@ void AudioConferenceMixerImpl::Process() {
                 mixList.size());
         }
 
-        if((_vadReceiver != NULL) && _vadStatisticsAmount > 0) {
+        if(_vadReceiver != NULL && fireVadCallback) {
             _vadReceiver->VadParticipants(
-                    _vadStatistics,
-                    _vadStatisticsAmount);
+                    _vadStatistics.data(),
+                    _vadStatistics.size());
         }
     }
 
@@ -1021,6 +1039,9 @@ int32_t AudioConferenceMixerImpl::RegisterMixerVadCallback(
     {
         rtc::CritScope cs(&_crit);
         _amountOf10MsBetweenVadCallbacks = amountOf10MsBetweenCallbacks;
+        _amountOf10MsAll = 0;
+        _amountOf10MsRemainder = 0;
+
         _vadEnabled = true;
     }
     return 0;
@@ -1034,6 +1055,8 @@ int32_t AudioConferenceMixerImpl::UnRegisterMixerVadCallback() {
 
         _vadEnabled = false;
         _amountOf10MsBetweenVadCallbacks = 0;
+        _amountOf10MsAll = 0;
+        _amountOf10MsRemainder = 0;
     }
     {
         rtc::CritScope cs(&_cbCrit);
@@ -1043,14 +1066,23 @@ int32_t AudioConferenceMixerImpl::UnRegisterMixerVadCallback() {
 }
 
 void AudioConferenceMixerImpl::UpdateVadStatistics(AudioFrameList* mixList) {
-    _vadStatisticsAmount = 0;
+    WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, _id,
+            "UpdateVadStatistics: %d",
+            _amountOf10MsRemainder);
+
     for (AudioFrameList::iterator iter = mixList->begin();
          iter != mixList->end();
          ++iter) {
         if((*iter).frame->vad_activity_ == AudioFrame::kVadActive) {
-            _vadStatistics[_vadStatisticsAmount].id = (*iter).frame->id_;
-            _vadStatistics[_vadStatisticsAmount].energy = CalculateEnergy(*(*iter).frame);
-            _vadStatisticsAmount++;
+            if (_vadParticipantEnergyList.find((*iter).frame->id_) == _vadParticipantEnergyList.end()) {
+                _vadParticipantEnergyList[(*iter).frame->id_] = 0;
+            }
+            uint32_t energy = CalculateEnergy(*(*iter).frame);
+            _vadParticipantEnergyList[(*iter).frame->id_] += energy;
+
+            WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, _id,
+                    "###VadStatistics id(%d), energy(%12u), allEnergy(%12ld)",
+                    (*iter).frame->id_, energy, _vadParticipantEnergyList[(*iter).frame->id_]);
         }
     }
 }
