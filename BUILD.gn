@@ -23,7 +23,7 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
-if (!build_with_chromium) {
+if (!build_with_chromium && !build_with_woogeen) {
   # This target should (transitively) cause everything to be built; if you run
   # 'ninja default' and then 'ninja all', the second build should do no work.
   group("default") {
@@ -108,8 +108,13 @@ config("common_inherited_config") {
   } else {
     defines += [ "WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0" ]
   }
-  if (build_with_chromium) {
-    defines += [ "WEBRTC_CHROMIUM_BUILD" ]
+  if (build_with_chromium || build_with_woogeen) {
+    defines += [
+      # TODO(kjellander): Cleanup unused ones and move defines closer to
+      # the source when webrtc:4256 is completed.
+      "GTEST_RELATIVE_PATH",
+      "WEBRTC_CHROMIUM_BUILD",
+    ]
     include_dirs = [
       # The overrides must be included first as that is the mechanism for
       # selecting the override headers in Chromium.
@@ -118,6 +123,16 @@ config("common_inherited_config") {
       # Allow includes to be prefixed with webrtc/ in case it is not an
       # immediate subdirectory of the top-level.
       ".",
+    ]
+  } else if (build_with_woogeen) {
+    include_dirs = [
+      # The overrides must be included first as that is the mechanism for
+      # selecting the override headers in Chromium.
+      "../webrtc_overrides",
+
+      # Allow includes to be prefixed with webrtc/ in case it is not an
+      # immediate subdirectory of the top-level.
+      "..",
     ]
   }
   if (is_posix || is_fuchsia) {
@@ -163,6 +178,10 @@ config("common_inherited_config") {
 
   if (is_ubsan) {
     cflags += [ "-fsanitize=float-cast-overflow" ]
+  }
+
+  if (!rtc_use_h265) {
+    defines += [ "DISABLE_H265" ]
   }
 }
 
@@ -235,9 +254,6 @@ config("common_config") {
       cflags_objc += [ "-Wstrict-prototypes" ]
       cflags_cc = [
         "-Wnon-virtual-dtor",
-
-        # This is enabled for clang; enable for gcc as well.
-        "-Woverloaded-virtual",
       ]
     }
 
@@ -249,6 +265,17 @@ config("common_config") {
         "-Winconsistent-missing-override",
         "-Wundef",
       ]
+
+      # enable this only for clang build on non-windows platform
+      if (is_win) {
+        cflags_cc += [
+          "-Wno-overloaded-virtual",
+        ]
+      } else {
+        cflags_cc += [
+          "-Woverloaded-virtual",
+        ]
+      }
 
       # use_xcode_clang only refers to the iOS toolchain, host binaries use
       # chromium's clang always.
@@ -316,6 +343,10 @@ config("common_config") {
     # Used in Chromium's overrides to disable logging
     defines += [ "WEBRTC_UNSAFE_FUZZER_MODE" ]
   }
+  
+  if (is_ios) {
+    cflags += [ "-fvisibility=default" ]
+  }
 }
 
 config("common_objc") {
@@ -327,6 +358,10 @@ if (!build_with_chromium) {
   rtc_static_library("webrtc") {
     # Only the root target should depend on this.
     visibility = [ "//:default" ]
+
+    if (build_with_woogeen) {
+      visibility += [ "//talk/ics" ]
+    }
 
     sources = []
     complete_static_lib = true
@@ -416,6 +451,9 @@ if (use_libfuzzer || use_drfuzz || use_afl) {
 if (rtc_include_tests) {
   rtc_test("rtc_unittests") {
     testonly = true
+      # Only the root target should depend on this.
+
+    visibility = [ "//:default" ]
 
     deps = [
       ":webrtc_common",

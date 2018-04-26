@@ -11,6 +11,7 @@ import("//build/config/mips.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
 import("//build_overrides/build.gni")
+import("//build_overrides/ssl/ssl.gni")
 
 if (!build_with_chromium && is_component_build) {
   print("The Gn argument `is_component_build` is currently " +
@@ -70,7 +71,7 @@ declare_args() {
 
   # Used to specify an external OpenSSL include path when not compiling the
   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
-  rtc_ssl_root = ""
+  rtc_ssl_root = woogeen_openssl_header_root
 
   # Selects fixed-point code where possible.
   rtc_prefer_fixed_point = false
@@ -182,7 +183,7 @@ declare_args() {
   rtc_build_libvpx = !build_with_mozilla
   rtc_libvpx_build_vp9 = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
-  rtc_build_ssl = !build_with_mozilla
+  rtc_build_ssl = !woogeen_use_openssl
   rtc_build_usrsctp = !build_with_mozilla
 
   # Enable libevent task queues on platforms that support it.

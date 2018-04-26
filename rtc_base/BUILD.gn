@@ -873,6 +873,10 @@ rtc_static_library("rtc_base_generic") {
     configs += [ ":external_ssl_library" ]
   }
 
+  if (woogeen_use_openssl) {
+    configs += [ "//build_overrides/ssl:external_openssl" ]
+  }
+
   if (is_android) {
     sources += [
       "ifaddrs-android.cc",
