@@ -205,6 +205,8 @@ private:
     uint32_t _amountOf10MsRemainder;
     std::map<int32_t, int64_t> _vadParticipantEnergyList;
 
+    std::map<int32_t, std::unique_ptr<AudioProcessing>> _apms;
+
     std::vector<ParticipantVadStatistics> _vadStatistics;
 };
 }  // namespace webrtc

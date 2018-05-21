@@ -15,6 +15,10 @@
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
+//#define _VAD_METHOD_ENERGY_
+#define _VAD_METHOD_VOICE_DETECTION_
+//#define _VAD_METHOD_JOINT_ENERGY_VOICE_DETECTION_
+
 namespace webrtc {
 namespace {
 
@@ -496,6 +500,9 @@ int32_t AudioConferenceMixerImpl::SetMixabilityStatus(
     // Note: The scratch buffer may only be updated in Process().
     rtc::CritScope cs(&_crit);
     _numMixedParticipants = numMixedParticipants;
+
+    if (!mixable) _apms.clear();
+
     return 0;
 }
 
@@ -1074,15 +1081,44 @@ void AudioConferenceMixerImpl::UpdateVadStatistics(AudioFrameList* mixList) {
          iter != mixList->end();
          ++iter) {
         if((*iter).frame->vad_activity_ == AudioFrame::kVadActive) {
-            if (_vadParticipantEnergyList.find((*iter).frame->id_) == _vadParticipantEnergyList.end()) {
-                _vadParticipantEnergyList[(*iter).frame->id_] = 0;
+            int32_t id = (*iter).frame->id_;
+            uint32_t energy = 0;
+
+            if (_vadParticipantEnergyList.find(id) == _vadParticipantEnergyList.end()) {
+                _vadParticipantEnergyList[id] = 0;
             }
-            uint32_t energy = CalculateEnergy(*(*iter).frame);
-            _vadParticipantEnergyList[(*iter).frame->id_] += energy;
+
+#if defined (_VAD_METHOD_ENERGY_)
+            energy = CalculateEnergy(*(*iter).frame);
+#elif defined (_VAD_METHOD_VOICE_DETECTION_)
+            if (_apms.find(id) == _apms.end()) {
+                _apms[id].reset(AudioProcessing::Create());
+                _apms[id]->voice_detection()->Enable(true);
+                _apms[id]->voice_detection()->set_likelihood (VoiceDetection::kLowLikelihood);
+            }
+            _apms[id]->ProcessStream((*iter).frame);
+
+            bool hasVoice = _apms[id]->voice_detection ()->stream_has_voice();
+            energy = hasVoice * 100;
+#elif defined (_VAD_METHOD_JOINT_ENERGY_VOICE_DETECTION_)
+            if (_apms.find(id) == _apms.end()) {
+                _apms[id].reset(AudioProcessing::Create());
+                _apms[id]->voice_detection()->Enable(true);
+                _apms[id]->voice_detection()->set_likelihood (VoiceDetection::kLowLikelihood);
+            }
+            _apms[id]->ProcessStream((*iter).frame);
+
+            bool hasVoice = _apms[id]->voice_detection ()->stream_has_voice();
+            energy = hasVoice ? CalculateEnergy(*(*iter).frame) : 0;
+#else
+#error "Invalid VAD method!"
+#endif
+
+            _vadParticipantEnergyList[id] += energy;
 
             WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, _id,
                     "###VadStatistics id(%d), energy(%12u), allEnergy(%12ld)",
-                    (*iter).frame->id_, energy, _vadParticipantEnergyList[(*iter).frame->id_]);
+                    id, energy, _vadParticipantEnergyList[id]);
         }
     }
 }
