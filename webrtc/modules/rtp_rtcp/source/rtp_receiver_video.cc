@@ -100,10 +100,7 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
 
   rtp_header->type.Video.playout_delay =
       rtp_header->header.extension.playout_delay;
-#ifndef DISABLE_H265
-  if (rtp_header->type.Video.codec == webrtc::kRtpVideoH265)
-    rtp_header->type.Video.is_first_packet_in_frame = is_first_packet;
-#endif
+
   return data_callback_->OnReceivedPayloadData(parsed_payload.payload,
                                                parsed_payload.payload_length,
                                                rtp_header) == 0

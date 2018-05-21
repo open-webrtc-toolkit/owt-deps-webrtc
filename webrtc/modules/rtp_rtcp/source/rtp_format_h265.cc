@@ -46,11 +46,22 @@ static const size_t kHevcLengthFieldSize = 2;
 static const size_t kHevcApHeaderSize = kHevcNalHeaderSize + kHevcLengthFieldSize;
 
 
-enum HevcNalHdrMasks {kHevcFbit = 0x80, kHevcTypeMask= 0x7E, kHevcLayerIDHMask = 0x1,
-                  kHevcLayerIDLMask = 0xF8, kHevcTIDMask = 0x7, kHevcTypeMaskN = 0x81, kHevcTypeMaskInFuHeader=0x3F};
+enum HevcNalHdrMasks {
+    kHevcFbit = 0x80,
+    kHevcTypeMask= 0x7E,
+    kHevcLayerIDHMask = 0x1,
+    kHevcLayerIDLMask = 0xF8,
+    kHevcTIDMask = 0x7,
+    kHevcTypeMaskN = 0x81,
+    kHevcTypeMaskInFuHeader=0x3F
+};
 
 // Bit masks for FU headers.
-enum HevcFuDefs { kHevcSBit = 0x80, kHevcEBit = 0x40, kHevcFuTypeBit = 0x3F };
+enum HevcFuDefs {
+    kHevcSBit = 0x80,
+    kHevcEBit = 0x40,
+    kHevcFuTypeBit = 0x3F
+};
 
 bool VerifyApNaluLengths(const uint8_t* nalu_ptr, size_t length_remaining) {
   while (length_remaining > 0) {
@@ -74,23 +85,14 @@ bool ParseHevcSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   parsed_payload->type.Video.width = 0;
   parsed_payload->type.Video.height = 0;
   parsed_payload->type.Video.codec = kRtpVideoH265;
-  //parsed_payload->type.Video.isFirstPacket = true;
   RTPVideoHeaderH265* h265_header =
       &parsed_payload->type.Video.codecHeader.H265;
 
   if (payload_data_length <= 4)
        return false;
 
-  if ((payload_data[0] == 0 && payload_data[1] == 0 && payload_data[2] == 1) ||
-       (payload_data[0] == 0 && payload_data[1] == 0 && payload_data[2] == 0 && payload_data[3] == 1)) {
-       uint8_t single_nal_type = (payload_data[2] == 1) ? ((payload_data[3] >> 1) & 0x7F) : ((payload_data[4] >> 1) & 0x7F);
-       h265_header->packetization_type = kH265SingleNalu;
-       h265_header->nalu_type = single_nal_type;
-       parsed_payload->frame_type = kVideoFrameKey;
-       return true;
-  }
-  const uint8_t* nalu_start = payload_data + kHevcNalHeaderSize;
-  size_t nalu_length = payload_data_length - kHevcNalHeaderSize;
+  const uint8_t* nalu_start = payload_data  /*kHevcNalHeaderSize*/;
+  size_t nalu_length = payload_data_length /*- kHevcNalHeaderSize*/;
   //nal type is at bit 6:1
   uint8_t nal_type = (payload_data[0] >>1) & 0x7F;
   if (nal_type == kHevcAp) {
@@ -111,6 +113,7 @@ bool ParseHevcSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
     nalu_length -= kHevcApHeaderSize;
     h265_header->packetization_type = kH265AP;
   } else {
+    parsed_payload->type.Video.is_first_packet_in_frame = true;
     h265_header->packetization_type = kH265SingleNalu;
   }
   h265_header->nalu_type = nal_type;
@@ -179,7 +182,7 @@ bool ParseHevcFuNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   parsed_payload->type.Video.width = 0;
   parsed_payload->type.Video.height = 0;
   parsed_payload->type.Video.codec = kRtpVideoH265;
-  //parsed_payload->type.Video.isFirstPacket = first_fragment;
+  parsed_payload->type.Video.is_first_packet_in_frame = first_fragment;
   RTPVideoHeaderH265* h265_header =
       &parsed_payload->type.Video.codecHeader.H265;
   h265_header->packetization_type = kH265FU;

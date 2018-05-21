@@ -136,7 +136,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
     case kRtpVideoH265:
       is_first_packet_in_frame = videoHeader.is_first_packet_in_frame;
       if (is_first_packet_in_frame)
-        insertStartCode = false;
+        insertStartCode = true;
       if (is_first_packet_in_frame && markerBit) {
         completeNALU = kNaluComplete;
       } else if (is_first_packet_in_frame) {
