@@ -11,6 +11,7 @@
 #import "WebRTC/RTCVideoCodec.h"
 
 #import "WebRTC/RTCVideoCodecH264.h"
+#import "WebRTC/RTCVideoCodecH265.h"
 
 #include "api/video_codecs/sdp_video_format.h"
 #include "common_video/include/video_frame.h"

@@ -60,6 +60,10 @@ static void CodecSettings(VideoCodecType codec_type, VideoCodec* settings) {
       // TODO(brandtr): Set |qpMax| here, when the OpenH264 wrapper supports it.
       *(settings->H264()) = VideoEncoder::GetDefaultH264Settings();
       return;
+    case kVideoCodecH265:
+      settings->codecType = kVideoCodecH265;
+      *(settings->H265()) = VideoEncoder::GetDefaultH265Settings();
+      return;
     case kVideoCodecI420:
       // Bitrate needed for this size and framerate.
       settings->startBitrate =

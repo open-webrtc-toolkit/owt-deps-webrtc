@@ -445,10 +445,12 @@ if (is_ios || is_mac) {
         "objc/Framework/Classes/PeerConnection/RTCVideoCodec+Private.h",
         "objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
         "objc/Framework/Classes/PeerConnection/RTCVideoCodecH264.mm",
+        "objc/Framework/Classes/PeerConnection/RTCVideoCodecH265.mm",
         "objc/Framework/Classes/PeerConnection/RTCVideoEncoderSettings.mm",
         "objc/Framework/Headers/WebRTC/RTCVideoCodec.h",
         "objc/Framework/Headers/WebRTC/RTCVideoCodecFactory.h",
         "objc/Framework/Headers/WebRTC/RTCVideoCodecH264.h",
+        "objc/Framework/Headers/WebRTC/RTCVideoCodecH265.h",
       ]
       if (is_ios) {
         sources += [
@@ -982,6 +984,7 @@ if (is_ios || is_mac) {
           "objc/Framework/Headers/WebRTC/RTCTracing.h",
           "objc/Framework/Headers/WebRTC/RTCVideoCapturer.h",
           "objc/Framework/Headers/WebRTC/RTCVideoCodecH264.h",
+          "objc/Framework/Headers/WebRTC/RTCVideoCodecH265.h",
           "objc/Framework/Headers/WebRTC/RTCVideoFrame.h",
           "objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
           "objc/Framework/Headers/WebRTC/RTCVideoRenderer.h",
@@ -1179,7 +1182,10 @@ if (is_ios || is_mac) {
       ]
       sources = [
         "objc/Framework/Classes/VideoToolbox/RTCVideoDecoderH264.mm",
+        "objc/Framework/Classes/VideoToolbox/RTCVideoDecoderH265.mm",
         "objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH264.mm",
+        "objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH265.mm",
+        "objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
       ]
 
       configs += [
