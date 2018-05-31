@@ -55,7 +55,8 @@ bool H265CMSampleBufferToAnnexBBuffer(
     CMSampleBufferRef hvcc_sample_buffer,
     bool is_keyframe,
     rtc::Buffer* annexb_buffer,
-    std::unique_ptr<RTPFragmentationHeader> *out_header);
+    std::unique_ptr<RTPFragmentationHeader>* out_header)
+    __OSX_AVAILABLE_STARTING(__MAC_10_12, __IPHONE_11_0);
 
 // Converts a buffer received from RTP into a sample buffer suitable for the
 // VideoToolbox decoder. The RTP buffer is in annex b format whereas the sample
@@ -66,7 +67,8 @@ bool H265CMSampleBufferToAnnexBBuffer(
 bool H265AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
                                       size_t annexb_buffer_size,
                                       CMVideoFormatDescriptionRef video_format,
-                                      CMSampleBufferRef* out_sample_buffer);
+                                      CMSampleBufferRef* out_sample_buffer)
+    __OSX_AVAILABLE_STARTING(__MAC_10_12, __IPHONE_11_0);
 
 // Returns a video format description created from the sps/pps information in
 // the Annex B buffer. If there is no such information, nullptr is returned.
@@ -76,7 +78,8 @@ CMVideoFormatDescriptionRef CreateVideoFormatDescription(
     size_t annexb_buffer_size);
 CMVideoFormatDescriptionRef CreateH265VideoFormatDescription(
     const uint8_t* annexb_buffer,
-    size_t annexb_buffer_size);
+    size_t annexb_buffer_size)
+    __OSX_AVAILABLE_STARTING(__MAC_10_12, __IPHONE_11_0);
 
 // Helper class for reading NALUs from an RTP Annex B buffer.
 class AnnexBBufferReader final {

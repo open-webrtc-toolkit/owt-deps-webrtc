@@ -60,7 +60,7 @@ const int kHighh265QpThreshold = 39;
 
 // Struct that we pass to the encoder per frame to encode. We receive it again
 // in the encoder callback.
-struct RTCFrameEncodeParams {
+struct API_AVAILABLE(ios(11.0)) RTCFrameEncodeParams {
   RTCFrameEncodeParams(RTCVideoEncoderH265* e,
                        int32_t w,
                        int32_t h,
@@ -143,7 +143,8 @@ void compressionOutputCallback(void* encoder,
                                void* params,
                                OSStatus status,
                                VTEncodeInfoFlags infoFlags,
-                               CMSampleBufferRef sampleBuffer) {
+                               CMSampleBufferRef sampleBuffer)
+    API_AVAILABLE(ios(11.0)) {
   RTC_CHECK(params);
   std::unique_ptr<RTCFrameEncodeParams> encodeParams(
       reinterpret_cast<RTCFrameEncodeParams*>(params));

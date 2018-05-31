@@ -21,6 +21,7 @@ RTC_EXPORT
 
 /** Encoder. */
 RTC_EXPORT
+API_AVAILABLE(ios(11.0))
 @interface RTCVideoEncoderH265 : NSObject<RTCVideoEncoder>
 
 - (instancetype)initWithCodecInfo:(RTCVideoCodecInfo *)codecInfo;
@@ -29,15 +30,18 @@ RTC_EXPORT
 
 /** Decoder. */
 RTC_EXPORT
+API_AVAILABLE(ios(11.0))
 @interface RTCVideoDecoderH265 : NSObject<RTCVideoDecoder>
 @end
 
 /** Encoder factory. */
 RTC_EXPORT
+API_AVAILABLE(ios(11.0))
 @interface RTCVideoEncoderFactoryH265 : NSObject<RTCVideoEncoderFactory>
 @end
 
 /** Decoder factory. */
 RTC_EXPORT
+API_AVAILABLE(ios(11.0))
 @interface RTCVideoDecoderFactoryH265 : NSObject<RTCVideoDecoderFactory>
 @end
