@@ -1106,6 +1106,24 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
           header.fragmentationPlType[i] = 0;
           header.fragmentationTimeDiff[i] = 0;
         }
+      } else if (codec_type == kVideoCodecH265) {
+        const std::vector<H265::NaluIndex> nalu_idxs =
+            H265::FindNaluIndices(payload, payload_size);
+        if (nalu_idxs.empty()) {
+          ALOGE << "Start code is not found!";
+          ALOGE << "Data:" <<  image->_buffer[0] << " " << image->_buffer[1]
+              << " " << image->_buffer[2] << " " << image->_buffer[3]
+              << " " << image->_buffer[4] << " " << image->_buffer[5];
+          ProcessHWError(true /* reset_if_fallback_unavailable */);
+          return false;
+        }
+        header.VerifyAndAllocateFragmentationHeader(nalu_idxs.size());
+        for (size_t i = 0; i < nalu_idxs.size(); i++) {
+          header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
+          header.fragmentationLength[i] = nalu_idxs[i].payload_size;
+          header.fragmentationPlType[i] = 0;
+          header.fragmentationTimeDiff[i] = 0;
+        }
       }
 #endif
 

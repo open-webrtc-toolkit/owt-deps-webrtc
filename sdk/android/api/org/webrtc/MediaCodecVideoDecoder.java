@@ -140,7 +140,8 @@ public class MediaCodecVideoDecoder {
     VIDEO_CODEC_UNKNOWN,
     VIDEO_CODEC_VP8,
     VIDEO_CODEC_VP9,
-    VIDEO_CODEC_H264;
+    VIDEO_CODEC_H264,
+    VIDEO_CODEC_H265;
 
     @CalledByNative("VideoCodecType")
     static VideoCodecType fromNativeIndex(int nativeIndex) {
@@ -170,6 +171,7 @@ public class MediaCodecVideoDecoder {
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
   private static final String H264_MIME_TYPE = "video/avc";
+  private static final String H265_MIME_TYPE = "video/hevc";
   // List of supported HW VP8 decoders.
   private static final String[] supportedVp8HwCodecPrefixes() {
     ArrayList<String> supportedPrefixes = new ArrayList<String>();
@@ -197,6 +199,9 @@ public class MediaCodecVideoDecoder {
     }
     return supportedPrefixes.toArray(new String[supportedPrefixes.size()]);
   }
+
+  // TODO(zhanghe): add other decoders after checking.
+  private static final String[] supportedH265HwCodecPrefixes = {"OMX.qcom."};
 
   // List of supported HW H.264 high profile decoders.
   private static final String supportedQcomH264HighProfileHwCodecPrefix = "OMX.qcom.";
@@ -282,6 +287,11 @@ public class MediaCodecVideoDecoder {
     hwDecoderDisabledTypes.add(H264_MIME_TYPE);
   }
 
+  public static void disableH265HwCodec() {
+    Logging.w(TAG, "H.265 decoding is disabled by application.");
+    hwDecoderDisabledTypes.add(H265_MIME_TYPE);
+  }
+
   // Functions to query if HW decoding is supported.
   public static boolean isVp8HwSupported() {
     return !hwDecoderDisabledTypes.contains(VP8_MIME_TYPE)
@@ -322,6 +332,12 @@ public class MediaCodecVideoDecoder {
       return true;
     }
     return false;
+  }
+
+  @CalledByNativeUnchecked
+  public static boolean isH265HwSupported() {
+    return !hwDecoderDisabledTypes.contains(H265_MIME_TYPE)
+        && (findDecoder(H265_MIME_TYPE, supportedH265HwCodecPrefixes) != null);
   }
 
   public static void printStackTrace() {
@@ -439,6 +455,9 @@ public class MediaCodecVideoDecoder {
     } else if (type == VideoCodecType.VIDEO_CODEC_H264) {
       mime = H264_MIME_TYPE;
       supportedCodecPrefixes = supportedH264HwCodecPrefixes();
+    }  else if (type == VideoCodecType.VIDEO_CODEC_H265) {
+      mime = H265_MIME_TYPE;
+      supportedCodecPrefixes = supportedH265HwCodecPrefixes;
     } else {
       throw new RuntimeException("initDecode: Non-supported codec " + type);
     }

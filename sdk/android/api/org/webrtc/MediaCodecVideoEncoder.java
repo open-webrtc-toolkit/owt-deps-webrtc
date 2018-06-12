@@ -140,7 +140,8 @@ public class MediaCodecVideoEncoder {
     VIDEO_CODEC_UNKNOWN,
     VIDEO_CODEC_VP8,
     VIDEO_CODEC_VP9,
-    VIDEO_CODEC_H264;
+    VIDEO_CODEC_H264,
+    VIDEO_CODEC_H265;
 
     @CalledByNative("VideoCodecType")
     static VideoCodecType fromNativeIndex(int nativeIndex) {
@@ -184,6 +185,7 @@ public class MediaCodecVideoEncoder {
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
   private static final String H264_MIME_TYPE = "video/avc";
+  private static final String H265_MIME_TYPE = "video/hevc";
 
   private static final int VIDEO_AVCProfileHigh = 8;
   private static final int VIDEO_AVCLevel3 = 0x100;
@@ -312,6 +314,12 @@ public class MediaCodecVideoEncoder {
   private static final MediaCodecProperties[] h264HighProfileHwList =
       new MediaCodecProperties[] {exynosH264HighProfileHwProperties};
 
+  // TODO(zhanghe): add other decoders after checking.
+  private static final MediaCodecProperties qcomH265HwProperties = new MediaCodecProperties(
+      "OMX.qcom.", Build.VERSION_CODES.KITKAT, BitrateAdjustmentType.NO_ADJUSTMENT);
+  private static final MediaCodecProperties[] h265HwList =
+      new MediaCodecProperties[] {qcomH265HwProperties};
+
   // List of devices with poor H.264 encoder quality.
   // HW H.264 encoder on below devices has poor bitrate control - actual
   // bitrates deviates a lot from the target value.
@@ -406,6 +414,12 @@ public class MediaCodecVideoEncoder {
   public static boolean isH264HighProfileHwSupported() {
     return !hwEncoderDisabledTypes.contains(H264_MIME_TYPE)
         && (findHwEncoder(H264_MIME_TYPE, h264HighProfileHwList, supportedColorList) != null);
+  }
+
+  @CalledByNative
+  public static boolean isH265HwSupported() {
+    return !hwEncoderDisabledTypes.contains(H265_MIME_TYPE)
+        && (findHwEncoder(H265_MIME_TYPE, h265HwList, supportedColorList) != null);
   }
 
   public static boolean isVp8HwSupportedUsingTextures() {
@@ -598,6 +612,11 @@ public class MediaCodecVideoEncoder {
           Logging.d(TAG, "High profile H.264 encoder requested, but not supported. Use baseline.");
         }
       }
+      keyFrameIntervalSec = 20;
+    } else if (type == VideoCodecType.VIDEO_CODEC_H265) {
+      mime = H265_MIME_TYPE;
+      properties = findHwEncoder(
+          H265_MIME_TYPE, h265HwList, useSurface ? supportedSurfaceColorList : supportedColorList);
       keyFrameIntervalSec = 20;
     } else {
       throw new RuntimeException("initEncode: Non-supported codec " + type);
@@ -995,7 +1014,7 @@ public class MediaCodecVideoEncoder {
         if (isKeyFrame) {
           Logging.d(TAG, "Sync frame generated");
         }
-        if (isKeyFrame && type == VideoCodecType.VIDEO_CODEC_H264) {
+        if (isKeyFrame && (type == VideoCodecType.VIDEO_CODEC_H264 || type == VideoCodecType.VIDEO_CODEC_H265)) {
           Logging.d(TAG, "Appending config frame of size " + configData.capacity()
                   + " to output buffer with offset " + info.offset + ", size " + info.size);
           // For H.264 key frame append SPS and PPS NALs at the start
