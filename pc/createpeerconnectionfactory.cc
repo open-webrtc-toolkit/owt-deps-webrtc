@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "api/audio/echo_canceller3_factory.h"
 #include "api/call/callfactoryinterface.h"
 #include "api/peerconnectioninterface.h"
 #include "api/video_codecs/video_decoder_factory.h"
@@ -19,6 +20,7 @@
 #include "rtc_base/bind.h"
 #include "rtc_base/scoped_ref_ptr.h"
 #include "rtc_base/thread.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -49,7 +51,18 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
     rtc::scoped_refptr<AudioProcessing> audio_processing) {
   rtc::scoped_refptr<AudioProcessing> audio_processing_use = audio_processing;
   if (!audio_processing_use) {
-    audio_processing_use = AudioProcessingBuilder().Create();
+    if (webrtc::field_trial::FindFullName("ICS-EchoCanceller3") == "Enabled") {
+    webrtc::EchoCanceller3Config aec3_config;
+    // TODO(jianlin): AEC3 configurations should be exposed to application.
+    // Review the config items to decide the param customization set.
+    aec3_config.ep_strength.bounded_erl = false;
+    aec3_config.echo_removal_control.has_clock_drift = false;
+    audio_processing_use = AudioProcessingBuilder().SetEchoControlFactory(
+        std::unique_ptr<webrtc::EchoControlFactory>(
+            new webrtc::EchoCanceller3Factory(aec3_config))).Create();
+    } else {
+      audio_processing_use = AudioProcessingBuilder().Create();
+    }
   }
 
   std::unique_ptr<cricket::MediaEngineInterface> media_engine(
