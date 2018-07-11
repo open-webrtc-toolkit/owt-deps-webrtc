@@ -90,6 +90,8 @@ public:
                                         const uint32_t amountOf10MsBetweenCallbacks) override;
     int32_t UnRegisterMixerVadCallback() override;
 
+    void SetMultipleInputs(bool enable) override;
+
 private:
     enum{DEFAULT_AUDIO_FRAME_POOLSIZE = 50};
 
@@ -208,6 +210,8 @@ private:
     std::map<int32_t, std::unique_ptr<AudioProcessing>> _apms;
 
     std::vector<ParticipantVadStatistics> _vadStatistics;
+
+    bool _supportMultipleInputs;
 };
 }  // namespace webrtc
 

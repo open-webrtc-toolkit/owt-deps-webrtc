@@ -19,6 +19,8 @@
 #define _VAD_METHOD_VOICE_DETECTION_
 //#define _VAD_METHOD_JOINT_ENERGY_VOICE_DETECTION_
 
+#define GROUP_ID(id) (((id) >> 16) & 0xffff)
+
 namespace webrtc {
 namespace {
 
@@ -133,7 +135,8 @@ AudioConferenceMixerImpl::AudioConferenceMixerImpl(int id)
       _vadReceiver(NULL),
       _amountOf10MsBetweenVadCallbacks(0),
       _amountOf10MsAll(0),
-      _amountOf10MsRemainder(0) {}
+      _amountOf10MsRemainder(0),
+      _supportMultipleInputs(false) {}
 
 bool AudioConferenceMixerImpl::Init() {
     Config config;
@@ -339,6 +342,7 @@ void AudioConferenceMixerImpl::Process() {
         MixAnonomouslyFromList(generalFrame, rampOutList);
 
         // 2. mix workList and anonomouslyMixerdFrame
+        std::map<uint16_t, bool> groupIds;
         for (size_t i = 0; i <= mixList.size(); ++i) {
             AudioFrameList workList = mixList;
             int id = -1;
@@ -351,7 +355,24 @@ void AudioConferenceMixerImpl::Process() {
                 AudioFrameList::iterator it = workList.begin();
                 advance(it, i);
                 id = (*it).frame->id_;
-                workList.erase(it);
+
+                if (_supportMultipleInputs) {
+                    uint16_t groupId = GROUP_ID(id);
+                    if (groupIds.find(groupId) != groupIds.end()) {
+                        continue;
+                    }
+
+                    groupIds[groupId] = true;
+                    for (it = workList.begin(); it != workList.end(); ) {
+                        if (GROUP_ID((*it).frame->id_) == groupId) {
+                            it = workList.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    }
+                } else {
+                    workList.erase(it);
+                }
 
                 mixedAudio->CopyFrom(*generalFrame);
             }
@@ -1117,10 +1138,19 @@ void AudioConferenceMixerImpl::UpdateVadStatistics(AudioFrameList* mixList) {
             _vadParticipantEnergyList[id] += energy;
 
             WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, _id,
-                    "###VadStatistics id(%d), energy(%12u), allEnergy(%12ld)",
+                    "###VadStatistics id(0x%-8x), energy(%12u), allEnergy(%12ld)",
                     id, energy, _vadParticipantEnergyList[id]);
         }
     }
+}
+
+void AudioConferenceMixerImpl::SetMultipleInputs(bool enable)
+{
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioMixerServer, _id,
+            "Support multiple inputs: %d",
+            enable);
+
+    _supportMultipleInputs = enable;
 }
 
 }  // namespace webrtc

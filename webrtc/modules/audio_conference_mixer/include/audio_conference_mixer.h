@@ -74,6 +74,8 @@ public:
                                         const uint32_t amountOf10MsBetweenCallbacks) = 0;
     virtual int32_t UnRegisterMixerVadCallback() = 0;
 
+    virtual void SetMultipleInputs(bool enable) = 0;
+
 protected:
     AudioConferenceMixer() {}
 };
