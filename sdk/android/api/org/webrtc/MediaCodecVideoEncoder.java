@@ -272,6 +272,9 @@ public class MediaCodecVideoEncoder {
       "OMX.Exynos.", Build.VERSION_CODES.M, BitrateAdjustmentType.DYNAMIC_ADJUSTMENT);
   private static final MediaCodecProperties intelVp8HwProperties = new MediaCodecProperties(
       "OMX.Intel.", Build.VERSION_CODES.LOLLIPOP, BitrateAdjustmentType.NO_ADJUSTMENT);
+  //Default HW VP8 encoder properties. Make sure this property is added to the END of the supported list.
+  private static final MediaCodecProperties defaultVp8HwProperties = new MediaCodecProperties(
+      "OMX.", Build.VERSION_CODES.KITKAT, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static MediaCodecProperties[] vp8HwList() {
     final ArrayList<MediaCodecProperties> supported_codecs = new ArrayList<MediaCodecProperties>();
     supported_codecs.add(qcomVp8HwProperties);
@@ -279,16 +282,26 @@ public class MediaCodecVideoEncoder {
     if (PeerConnectionFactory.fieldTrialsFindFullName("WebRTC-IntelVP8").equals("Enabled")) {
       supported_codecs.add(intelVp8HwProperties);
     }
+    supported_codecs.add(defaultVp8HwProperties);
     return supported_codecs.toArray(new MediaCodecProperties[supported_codecs.size()]);
   }
+
+  private static String[] vp8HwCodecBlacklist = {
+      "OMX.google."};
 
   // List of supported HW VP9 encoders.
   private static final MediaCodecProperties qcomVp9HwProperties = new MediaCodecProperties(
       "OMX.qcom.", Build.VERSION_CODES.N, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties exynosVp9HwProperties = new MediaCodecProperties(
       "OMX.Exynos.", Build.VERSION_CODES.N, BitrateAdjustmentType.FRAMERATE_ADJUSTMENT);
+  //Default HW VP9 encoder properties. Make sure this property is added to the END of the supported list.
+  private static final MediaCodecProperties defaultVp9HwProperties = new MediaCodecProperties(
+      "OMX.", Build.VERSION_CODES.M, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties[] vp9HwList =
-      new MediaCodecProperties[] {qcomVp9HwProperties, exynosVp9HwProperties};
+      new MediaCodecProperties[] {qcomVp9HwProperties, exynosVp9HwProperties, defaultVp9HwProperties};
+
+  private static String[] vp9HwCodecBlacklist = {
+      "OMX.google."};
 
   // List of supported HW H.264 encoders.
   private static final MediaCodecProperties qcomH264HwProperties = new MediaCodecProperties(
@@ -297,6 +310,9 @@ public class MediaCodecVideoEncoder {
       "OMX.Exynos.", Build.VERSION_CODES.LOLLIPOP, BitrateAdjustmentType.FRAMERATE_ADJUSTMENT);
   private static final MediaCodecProperties mediatekH264HwProperties = new MediaCodecProperties(
       "OMX.MTK.", Build.VERSION_CODES.O_MR1, BitrateAdjustmentType.FRAMERATE_ADJUSTMENT);
+  //Default HW H.264 encoder properties. Make sure this property is added to the END of the supported list.
+  private static final MediaCodecProperties defaultH264HwProperties = new MediaCodecProperties(
+      "OMX.", Build.VERSION_CODES.KITKAT, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties[] h264HwList() {
     final ArrayList<MediaCodecProperties> supported_codecs = new ArrayList<MediaCodecProperties>();
     supported_codecs.add(qcomH264HwProperties);
@@ -304,21 +320,28 @@ public class MediaCodecVideoEncoder {
     if (PeerConnectionFactory.fieldTrialsFindFullName("WebRTC-MediaTekH264").equals("Enabled")) {
       supported_codecs.add(mediatekH264HwProperties);
     }
+    supported_codecs.add(defaultH264HwProperties);
     return supported_codecs.toArray(new MediaCodecProperties[supported_codecs.size()]);
   }
+
+  private static String[] h264HwCodecBlacklist = {
+      "OMX.google."};
 
   // List of supported HW H.264 high profile encoders.
   private static final MediaCodecProperties exynosH264HighProfileHwProperties =
       new MediaCodecProperties(
           "OMX.Exynos.", Build.VERSION_CODES.M, BitrateAdjustmentType.FRAMERATE_ADJUSTMENT);
   private static final MediaCodecProperties[] h264HighProfileHwList =
-      new MediaCodecProperties[] {exynosH264HighProfileHwProperties};
+      new MediaCodecProperties[] {exynosH264HighProfileHwProperties, defaultH264HwProperties};
 
   // TODO(zhanghe): add other decoders after checking.
   private static final MediaCodecProperties qcomH265HwProperties = new MediaCodecProperties(
       "OMX.qcom.", Build.VERSION_CODES.KITKAT, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties[] h265HwList =
       new MediaCodecProperties[] {qcomH265HwProperties};
+
+  private static String[] h265HwCodecBlacklist = {
+      "OMX.google."};
 
   // List of devices with poor H.264 encoder quality.
   // HW H.264 encoder on below devices has poor bitrate control - actual
@@ -416,12 +439,6 @@ public class MediaCodecVideoEncoder {
         && (findHwEncoder(H264_MIME_TYPE, h264HighProfileHwList, supportedColorList) != null);
   }
 
-  @CalledByNative
-  public static boolean isH265HwSupported() {
-    return !hwEncoderDisabledTypes.contains(H265_MIME_TYPE)
-        && (findHwEncoder(H265_MIME_TYPE, h265HwList, supportedColorList) != null);
-  }
-
   public static boolean isVp8HwSupportedUsingTextures() {
     return !hwEncoderDisabledTypes.contains(VP8_MIME_TYPE)
         && (findHwEncoder(VP8_MIME_TYPE, vp8HwList(), supportedSurfaceColorList) != null);
@@ -450,7 +467,28 @@ public class MediaCodecVideoEncoder {
     public final BitrateAdjustmentType bitrateAdjustmentType; // Bitrate adjustment type
   }
 
-  private static @Nullable EncoderProperties findHwEncoder(
+  private static boolean isBlacklisted(String codecName, String mime){
+    String[] blacklist;
+    if(mime.equals(VP8_MIME_TYPE)){
+      blacklist = vp8HwCodecBlacklist;
+    }else if(mime.equals(VP9_MIME_TYPE)){
+      blacklist = vp9HwCodecBlacklist;
+    }else if(mime.equals(H264_MIME_TYPE)){
+      blacklist = h264HwCodecBlacklist;
+    }else if(mime.equals(H265_MIME_TYPE)){
+      blacklist = h265HwCodecBlacklist;
+    }else{
+      return false;
+    }
+    for(String blacklistedCodec : blacklist){
+      if(codecName.startsWith(blacklistedCodec)){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static EncoderProperties findHwEncoder(
       String mime, MediaCodecProperties[] supportedHwCodecProperties, int[] colorList) {
     // MediaCodec.setParameters is missing for JB and below, so bitrate
     // can not be adjusted dynamically.
@@ -481,11 +519,16 @@ public class MediaCodecVideoEncoder {
       for (String mimeType : info.getSupportedTypes()) {
         if (mimeType.equals(mime)) {
           name = info.getName();
+          Logging.d(TAG, "Found codec name: "+name);
           break;
         }
       }
       if (name == null) {
         continue; // No HW support in this codec; try the next one.
+      }
+      // Check if it is blacklisted.
+      if(isBlacklisted(name, mime)){
+        continue;
       }
       Logging.v(TAG, "Found candidate encoder " + name);
 
