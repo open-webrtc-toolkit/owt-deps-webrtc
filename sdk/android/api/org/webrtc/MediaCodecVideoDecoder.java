@@ -181,10 +181,15 @@ public class MediaCodecVideoDecoder {
         && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       supportedPrefixes.add("OMX.MTK.");
     }
+    supportedPrefixes.add("OMX.");
     return supportedPrefixes.toArray(new String[supportedPrefixes.size()]);
   }
+  private static String[] vp8HwCodecBlacklist = {
+      "OMX.google."};
   // List of supported HW VP9 decoders.
-  private static final String[] supportedVp9HwCodecPrefixes = {"OMX.qcom.", "OMX.Exynos."};
+  private static final String[] supportedVp9HwCodecPrefixes = {"OMX.qcom.", "OMX.Exynos.", "OMX."};
+  private static String[] vp9HwCodecBlacklist = {
+      "OMX.google."};
   // List of supported HW H.264 decoders.
   private static final String[] supportedH264HwCodecPrefixes() {
     ArrayList<String> supportedPrefixes = new ArrayList<String>();
@@ -195,8 +200,16 @@ public class MediaCodecVideoDecoder {
         && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
       supportedPrefixes.add("OMX.MTK.");
     }
+    supportedPrefixes.add("OMX.");
     return supportedPrefixes.toArray(new String[supportedPrefixes.size()]);
   }
+
+  private static String[] h264HwCodecBlacklist = {
+      "OMX.google."};
+
+  private static final String[] supportedH265HwCodecPrefixes = {"OMX."};
+  private static String[] h265HwCodecBlacklist = {
+      "OMX.google."};
 
   // List of supported HW H.264 high profile decoders.
   private static final String supportedQcomH264HighProfileHwCodecPrefix = "OMX.qcom.";
@@ -346,6 +359,27 @@ public class MediaCodecVideoDecoder {
     public final int colorFormat; // Color format supported by codec.
   }
 
+  private static boolean isBlacklisted(String codecName, String mime){
+    String[] blacklist;
+    if(mime.equals(VP8_MIME_TYPE)){
+      blacklist = vp8HwCodecBlacklist;
+    }else if(mime.equals(VP9_MIME_TYPE)){
+      blacklist = vp9HwCodecBlacklist;
+    }else if(mime.equals(H264_MIME_TYPE)){
+      blacklist = h264HwCodecBlacklist;
+    }else if(mime.equals(H265_MIME_TYPE)){
+      blacklist = h265HwCodecBlacklist;
+    }else{
+      return false;
+    }
+    for(String blacklistedCodec : blacklist){
+      if(codecName.startsWith(blacklistedCodec)){
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static @Nullable DecoderProperties findDecoder(
       String mime, String[] supportedCodecPrefixes) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
@@ -371,6 +405,10 @@ public class MediaCodecVideoDecoder {
       }
       if (name == null) {
         continue; // No HW support in this codec; try the next one.
+      }
+      // Check if it is blacklisted.
+      if(isBlacklisted(name, mime)){
+        continue;
       }
       Logging.d(TAG, "Found candidate decoder " + name);
 
