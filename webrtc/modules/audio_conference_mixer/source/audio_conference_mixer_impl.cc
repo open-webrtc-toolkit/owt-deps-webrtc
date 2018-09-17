@@ -285,6 +285,7 @@ void AudioConferenceMixerImpl::Process() {
         }
     }
 
+    uint32_t mixedFrameCount = 0;
     bool fireVadCallback = false;
     {
         rtc::CritScope cs(&_crit);
@@ -351,7 +352,6 @@ void AudioConferenceMixerImpl::Process() {
             if (i == mixList.size()) {
                 mixedAudio = generalFrame;
             } else {
-                mixedAudio = uniqueFrames[i];
                 AudioFrameList::iterator it = workList.begin();
                 advance(it, i);
                 id = (*it).frame->id_;
@@ -374,6 +374,7 @@ void AudioConferenceMixerImpl::Process() {
                     workList.erase(it);
                 }
 
+                mixedAudio = uniqueFrames[mixedFrameCount++];
                 mixedAudio->CopyFrom(*generalFrame);
             }
 
@@ -415,7 +416,7 @@ void AudioConferenceMixerImpl::Process() {
                 _id,
                 *generalFrame,
                 const_cast<const AudioFrame**>(uniqueFrames),
-                mixList.size());
+                mixedFrameCount);
         }
 
         if(_vadReceiver != NULL && fireVadCallback) {
