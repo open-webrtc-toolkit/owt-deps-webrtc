@@ -138,8 +138,7 @@ bool ParseHevcSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
       parsed_payload->frame_type = kVideoFrameKey;
       break;
     default:
-      parsed_payload->frame_type = kVideoFrameKey;
-      //parsed_payload->frame_type = kVideoFrameDelta;
+      parsed_payload->frame_type = kVideoFrameDelta;
       break;
   }
   return true;
@@ -176,8 +175,7 @@ bool ParseHevcFuNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   if (original_nal_type == kIdrNLp || original_nal_type == kIdrWRadl) {
     parsed_payload->frame_type = kVideoFrameKey;
   } else {
-    parsed_payload->frame_type = kVideoFrameKey;
-    //parsed_payload->frame_type = kVideoFrameDelta;
+    parsed_payload->frame_type = kVideoFrameDelta;
   }
   parsed_payload->type.Video.width = 0;
   parsed_payload->type.Video.height = 0;
