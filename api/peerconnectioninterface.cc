@@ -243,6 +243,13 @@ PeerConnectionFactoryInterface::CreateVideoSource(
 
 rtc::scoped_refptr<VideoTrackSourceInterface>
 PeerConnectionFactoryInterface::CreateVideoSource(
+    cricket::VideoCapturer* capturer,
+    const MediaConstraintsInterface* constraints) {
+  return CreateVideoSource(std::unique_ptr<cricket::VideoCapturer>(capturer), constraints);
+}
+
+rtc::scoped_refptr<VideoTrackSourceInterface>
+PeerConnectionFactoryInterface::CreateVideoSource(
     cricket::VideoCapturer* capturer) {
   return CreateVideoSource(std::unique_ptr<cricket::VideoCapturer>(capturer));
 }

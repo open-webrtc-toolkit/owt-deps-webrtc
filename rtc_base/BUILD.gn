@@ -655,7 +655,8 @@ rtc_static_library("rtc_numerics") {
 }
 
 rtc_source_set("rtc_json") {
-  testonly = true
+  visibility = [ "*" ]
+  testonly = false
   defines = []
   sources = [
     "json.cc",

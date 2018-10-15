@@ -1281,7 +1281,9 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
   virtual rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       std::unique_ptr<cricket::VideoCapturer> capturer,
       const MediaConstraintsInterface* constraints);
-
+  virtual rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
+      cricket::VideoCapturer* capturer,
+      const MediaConstraintsInterface* constraints);
   // Deprecated; please use the versions that take unique_ptrs above.
   // TODO(deadbeef): Remove these once safe to do so.
   virtual rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(

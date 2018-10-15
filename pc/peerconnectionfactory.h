@@ -75,7 +75,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   rtc::scoped_refptr<VideoTrackSourceInterface> CreateVideoSource(
       std::unique_ptr<cricket::VideoCapturer> capturer,
       const MediaConstraintsInterface* constraints) override;
-
   rtc::scoped_refptr<VideoTrackInterface> CreateVideoTrack(
       const std::string& id,
       VideoTrackSourceInterface* video_source) override;
