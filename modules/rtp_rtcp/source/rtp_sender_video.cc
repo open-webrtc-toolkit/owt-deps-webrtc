@@ -229,6 +229,10 @@ void RTPSenderVideo::RegisterPayloadType(int8_t payload_type,
       video_type = kVideoCodecVP9;
     } else if (absl::EqualsIgnoreCase(payload_name, "H264")) {
       video_type = kVideoCodecH264;
+#ifndef DISABLE_H265
+    } else if (absl::EqualsIgnoreCase(payload_name, "H265")) {
+      video_type = kVideoCodecH265;
+#endif
     } else {
       video_type = kVideoCodecGeneric;
     }
@@ -448,8 +452,9 @@ bool RTPSenderVideo::SendVideo(VideoFrameType frame_type,
   int32_t retransmission_settings;
   bool set_video_rotation;
   bool set_color_space = false;
-  bool set_frame_marking = video_header->codec == kVideoCodecH264 &&
-        video_header->frame_marking.temporal_id != kNoTemporalIdx;
+  bool set_frame_marking =
+      video_header->codec == kVideoCodecH264 &&
+      video_header->frame_marking.temporal_id != kNoTemporalIdx;
 
   const absl::optional<PlayoutDelay> playout_delay =
       playout_delay_oracle_->PlayoutDelayToSend(video_header->playout_delay);
@@ -817,6 +822,9 @@ uint8_t RTPSenderVideo::GetTemporalId(const RTPVideoHeader& header) {
       return vp9.temporal_idx;
     }
     uint8_t operator()(const RTPVideoHeaderH264&) { return kNoTemporalIdx; }
+#ifndef DISABLE_H265
+    uint8_t operator()(const RTPVideoHeaderH265&) { return kNoTemporalIdx; }
+#endif
     uint8_t operator()(const absl::monostate&) { return kNoTemporalIdx; }
   };
   switch (header.codec) {

@@ -131,7 +131,13 @@ bool RequiresEncoderReset(const VideoCodec& previous_send_codec,
         return true;
       }
       break;
-
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      if (new_send_codec.H265() != previous_send_codec.H265()) {
+        return true;
+      }
+      break;
+#endif
     default:
       break;
   }

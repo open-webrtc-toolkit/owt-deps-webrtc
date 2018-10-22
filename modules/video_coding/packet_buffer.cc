@@ -18,8 +18,14 @@
 #include "absl/types/variant.h"
 #include "api/video/encoded_frame.h"
 #include "common_video/h264/h264_common.h"
+#ifndef DISABLE_H265
+#include "common_video/h265/h265_common.h"
+#endif
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
+#ifndef DISABLE_H265
+#include "modules/video_coding/codecs/h265/include/h265_globals.h"
+#endif
 #include "modules/video_coding/frame_object.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
@@ -301,7 +307,13 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
       bool has_h264_pps = false;
       bool has_h264_idr = false;
       bool is_h264_keyframe = false;
-
+#ifndef DISABLE_H265
+      bool is_h265 = data_buffer_[start_index].codec() == kVideoCodecH265;
+      bool has_h265_sps = false;
+      bool has_h265_pps = false;
+      bool has_h265_idr = false;
+      bool is_h265_keyframe = false;
+#endif
       while (true) {
         ++tested_packets;
         frame_size += data_buffer_[start_index].sizeBytes;
@@ -338,7 +350,26 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
             is_h264_keyframe = true;
           }
         }
-
+#ifndef DISABLE_H265
+        if (is_h265 && !is_h265_keyframe) {
+          const auto* h265_header = absl::get_if<RTPVideoHeaderH265>(
+              &data_buffer_[start_index].video_header.video_type_header);
+          if (!h265_header || h265_header->nalus_length >= kMaxNalusPerPacket)
+            return found_frames;
+          for (size_t j = 0; j < h265_header->nalus_length; ++j) {
+            if (h265_header->nalus[j].type == H265::NaluType::kSps) {
+              has_h265_sps = true;
+            } else if (h265_header->nalus[j].type == H265::NaluType::kPps) {
+              has_h265_pps = true;
+            } else if (h265_header->nalus[j].type == H265::NaluType::kIdr) {
+              has_h265_idr = true;
+            }
+          }
+          if ((has_h265_sps && has_h265_pps) || has_h265_idr) {
+            is_h265_keyframe = true;
+          }
+        }
+#endif
         if (tested_packets == size_)
           break;
 
