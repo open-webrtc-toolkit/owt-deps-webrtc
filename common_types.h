@@ -338,6 +338,9 @@ enum VideoCodecType {
   kVideoCodecVP8,
   kVideoCodecVP9,
   kVideoCodecH264,
+#ifndef DISABLE_H265
+  kVideoCodecH265,
+#endif
   kVideoCodecI420,
   kVideoCodecMultiplex,
   // DEPRECATED. Do not use.

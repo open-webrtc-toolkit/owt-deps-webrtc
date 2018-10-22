@@ -153,7 +153,13 @@ bool VCMEncoderDataBase::RequiresEncoderReset(
         return true;
       }
       break;
-
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      if (new_send_codec.H265() != *send_codec_.H265()) {
+        return true;
+      }
+      break;
+#endif
     default:
       break;
   }

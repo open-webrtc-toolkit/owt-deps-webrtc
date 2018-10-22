@@ -141,6 +141,12 @@ rtc_static_library("video_coding") {
     "video_sender.cc",
   ]
 
+  if (rtc_use_h265) {
+    sources += [
+      "h265_vps_sps_pps_tracker.cc",
+      "h265_vps_sps_pps_tracker.h",
+    ]
+  }
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]

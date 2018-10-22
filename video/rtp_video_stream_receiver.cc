@@ -239,8 +239,21 @@ int32_t RtpVideoStreamReceiver::OnReceivedPayloadData(
       case video_coding::H264SpsPpsTracker::kInsert:
         break;
     }
-
-  } else {
+  }
+#ifndef DISABLE_H265
+  else if (packet.codec == kVideoCodecH265) {
+    switch (h265_tracker_.CopyAndFixBitstream(&packet)) {
+      case video_coding::H265VpsSpsPpsTracker::kRequestKeyframe:
+        keyframe_request_sender_->RequestKeyFrame();
+        RTC_FALLTHROUGH();
+      case video_coding::H265VpsSpsPpsTracker::kDrop:
+        return 0;
+      case video_coding::H265VpsSpsPpsTracker::kInsert:
+        break;
+    }
+  }
+#endif
+  else {
     uint8_t* data = new uint8_t[packet.sizeBytes];
     memcpy(data, packet.dataPtr, packet.sizeBytes);
     packet.dataPtr = data;

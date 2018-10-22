@@ -128,13 +128,23 @@ extern const char kComfortNoiseCodecName[];
 extern const char kVp8CodecName[];
 extern const char kVp9CodecName[];
 extern const char kH264CodecName[];
-
+#ifndef DISABLE_H265
+extern const char kH265CodecName[];
+#endif
 // RFC 6184 RTP Payload Format for H.264 video
 extern const char kH264FmtpProfileLevelId[];
 extern const char kH264FmtpLevelAsymmetryAllowed[];
 extern const char kH264FmtpPacketizationMode[];
 extern const char kH264FmtpSpropParameterSets[];
 extern const char kH264ProfileLevelConstrainedBaseline[];
+
+#ifndef DISABLE_H265
+// RFC 7798 RTP Payload Format for H.265 video
+extern const char kH265FmtpProfileSpace[];
+extern const char kH265FmtpProfileId[];
+extern const char kH265FmtpTierFlag[];
+extern const char kH265FmtpLevelId[];
+#endif
 
 extern const int kDefaultVideoMaxFramerate;
 

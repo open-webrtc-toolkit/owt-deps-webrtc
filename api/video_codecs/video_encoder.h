@@ -119,7 +119,9 @@ class VideoEncoder {
   static VideoCodecVP8 GetDefaultVp8Settings();
   static VideoCodecVP9 GetDefaultVp9Settings();
   static VideoCodecH264 GetDefaultH264Settings();
-
+#ifndef DISABLE_H265
+  static VideoCodecH265 GetDefaultH265Settings();
+#endif
   virtual ~VideoEncoder() {}
 
   // Initialize the encoder with the information from the codecSettings
