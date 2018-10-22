@@ -28,6 +28,7 @@ namespace webrtc {
 using RTPVideoTypeHeader =
     absl::variant<RTPVideoHeaderVP8, RTPVideoHeaderVP9, RTPVideoHeaderH264, RTPVideoHeaderH265>;
 #else
+using RTPVideoTypeHeader =
     absl::variant<RTPVideoHeaderVP8, RTPVideoHeaderVP9, RTPVideoHeaderH264>;
 #endif
 struct RTPVideoHeader {
