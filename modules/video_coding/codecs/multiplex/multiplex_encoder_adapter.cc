@@ -89,6 +89,12 @@ int MultiplexEncoderAdapter::InitEncode(const VideoCodec* inst,
       key_frame_interval_ = settings.H264()->keyFrameInterval;
       settings.H264()->keyFrameInterval = 0;
       break;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      key_frame_interval_ = settings.H265()->keyFrameInterval;
+      settings.H265()->keyFrameInterval = 0;
+      break;
+#endif
     default:
       break;
   }

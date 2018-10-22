@@ -13,10 +13,16 @@
 #include "absl/memory/memory.h"
 #include "absl/types/variant.h"
 #include "modules/rtp_rtcp/source/rtp_format_h264.h"
+#ifndef DISABLE_H265
+#include "modules/rtp_rtcp/source/rtp_format_h265.h"
+#endif
 #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp9.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
+#ifndef DISABLE_H265
+#include "modules/video_coding/codecs/h265/include/h265_globals.h"
+#endif
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "rtc_base/checks.h"
@@ -44,6 +50,15 @@ std::unique_ptr<RtpPacketizer> RtpPacketizer::Create(
       return absl::make_unique<RtpPacketizerH264>(
           payload, limits, h264.packetization_mode, *fragmentation);
     }
+#ifndef DISABLE_H265
+    case kVideoCodecH265: {
+      RTC_CHECK(fragmentation);
+      const auto& h265 =
+          absl::get<RTPVideoHeaderH265>(rtp_video_header.video_type_header);
+      return absl::make_unique<RtpPacketizerH265>(
+          payload, limits, h265.packetization_mode, *fragmentation);
+    }
+#endif
     case kVideoCodecVP8: {
       const auto& vp8 =
           absl::get<RTPVideoHeaderVP8>(rtp_video_header.video_type_header);
@@ -145,6 +160,10 @@ RtpDepacketizer* RtpDepacketizer::Create(absl::optional<VideoCodecType> type) {
   }
 
   switch (*type) {
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      return new RtpDepacketizerH265();
+#endif
     case kVideoCodecH264:
       return new RtpDepacketizerH264();
     case kVideoCodecVP8:
