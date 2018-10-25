@@ -369,7 +369,7 @@ if (!build_with_chromium) {
     visibility = [ "//:default" ]
 
     if (build_with_woogeen) {
-      visibility += [ "//talk/ics" ]
+      visibility += [ "//talk/oms" ]
     }
 
     sources = []
