@@ -641,7 +641,7 @@ if (is_ios) {
     action("umbrella_header_$target_name") {
       forward_variables_from(invoker, [ "public_headers" ])
 
-      script = "//tools_webrtc/ios/generate_umbrella_header.py"
+      script = "../tools_webrtc/ios/generate_umbrella_header.py"
 
       outputs = [
         umbrella_header_path,
