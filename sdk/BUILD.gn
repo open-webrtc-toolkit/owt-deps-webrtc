@@ -243,11 +243,11 @@ if (is_ios || is_mac) {
       ]
       deps = [
         ":common_objc",
-        "//api/video:video_frame",
-        "//api/video:video_frame_i420",
-        "//common_video",
-        "//rtc_base:checks",
-        "//rtc_base:rtc_base_approved",
+        "../api/video:video_frame",
+        "../api/video:video_frame_i420",
+        "../common_video",
+        "../rtc_base:checks",
+        "../rtc_base:rtc_base_approved",
         "//third_party/libyuv",
       ]
       configs += [
@@ -445,10 +445,12 @@ if (is_ios || is_mac) {
         "objc/Framework/Classes/PeerConnection/RTCVideoCodec+Private.h",
         "objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
         "objc/Framework/Classes/PeerConnection/RTCVideoCodecH264.mm",
+        "objc/Framework/Classes/PeerConnection/RTCVideoCodecH265.mm",
         "objc/Framework/Classes/PeerConnection/RTCVideoEncoderSettings.mm",
         "objc/Framework/Headers/WebRTC/RTCVideoCodec.h",
         "objc/Framework/Headers/WebRTC/RTCVideoCodecFactory.h",
         "objc/Framework/Headers/WebRTC/RTCVideoCodecH264.h",
+        "objc/Framework/Headers/WebRTC/RTCVideoCodecH265.h",
       ]
       if (is_ios) {
         sources += [
@@ -919,7 +921,7 @@ if (is_ios || is_mac) {
           "../rtc_base:rtc_base_tests_utils",
           "../rtc_base/system:unused",
           "../system_wrappers:system_wrappers_default",
-          "//test:test_support",
+          "../test:test_support",
           "//third_party/ocmock",
         ]
 
@@ -982,6 +984,7 @@ if (is_ios || is_mac) {
           "objc/Framework/Headers/WebRTC/RTCTracing.h",
           "objc/Framework/Headers/WebRTC/RTCVideoCapturer.h",
           "objc/Framework/Headers/WebRTC/RTCVideoCodecH264.h",
+          "objc/Framework/Headers/WebRTC/RTCVideoCodecH265.h",
           "objc/Framework/Headers/WebRTC/RTCVideoFrame.h",
           "objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
           "objc/Framework/Headers/WebRTC/RTCVideoRenderer.h",
@@ -1179,7 +1182,10 @@ if (is_ios || is_mac) {
       ]
       sources = [
         "objc/Framework/Classes/VideoToolbox/RTCVideoDecoderH264.mm",
+        "objc/Framework/Classes/VideoToolbox/RTCVideoDecoderH265.mm",
         "objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH264.mm",
+        "objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH265.mm",
+        "objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
       ]
 
       configs += [

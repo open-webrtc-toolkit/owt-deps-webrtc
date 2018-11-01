@@ -104,6 +104,14 @@
 #endif
 }
 
+- (instancetype)initWithNativePeerConnectionFactory:
+    (rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory {
+  if (self = [self initNative]) {
+    _nativeFactory = factory;
+  }
+  return self;
+}
+
 - (instancetype)initNative {
   if (self = [super init]) {
     _networkThread = rtc::Thread::CreateWithSocketServer();

@@ -29,6 +29,7 @@ NSString *MaxSupportedProfileLevelConstrainedBaseline();
 NSString *const kRTCVideoCodecVp8Name = @(cricket::kVp8CodecName);
 NSString *const kRTCVideoCodecVp9Name = @(cricket::kVp9CodecName);
 NSString *const kRTCVideoCodecH264Name = @(cricket::kH264CodecName);
+NSString *const kRTCVideoCodecH265Name = @(cricket::kH265CodecName);
 NSString *const kRTCLevel31ConstrainedHigh = @"640c1f";
 NSString *const kRTCLevel31ConstrainedBaseline = @"42e01f";
 NSString *const kRTCMaxSupportedH264ProfileLevelConstrainedHigh =
