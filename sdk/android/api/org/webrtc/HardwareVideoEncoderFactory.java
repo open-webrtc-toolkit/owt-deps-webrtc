@@ -105,7 +105,8 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
     // Generate a list of supported codecs in order of preference:
     // VP8, VP9, H264 (high profile), and H264 (baseline profile).
     for (VideoCodecType type :
-        new VideoCodecType[] {VideoCodecType.VP8, VideoCodecType.VP9, VideoCodecType.H264}) {
+        new VideoCodecType[] {VideoCodecType.VP8, VideoCodecType.VP9, VideoCodecType.H264,
+            VideoCodecType.H265}) {
       MediaCodecInfo codec = findCodecForType(type);
       if (codec != null) {
         String name = type.name();
@@ -168,6 +169,8 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
         return isHardwareSupportedInCurrentSdkVp9(info);
       case H264:
         return isHardwareSupportedInCurrentSdkH264(info);
+      case H265:
+        return isHardwareSupportedInCurrentSdkH265(info);
     }
     return false;
   }
@@ -208,12 +211,19 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
         || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
   }
 
+  private boolean isHardwareSupportedInCurrentSdkH265(MediaCodecInfo info) {
+    // We don't have too much data for H.265. Just use the same configuration for H.264.
+    return isHardwareSupportedInCurrentSdkH264(info);
+  }
+
   private int getKeyFrameIntervalSec(VideoCodecType type) {
     switch (type) {
       case VP8: // Fallthrough intended.
       case VP9:
         return 100;
       case H264:
+        return 20;
+      case H265:
         return 20;
     }
     throw new IllegalArgumentException("Unsupported VideoCodecType " + type);
