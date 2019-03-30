@@ -13,6 +13,7 @@ package org.webrtc;
 import static org.webrtc.MediaCodecUtils.EXYNOS_PREFIX;
 import static org.webrtc.MediaCodecUtils.INTEL_PREFIX;
 import static org.webrtc.MediaCodecUtils.QCOM_PREFIX;
+import static org.webrtc.MediaCodecUtils.HISI_PREFIX;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
@@ -179,12 +180,15 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
         || (name.startsWith(EXYNOS_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         // Intel Vp8 encoder is supported in LOLLIPOP or later, with the intel encoder enabled.
         || (name.startsWith(INTEL_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-               && enableIntelVp8Encoder);
+               && enableIntelVp8Encoder)
+        // Hisi Vp8 encoder seems to be supported. Needs more testing.
+        || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
   }
 
   private boolean isHardwareSupportedInCurrentSdkVp9(MediaCodecInfo info) {
     String name = info.getName();
-    return (name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX))
+    return (name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX))
+        // Just redo an old change on MediaCodecVideoEncoder. Needs more testing.
         // Both QCOM and Exynos VP9 encoders are supported in N or later.
         && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
   }
@@ -199,7 +203,9 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
     return (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
         // Exynos H264 encoder is supported in LOLLIPOP or later.
         || (name.startsWith(EXYNOS_PREFIX)
-               && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+               && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        // Hisi H264 encoder seems to be supported. Needs more testing.
+        || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
   }
 
   private int getKeyFrameIntervalSec(VideoCodecType type) {

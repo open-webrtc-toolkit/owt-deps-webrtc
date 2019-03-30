@@ -14,6 +14,7 @@ import static org.webrtc.MediaCodecUtils.EXYNOS_PREFIX;
 import static org.webrtc.MediaCodecUtils.INTEL_PREFIX;
 import static org.webrtc.MediaCodecUtils.NVIDIA_PREFIX;
 import static org.webrtc.MediaCodecUtils.QCOM_PREFIX;
+import static org.webrtc.MediaCodecUtils.HISI_PREFIX;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -128,14 +129,19 @@ public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
       case VP8:
         // QCOM, Intel, Exynos, and Nvidia all supported for VP8.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
-            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(NVIDIA_PREFIX);
+            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(NVIDIA_PREFIX)
+            // Hisi seems to support VP8.
+            || name.startsWith(HISI_PREFIX);
       case VP9:
         // QCOM and Exynos supported for VP9.
-        return name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX);
+        return name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX)
+            // Hisi seems to support VP9.
+            || name.startsWith(HISI_PREFIX);
       case H264:
         // QCOM, Intel, and Exynos supported for H264.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
-            || name.startsWith(EXYNOS_PREFIX);
+            // Hisi seems to support H264.
+            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX);
       default:
         return false;
     }
