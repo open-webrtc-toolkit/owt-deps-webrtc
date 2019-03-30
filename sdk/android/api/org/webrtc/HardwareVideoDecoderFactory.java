@@ -67,7 +67,8 @@ public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
     // Generate a list of supported codecs in order of preference:
     // VP8, VP9, H264 (high profile), and H264 (baseline profile).
     for (VideoCodecType type :
-        new VideoCodecType[] {VideoCodecType.VP8, VideoCodecType.VP9, VideoCodecType.H264}) {
+        new VideoCodecType[] {VideoCodecType.VP8, VideoCodecType.VP9, VideoCodecType.H264,
+            VideoCodecType.H265}) {
       MediaCodecInfo codec = findCodecForType(type);
       if (codec != null) {
         String name = type.name();
@@ -141,6 +142,10 @@ public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
         // QCOM, Intel, and Exynos supported for H264.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             // Hisi seems to support H264.
+            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX);
+      case H265:
+        // H265 is copied from H264. More testing is needed.
+        return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX);
       default:
         return false;
