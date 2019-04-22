@@ -19,6 +19,9 @@
 #include "absl/types/variant.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
+#ifndef DISABLE_H265
+#include "modules/video_coding/codecs/h265/include/h265_globals.h"
+#endif
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -96,6 +99,7 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       h264_header.packetization_mode =
           info.codecSpecific.H264.packetization_mode;
       rtp->simulcastIdx = spatial_index.value_or(0);
+      h264_header.picture_id = info.codecSpecific.H264.picture_id;
       return;
     }
 #ifdef WEBRTC_USE_H265
@@ -103,6 +107,7 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       auto& h265_header = rtp->video_type_header.emplace<RTPVideoHeaderH265>();
       h265_header.packetization_mode =
           info.codecSpecific.H265.packetization_mode;
+      h265_header.picture_id = info.codecSpecific.H265.picture_id;
     }
     return;
 #endif

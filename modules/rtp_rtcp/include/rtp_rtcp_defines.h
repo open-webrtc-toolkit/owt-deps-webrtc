@@ -77,6 +77,7 @@ enum RTPExtensionType : int {
   kRtpExtensionColorSpace,
   kRtpExtensionVideoFrameTrackingId,
   kRtpExtensionNumberOfExtensions  // Must be the last entity in the enum.
+  kRtpExtensionPictureId,  // Required by temporal scalability support
 };
 
 enum RTCPAppSubTypes { kAppSubtypeBwe = 0x00 };

@@ -98,6 +98,7 @@ constexpr RtpExtensionSize kAudioExtensionSizes[] = {
     CreateMaxExtensionSize<RtpStreamId>(),
     CreateMaxExtensionSize<RepairedRtpStreamId>(),
     CreateMaxExtensionSize<RtpMid>(),
+	CreateExtensionSize<PictureId>(),
 };
 
 // Non-volatile extensions can be expected on all packets, if registered.

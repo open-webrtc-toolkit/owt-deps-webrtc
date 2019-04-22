@@ -120,6 +120,27 @@ if (!build_with_chromium) {
     }
   }
 
+  rtc_static_library("video_capture") {
+    visibility = [ "*" ]
+    sources = [
+      "external/device_info_external.cc",
+      "external/video_capture_external.cc",
+    ]
+
+    deps = [
+      ":video_capture_module",
+      "../../api:scoped_refptr",
+      "../../rtc_base:checks",
+      "../../rtc_base:rtc_base_approved",
+      "../../system_wrappers",
+    ]
+
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+
   if (!is_android && rtc_include_tests) {
     rtc_test("video_capture_tests") {
       sources = [ "test/video_capture_unittest.cc" ]

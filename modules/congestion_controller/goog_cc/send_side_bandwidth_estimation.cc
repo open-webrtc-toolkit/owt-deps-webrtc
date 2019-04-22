@@ -332,6 +332,10 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
                                                          DataRate bandwidth) {
   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
   // limitation.
+  if (field_trial::IsEnabled("OWT-LowLatencyMode")) {
+    // For low latency mode, we will always ignore REMB result.
+    return;
+  }
   receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
   ApplyTargetLimits(at_time);
 }
@@ -619,10 +623,19 @@ void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  DataRate upper_limit = delay_based_limit_;
-  if (disable_receiver_limit_caps_only_)
-    upper_limit = std::min(upper_limit, receiver_limit_);
-  return std::min(upper_limit, max_bitrate_configured_);
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-DelayBweWeight");
+  DataRate upper_limit = std::min(delay_based_limit_, receiver_limit_);
+  double delay_fraction = delay_weight / 100.0;
+
+  // Calculate new weighted BWE using delay/loss limit.
+  upper_limit = std::min(upper_limit, max_bitrate_configured_);
+  if (delay_weight < 100 && delay_weight >= 0) {
+    upper_limit =
+        std::min(upper_limit, loss_based_bandwidth_estimation_.GetEstimate());
+    }
+  DataRate upper_limit = std::min(weighted_limit, receiver_limit_);
+  upper_limit = std::min(upper_limit, max_bitrate_configured_);
 }
 
 void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
