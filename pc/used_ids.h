@@ -168,8 +168,8 @@ class UsedRtpHeaderExtensionIds : public UsedIds<webrtc::RtpExtension> {
         }
       }
     }
-    RTC_DCHECK(next_extension_id_ >= min_allowed_id_);
-    RTC_DCHECK(next_extension_id_ <= max_allowed_id_);
+    //RTC_DCHECK(next_extension_id_ >= min_allowed_id_);
+    //RTC_DCHECK(next_extension_id_ <= max_allowed_id_);
     return next_extension_id_;
   }
 

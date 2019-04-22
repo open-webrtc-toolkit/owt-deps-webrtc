@@ -91,11 +91,15 @@ struct CodecSpecificInfoH264 {
   uint8_t temporal_idx;
   bool base_layer_sync;
   bool idr_frame;
+  int16_t picture_id; // Required by temporal scalability
+  bool last_fragment_in_frame;
 };
 
 struct CodecSpecificInfoH265 {
   H265PacketizationMode packetization_mode;
   bool idr_frame;
+  bool last_fragment_in_frame;
+  int16_t picture_id;
 };
 #endif
 

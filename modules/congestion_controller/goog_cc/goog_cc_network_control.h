@@ -42,6 +42,7 @@ struct GoogCcConfig {
   std::unique_ptr<NetworkStatePredictor> network_state_predictor = nullptr;
   bool feedback_only = false;
 };
+class GPRABwe;
 
 class GoogCcNetworkController : public NetworkControllerInterface {
  public:
@@ -67,11 +68,16 @@ class GoogCcNetworkController : public NetworkControllerInterface {
       TargetRateConstraints msg) override;
   NetworkControlUpdate OnTransportLossReport(TransportLossReport msg) override;
   NetworkControlUpdate OnTransportPacketsFeedback(
-      TransportPacketsFeedback msg) override;
+      TransportPacketsFeedback msg, int64_t current_offset_ms) override;
   NetworkControlUpdate OnNetworkStateEstimate(
       NetworkStateEstimate msg) override;
 
   NetworkControlUpdate GetNetworkState(Timestamp at_time) const;
+
+#if defined(INTEL_GPRA)
+  // Not implemented here?
+  void SetBitrateEstimationWindowSize(int init_window, int rate_window);
+#endif
 
  private:
   friend class GoogCcStatePrinter;
@@ -106,7 +112,11 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   std::unique_ptr<ProbeBitrateEstimator> probe_bitrate_estimator_;
   std::unique_ptr<NetworkStateEstimator> network_estimator_;
   std::unique_ptr<NetworkStatePredictor> network_state_predictor_;
+#ifdef INTEL_GPRA
+  std::unique_ptr<GPRABwe> delay_based_bwe_;
+#else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_;
+#endif
   std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
       acknowledged_bitrate_estimator_;
 

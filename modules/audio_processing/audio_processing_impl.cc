@@ -770,7 +770,8 @@ int AudioProcessingImpl::ProcessStream(const float* const* src,
     capture_.capture_fullband_audio->CopyFrom(
         src, formats_.api_format.input_stream());
   }
-  RETURN_ON_ERR(ProcessCaptureStreamLocked());
+  // Bypass processing
+  //RETURN_ON_ERR(ProcessCaptureStreamLocked());
   if (capture_.capture_fullband_audio) {
     capture_.capture_fullband_audio->CopyTo(formats_.api_format.output_stream(),
                                             dest);

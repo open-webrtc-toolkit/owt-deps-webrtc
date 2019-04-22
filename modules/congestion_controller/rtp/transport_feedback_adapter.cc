@@ -61,6 +61,12 @@ DataSize InFlightBytesTracker::GetOutstandingData(
   }
 }
 
+#ifdef INTEL_GPRA
+int64_t TransportFeedbackAdapter::GetCurrentOffsetMs() {
+  return current_offset_ms_;
+}
+#endif
+
 // Comparator for consistent map with NetworkRoute as key.
 bool InFlightBytesTracker::NetworkRouteComparator::operator()(
     const rtc::NetworkRoute& a,
