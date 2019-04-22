@@ -72,6 +72,7 @@ struct RTPVideoHeader {
   VideoContentType content_type = VideoContentType::UNSPECIFIED;
   bool is_first_packet_in_frame = false;
   uint8_t simulcastIdx = 0;
+  uint16_t picture_id;
   VideoCodecType codec = VideoCodecType::kVideoCodecUnknown;
 
   PlayoutDelay playout_delay;

@@ -22,6 +22,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace vcm {
@@ -262,6 +263,9 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
                         << " loss rate " << encoder_params.loss_rate << " rtt "
                         << encoder_params.rtt << " input frame rate "
                         << encoder_params.input_frame_rate;
+    // For low latency mode we don't drop.
+    if (field_trial::IsEnabled("OWT-LowLatencyMode"))
+      return VCM_OK;
     post_encode_callback_->OnDroppedFrame(
         EncodedImageCallback::DropReason::kDroppedByMediaOptimizations);
     return VCM_OK;

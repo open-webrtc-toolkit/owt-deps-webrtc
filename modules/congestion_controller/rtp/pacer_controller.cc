@@ -23,6 +23,9 @@ PacerController::~PacerController() = default;
 
 void PacerController::OnCongestionWindow(DataSize congestion_window) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&sequenced_checker_);
+  if (pacer_->IsLowLatencyMode()) {
+    pacer_->SetCongestionWindow(PacedSender::kNoCongestionWindow);
+  }
   if (congestion_window.IsFinite())
     pacer_->SetCongestionWindow(congestion_window.bytes());
   else

@@ -23,7 +23,7 @@ struct BitrateConstraints {
   int max_bitrate_bps = -1;
 
  private:
-  static constexpr int kDefaultStartBitrateBps = 300000;
+  static constexpr int kDefaultStartBitrateBps = 5000000;  // Updated from 300k to 5MB for low latency mode.
 };
 
 // Like std::min, but considers non-positive values to be unset.

@@ -76,6 +76,7 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       h264_header.packetization_mode =
           info.codecSpecific.H264.packetization_mode;
       rtp->simulcastIdx = info.codecSpecific.H264.simulcast_idx;
+      rtp->picture_id = info.codecSpecific.H264.picture_id;
       return;
     }
     case kVideoCodecMultiplex:

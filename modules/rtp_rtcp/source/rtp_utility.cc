@@ -407,6 +407,16 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header->extension.hasTransportSequenceNumber = true;
           break;
         }
+        case kRtpExtensionPictureId: {
+          if (len != 1) {
+            RTC_LOG(LS_WARNING) << "Incorrect picture ID len: " << len;
+            return;
+          }
+          uint16_t picture_id = ptr[0] << 8;
+          picture_id += ptr[1];
+          header->extension.picture_id = picture_id;
+          break;
+        }
         case kRtpExtensionPlayoutDelay: {
           if (len != 2) {
             RTC_LOG(LS_WARNING) << "Incorrect playout delay len: " << len;

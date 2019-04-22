@@ -26,6 +26,7 @@ class MockProcessThread : public ProcessThread {
   // warnings from -Winconsistent-missing-override. See
   // http://crbug.com/428099.
   MOCK_METHOD0(Start, void());
+  MOCK_METHOD0(StartWithHighPriority, void());
   MOCK_METHOD0(Stop, void());
   MOCK_METHOD1(WakeUp, void(Module* module));
   MOCK_METHOD1(PostTask, void(rtc::QueuedTask* task));

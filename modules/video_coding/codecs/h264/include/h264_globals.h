@@ -77,6 +77,10 @@ struct RTPVideoHeaderH264 {
   // The packetization mode of this transport. Packetization mode
   // determines which packetization types are allowed when packetizing.
   H264PacketizationMode packetization_mode;
+  // Running cuter for every frame to determin frame decodable
+  // depending along with Temporal ID (obtained from RTP header extn).
+  // '0' if PictureID does not exist.
+  uint16_t picture_id;
 };
 
 }  // namespace webrtc

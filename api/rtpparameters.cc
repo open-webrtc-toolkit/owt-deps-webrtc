@@ -132,6 +132,9 @@ const int RtpExtension::kMidDefaultId = 9;
 const char RtpExtension::kEncryptHeaderExtensionsUri[] =
     "urn:ietf:params:rtp-hdrext:encrypt";
 
+const char RtpExtension::kPictureIdUri[] = "urn:intel:picture-id";
+const int RtpExtension::kPictureIdDefaultId = 12;
+
 const int RtpExtension::kMinId = 1;
 const int RtpExtension::kMaxId = 14;
 
@@ -149,7 +152,8 @@ bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
          uri == webrtc::RtpExtension::kPlayoutDelayUri ||
          uri == webrtc::RtpExtension::kVideoContentTypeUri ||
          uri == webrtc::RtpExtension::kVideoTimingUri ||
-         uri == webrtc::RtpExtension::kMidUri;
+         uri == webrtc::RtpExtension::kMidUri ||
+         uri == webrtc::RtpExtension::kPictureIdUri;
 }
 
 bool RtpExtension::IsEncryptionSupported(const std::string& uri) {

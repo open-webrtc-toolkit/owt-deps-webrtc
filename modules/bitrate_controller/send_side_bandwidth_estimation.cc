@@ -195,6 +195,9 @@ void SendSideBandwidthEstimation::CurrentEstimate(int* bitrate,
 
 void SendSideBandwidthEstimation::UpdateReceiverEstimate(int64_t now_ms,
                                                          uint32_t bandwidth) {
+  // At low latency mode we don't responde to BWE.
+  if (field_trial::IsEnabled("OWT-LowLatencyMode"))
+    return;
   bwe_incoming_ = bandwidth;
   CapBitrateToThresholds(now_ms, current_bitrate_bps_);
 }
@@ -410,11 +413,21 @@ void SendSideBandwidthEstimation::UpdateMinHistory(int64_t now_ms) {
 
 void SendSideBandwidthEstimation::CapBitrateToThresholds(int64_t now_ms,
                                                          uint32_t bitrate_bps) {
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-DelayBWEWeidght");
+  double delay_weight = ::strtod(experiment_string.c_str(), nullptr);
+  double delay_fraction = delay_weight / 100.0;
+  double lost_fraction = 1 - delay_fraction;
+
   if (bwe_incoming_ > 0 && bitrate_bps > bwe_incoming_) {
     bitrate_bps = bwe_incoming_;
   }
   if (delay_based_bitrate_bps_ > 0 && bitrate_bps > delay_based_bitrate_bps_) {
-    bitrate_bps = delay_based_bitrate_bps_;
+    if (delay_weight <= 100 && delay_weight >= 0)
+      bitrate_bps = bitrate_bps * lost_fraction +
+                    delay_based_bitrate_bps_ * delay_fraction;
+    else
+      bitrate_bps = delay_based_bitrate_bps_;
   }
   if (bitrate_bps > max_bitrate_configured_) {
     bitrate_bps = max_bitrate_configured_;

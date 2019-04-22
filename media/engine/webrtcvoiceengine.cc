@@ -298,6 +298,15 @@ void WebRtcVoiceEngine::Init() {
     options.experimental_ns = false;
     options.intelligibility_enhancer = false;
     options.residual_echo_detector = true;
+    // Overrided for low latency mode
+    if (webrtc::field_trial::IsEnabled("OWT-LowLatencyMode")) {
+      options.echo_cancellation = false;
+      options.auto_gain_control = false;
+      options.noise_suppression = false;
+      options.highpass_filter = false;
+      options.typing_detection = false;
+      options.residual_echo_detector = false;
+    }
     bool error = ApplyOptions(options);
     RTC_DCHECK(error);
   }
@@ -606,6 +615,10 @@ RtpCapabilities WebRtcVoiceEngine::GetCapabilities() const {
   // demuxing is completed.
   // capabilities.header_extensions.push_back(webrtc::RtpExtension(
   //     webrtc::RtpExtension::kMidUri, webrtc::RtpExtension::kMidDefaultId));
+  // Temporal scalability support.
+  capabilities.header_extensions.push_back(
+      webrtc::RtpExtension(webrtc::RtpExtension::kPictureIdUri,
+                           webrtc::RtpExtension::kPictureIdDefaultId));
   return capabilities;
 }
 

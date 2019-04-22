@@ -23,11 +23,17 @@ namespace webrtc {
 namespace {
 static const int64_t kRetransmitWindowSizeMs = 500;
 const char kTaskQueueExperiment[] = "WebRTC-TaskQueueCongestionControl";
+const char kLowLatencyStreaming[] = "OWT-LowLatencyMode";
 using TaskQueueController = webrtc::webrtc_cc::SendSideCongestionController;
 
 bool TaskQueueExperimentEnabled() {
   std::string trial = webrtc::field_trial::FindFullName(kTaskQueueExperiment);
   return trial.find("Enable") == 0;
+}
+
+bool LowLatencyStreamingEnabled() {
+  std::string trial = webrtc::field_trial::FindFullName(kLowLatencyStreaming);
+  return trial.find("Enabled") == 0;
 }
 
 std::unique_ptr<SendSideCongestionControllerInterface> CreateController(
@@ -75,7 +81,11 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 
   process_thread_->RegisterModule(&pacer_, RTC_FROM_HERE);
   process_thread_->RegisterModule(send_side_cc_.get(), RTC_FROM_HERE);
-  process_thread_->Start();
+  if (!LowLatencyStreamingEnabled()) {
+    process_thread_->Start();
+  } else {
+    process_thread_->StartWithHighPriority();
+  }
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {

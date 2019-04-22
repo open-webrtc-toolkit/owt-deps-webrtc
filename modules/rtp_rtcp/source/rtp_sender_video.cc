@@ -325,6 +325,10 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
         last_packet->SetExtension<VideoTimingExtension>(
             video_header->video_timing);
       }
+      if (video_type == kVideoCodecH264) {
+        last_packet->SetExtension<PictureId>(
+            video_header->picture_id);
+      }
     }
 
     // FEC settings.

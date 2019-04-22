@@ -72,6 +72,7 @@ constexpr RtpExtensionSize kVideoExtensionSizes[] = {
     CreateExtensionSize<VideoOrientation>(),
     CreateExtensionSize<VideoContentTypeExtension>(),
     CreateExtensionSize<VideoTimingExtension>(),
+    CreateExtensionSize<PictureId>(),
     {RtpMid::kId, RtpMid::kMaxValueSizeBytes},
 };
 
@@ -671,8 +672,9 @@ int32_t RTPSender::ReSendPacket(uint16_t packet_id) {
   if (paced_sender_) {
     // Convert from TickTime to Clock since capture_time_ms is based on
     // TickTime.
+    // Check lowlatencymode to not modify the capture_time_ms;
     int64_t corrected_capture_tims_ms =
-        stored_packet->capture_time_ms + clock_delta_ms_;
+        stored_packet->capture_time_ms/* + clock_delta_ms_*/;
     paced_sender_->InsertPacket(
         RtpPacketSender::kNormalPriority, stored_packet->ssrc,
         stored_packet->rtp_sequence_number, corrected_capture_tims_ms,

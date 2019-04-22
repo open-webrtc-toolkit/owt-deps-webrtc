@@ -33,6 +33,7 @@
 namespace {
 // Time limit in milliseconds between packet bursts.
 const int64_t kMinPacketLimitMs = 5;
+const int64_t kMinPacketLimitLowLatency = 1; // For low latency mode we set process interval to 1ms instead.
 const int64_t kCongestedPacketIntervalMs = 500;
 const int64_t kPausedProcessIntervalMs = kCongestedPacketIntervalMs;
 const int64_t kMaxElapsedTimeMs = 2000;
@@ -64,6 +65,7 @@ PacedSender::PacedSender(const Clock* clock,
       packet_sender_(packet_sender),
       alr_detector_(absl::make_unique<AlrDetector>(event_log)),
       drain_large_queues_(!field_trial::IsDisabled("WebRTC-Pacer-DrainQueue")),
+      low_latency_mode_(field_trial::IsEnabled("OWT-LowLatencyMode")),
       send_padding_if_silent_(
           field_trial::IsEnabled("WebRTC-Pacer-PadInSilence")),
       video_blocks_audio_(!field_trial::IsDisabled("WebRTC-Pacer-BlockAudio")),
@@ -88,18 +90,27 @@ PacedSender::PacedSender(const Clock* clock,
     RTC_LOG(LS_WARNING) << "Pacer queues will not be drained,"
                            "pushback experiment must be enabled.";
   UpdateBudgetWithElapsedTime(kMinPacketLimitMs);
+  if (low_latency_mode_)
+    prober_->SetEnabled(false);
 }
 
 PacedSender::~PacedSender() {}
 
 void PacedSender::CreateProbeCluster(int bitrate_bps) {
   rtc::CritScope cs(&critsect_);
-  prober_->CreateProbeCluster(bitrate_bps, clock_->TimeInMilliseconds());
+  if (!low_latency_mode_) // Do not create probe cluster on low latency mode.
+    prober_->CreateProbeCluster(bitrate_bps, clock_->TimeInMilliseconds());
+}
+
+bool PacedSender::IsLowLatencyMode() const {
+  return low_latency_mode_;
 }
 
 void PacedSender::Pause() {
   {
     rtc::CritScope cs(&critsect_);
+    if (low_latency_mode_)
+      return;
     if (!paused_)
       RTC_LOG(LS_INFO) << "PacedSender paused.";
     paused_ = true;
@@ -115,6 +126,8 @@ void PacedSender::Pause() {
 void PacedSender::Resume() {
   {
     rtc::CritScope cs(&critsect_);
+    if (low_latency_mode_)
+      return;
     if (paused_)
       RTC_LOG(LS_INFO) << "PacedSender resumed.";
     paused_ = false;
@@ -146,6 +159,10 @@ bool PacedSender::Congested() const {
 void PacedSender::SetProbingEnabled(bool enabled) {
   rtc::CritScope cs(&critsect_);
   RTC_CHECK_EQ(0, packet_counter_);
+  if (IsLowLatencyMode()) {
+    // Always disable prober disabled
+    prober_->SetEnabled(false);
+  }
   prober_->SetEnabled(enabled);
 }
 
@@ -243,6 +260,8 @@ int64_t PacedSender::QueueInMs() const {
 
 int64_t PacedSender::TimeUntilNextProcess() {
   rtc::CritScope cs(&critsect_);
+  if (low_latency_mode_)
+    return kMinPacketLimitLowLatency;
   int64_t elapsed_time_us =
       clock_->TimeInMicroseconds() - time_last_process_us_;
   int64_t elapsed_time_ms = (elapsed_time_us + 500) / 1000;
@@ -260,6 +279,7 @@ int64_t PacedSender::TimeUntilNextProcess() {
 }
 
 void PacedSender::Process() {
+  RTC_LOG(LS_ERROR) << "p.";
   int64_t now_us = clock_->TimeInMicroseconds();
   rtc::CritScope cs(&critsect_);
   int64_t elapsed_time_ms = (now_us - time_last_process_us_ + 500) / 1000;
@@ -284,8 +304,10 @@ void PacedSender::Process() {
       }
     }
   }
-  if (paused_)
-    return;
+  if (paused_) {
+    RTC_LOG(LS_ERROR) << "Paused.";
+    //return;
+  }
 
   if (elapsed_time_ms > 0) {
     int target_bitrate_kbps = pacing_bitrate_kbps_;
@@ -319,7 +341,7 @@ void PacedSender::Process() {
   }
   // The paused state is checked in the loop since SendPacket leaves the
   // critical section allowing the paused state to be changed from other code.
-  while (!packets_->Empty() && !paused_) {
+  while (!packets_->Empty() /*&& !paused_*/) {
     // Since we need to release the lock in order to send, we first pop the
     // element from the priority queue but keep it in storage, so that we can
     // reinsert it if send fails.
@@ -329,31 +351,39 @@ void PacedSender::Process() {
       bytes_sent += packet.bytes;
       // Send succeeded, remove it from the queue.
       packets_->FinalizePop(packet);
+      RTC_LOG(LS_ERROR) << "PS#:" << packet.sequence_number
+                        << ",ca: " << packet.capture_time_ms
+                        << ",cu: " << clock_->TimeInMilliseconds()
+                        << ",sz: " << packet.bytes
+                        << ", q: " << packets_->SizeInPackets();
       if (is_probing && bytes_sent > recommended_probe_size)
         break;
     } else {
       // Send failed, put it back into the queue.
       packets_->CancelPop(packet);
+      RTC_LOG(LS_ERROR) << "f";
       break;
     }
   }
 
-  if (packets_->Empty() && !Congested()) {
-    // We can not send padding unless a normal packet has first been sent. If we
-    // do, timestamps get messed up.
-    if (packet_counter_ > 0) {
-      int padding_needed =
-          static_cast<int>(is_probing ? (recommended_probe_size - bytes_sent)
+  if (!IsLowLatencyMode()) {
+    if (packets_->Empty() && !Congested()) {
+      // We can not send padding unless a normal packet has first been sent. If we
+      // do, timestamps get messed up.
+      if (packet_counter_ > 0) {
+        int padding_needed =
+            static_cast<int>(is_probing ? (recommended_probe_size - bytes_sent)
                                       : padding_budget_->bytes_remaining());
-      if (padding_needed > 0) {
-        bytes_sent += SendPadding(padding_needed, pacing_info);
+        if (padding_needed > 0) {
+          bytes_sent += SendPadding(padding_needed, pacing_info);
+        }
       }
     }
-  }
-  if (is_probing) {
-    probing_send_failure_ = bytes_sent == 0;
-    if (!probing_send_failure_)
-      prober_->ProbeSent(clock_->TimeInMilliseconds(), bytes_sent);
+    if (is_probing) {
+      probing_send_failure_ = bytes_sent == 0;
+      if (!probing_send_failure_)
+        prober_->ProbeSent(clock_->TimeInMilliseconds(), bytes_sent);
+    }
   }
   alr_detector_->OnBytesSent(bytes_sent, now_us / 1000);
 }
@@ -370,18 +400,20 @@ bool PacedSender::SendPacket(const PacketQueueInterface::Packet& packet,
   bool audio_packet = packet.priority == kHighPriority;
   bool apply_pacing =
       !audio_packet || account_for_audio_ || video_blocks_audio_;
-  if (apply_pacing && (Congested() || (media_budget_->bytes_remaining() == 0 &&
+  if (!IsLowLatencyMode()) {
+    if (apply_pacing && (Congested() || (media_budget_->bytes_remaining() == 0 &&
                                        pacing_info.probe_cluster_id ==
                                            PacedPacketInfo::kNotAProbe))) {
-    return false;
+      return false;
+    }
   }
-
   critsect_.Leave();
+  RTC_LOG(LS_ERROR) << "b:" << clock_->TimeInMilliseconds();
   const bool success = packet_sender_->TimeToSendPacket(
       packet.ssrc, packet.sequence_number, packet.capture_time_ms,
       packet.retransmission, pacing_info);
   critsect_.Enter();
-
+  RTC_LOG(LS_ERROR) << "a:" << clock_->TimeInMilliseconds();
   if (success) {
     if (first_sent_packet_ms_ == -1)
       first_sent_packet_ms_ = clock_->TimeInMilliseconds();

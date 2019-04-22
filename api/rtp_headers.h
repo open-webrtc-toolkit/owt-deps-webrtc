@@ -127,6 +127,9 @@ struct RTPHeaderExtension {
   // For identifying the media section used to interpret this RTP packet. See
   // https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-38
   Mid mid;
+
+  // Required for Temporal scalability support
+  uint16_t picture_id;
 };
 
 struct RTPHeader {

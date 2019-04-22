@@ -368,7 +368,7 @@ class UsedIds {
     while (IsIdUsed(next_id_) && next_id_ >= min_allowed_id_) {
       --next_id_;
     }
-    RTC_DCHECK(next_id_ >= min_allowed_id_);
+    //RTC_DCHECK(next_id_ >= min_allowed_id_);
     return next_id_;
   }
 
