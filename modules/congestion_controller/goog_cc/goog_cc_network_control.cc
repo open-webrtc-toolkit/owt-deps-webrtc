@@ -30,6 +30,9 @@
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#ifdef INTEL_GPRA
+#include "gpra_bwe.h"
+#endif
 
 namespace webrtc {
 
@@ -94,9 +97,13 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       network_estimator_(std::move(goog_cc_config.network_state_estimator)),
       network_state_predictor_(
           std::move(goog_cc_config.network_state_predictor)),
+#ifdef INTEL_GPRA
+      delay_based_bwe_(new GPRABwe()),
+#else
       delay_based_bwe_(new DelayBasedBwe(key_value_config_,
                                          event_log_,
                                          network_state_predictor_.get())),
+#endif
       acknowledged_bitrate_estimator_(
           AcknowledgedBitrateEstimatorInterface::Create(key_value_config_)),
       initial_config_(config),
@@ -117,6 +124,11 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       key_value_config_->Lookup("WebRTC-Bwe-SafeResetOnRouteChange"));
   if (delay_based_bwe_)
     delay_based_bwe_->SetMinBitrate(congestion_controller::GetMinBitrate());
+#ifdef INTEL_GPRA
+  RTC_LOG(LS_ERROR) << "DebugP Use GPRA BWE!!!";
+#else
+  RTC_LOG(LS_ERROR) << "DebugP Use TransportCC BWE";
+#endif
 }
 
 GoogCcNetworkController::~GoogCcNetworkController() {}
@@ -154,8 +166,12 @@ NetworkControlUpdate GoogCcNetworkController::OnNetworkRouteChange(
   probe_bitrate_estimator_.reset(new ProbeBitrateEstimator(event_log_));
   if (network_estimator_)
     network_estimator_->OnRouteChange(msg);
+#ifdef INTEL_GPRA
+  delay_based_bwe_.reset(new GPRABwe());
+#else
   delay_based_bwe_.reset(new DelayBasedBwe(key_value_config_, event_log_,
                                            network_state_predictor_.get()));
+#endif
   bandwidth_estimation_->OnRouteChange();
   probe_controller_->Reset(msg.at_time.ms());
   NetworkControlUpdate update;
@@ -394,7 +410,7 @@ void GoogCcNetworkController::UpdateCongestionWindowSize() {
 }
 
 NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
-    TransportPacketsFeedback report) {
+    TransportPacketsFeedback report, int64_t current_offset_ms) {
   if (report.packet_feedbacks.empty()) {
     // TODO(bugs.webrtc.org/10125): Design a better mechanism to safe-guard
     // against building very large network queues.
@@ -514,9 +530,16 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   bool backoff_in_alr = false;
 
   DelayBasedBwe::Result result;
+#ifdef INTEL_GPRA
+  delay_based_bwe_->SetCurrentOffsetMs(current_offset_ms);
   result = delay_based_bwe_->IncomingPacketFeedbackVector(
       report, acknowledged_bitrate, probe_bitrate, estimate_,
       alr_start_time.has_value());
+#else
+  result = delay_based_bwe_->IncomingPacketFeedbackVector(
+      report, acknowledged_bitrate, probe_bitrate, estimate_,
+      alr_start_time.has_value());
+#endif
 
   if (result.updated) {
     if (result.probe) {
@@ -638,6 +661,10 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
     alr_detector_->SetEstimatedBitrate(loss_based_target_rate.bps());
 
     TimeDelta bwe_period = delay_based_bwe_->GetExpectedBwePeriod();
+
+#ifdef INTEL_GPRA
+    delay_based_bwe_->SetCurrentPacketLossRate(fraction_loss);
+#endif
 
     TargetTransferRate target_rate_msg;
     target_rate_msg.at_time = at_time;

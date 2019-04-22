@@ -34,6 +34,7 @@ class ProcessThreadImpl : public ProcessThread {
   ~ProcessThreadImpl() override;
 
   void Start() override;
+  void StartWithHighPriority() override;
   void Stop() override;
 
   void WakeUp(Module* module) override;

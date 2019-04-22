@@ -1405,7 +1405,7 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
           Timestamp::Millis(clock.TimeInMilliseconds()));
       absl::optional<uint32_t> bitrate_bps;
       if (feedback_msg) {
-        observer.Update(goog_cc->OnTransportPacketsFeedback(*feedback_msg));
+        observer.Update(goog_cc->OnTransportPacketsFeedback(*feedback_msg), 0);
         std::vector<PacketResult> feedback =
             feedback_msg->SortedByReceiveTime();
         if (!feedback.empty()) {

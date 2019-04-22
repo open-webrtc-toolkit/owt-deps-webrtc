@@ -42,7 +42,8 @@ class RtpPacketizer {
       PayloadSizeLimits limits,
       // Codec-specific details.
       const RTPVideoHeader& rtp_video_header,
-      const RTPFragmentationHeader* fragmentation);
+      const RTPFragmentationHeader* fragmentation,
+      bool end_of_frame);
 
   virtual ~RtpPacketizer() = default;
 

@@ -23,29 +23,42 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 const int64_t PacedSender::kMaxQueueLengthMs = 2000;
 const float PacedSender::kDefaultPaceMultiplier = 2.5f;
 
-PacedSender::PacedSender(Clock* clock, PacketRouter* packet_router,
+bool PacedSender::IsLowLatencyMode() const {
+  return low_latency_mode_;
+}
+
+PacedSender::PacedSender(Clock* clock,
+                         PacketRouter* packet_router,
                          RtcEventLog* event_log,
                          const WebRtcKeyValueConfig* field_trials,
                          ProcessThread* process_thread)
-    : process_mode_(
+    : low_latency_mode_(field_trial::IsEnabled("OWT-LowLatencyMode")),
+      process_mode_(
           (field_trials != nullptr &&
-           absl::StartsWith(field_trials->Lookup("WebRTC-Pacer-DynamicProcess"),
+           absl::StartsWith(field_trials->Lookup("OWT-LowLatencyMode"),
                             "Enabled"))
-              ? PacingController::ProcessMode::kDynamic
+              ? PacingController::ProcessMode::kRealtime
               : PacingController::ProcessMode::kPeriodic),
       pacing_controller_(clock,
                          static_cast<PacingController::PacketSender*>(this),
-                         event_log, field_trials, process_mode_),
+                         event_log,
+                         field_trials,
+                         process_mode_),
       clock_(clock),
       packet_router_(packet_router),
       process_thread_(process_thread) {
   if (process_thread_)
     process_thread_->RegisterModule(&module_proxy_, RTC_FROM_HERE);
+
+  if (low_latency_mode_) {
+    pacing_controller_.SetProbingEnabled(false);
+  }
 }
 
 PacedSender::~PacedSender() {
@@ -56,13 +69,17 @@ PacedSender::~PacedSender() {
 
 void PacedSender::CreateProbeCluster(DataRate bitrate, int cluster_id) {
   rtc::CritScope cs(&critsect_);
-  return pacing_controller_.CreateProbeCluster(bitrate, cluster_id);
+  if (!low_latency_mode_) {  // Do not create probe cluster on low latency mode.
+    return pacing_controller_.CreateProbeCluster(bitrate, cluster_id);
+  }
 }
 
 void PacedSender::Pause() {
   {
     rtc::CritScope cs(&critsect_);
-    pacing_controller_.Pause();
+    if (!low_latency_mode_) {
+      pacing_controller_.Pause();
+    }
   }
 
   // Tell the process thread to call our TimeUntilNextProcess() method to get
@@ -75,7 +92,9 @@ void PacedSender::Pause() {
 void PacedSender::Resume() {
   {
     rtc::CritScope cs(&critsect_);
-    pacing_controller_.Resume();
+    if (!low_latency_mode_) {
+      pacing_controller_.Resume();
+    }
   }
 
   // Tell the process thread to call our TimeUntilNextProcess() method to
@@ -88,7 +107,11 @@ void PacedSender::Resume() {
 void PacedSender::SetCongestionWindow(DataSize congestion_window_size) {
   {
     rtc::CritScope cs(&critsect_);
-    pacing_controller_.SetCongestionWindow(congestion_window_size);
+    if (low_latency_mode_) { // Ignore congestion window for realtime pacing
+      pacing_controller_.SetCongestionWindow(DataSize::PlusInfinity());
+    } else {
+      pacing_controller_.SetCongestionWindow(congestion_window_size);
+    }
   }
   MaybeWakupProcessThread();
 }
@@ -157,14 +180,17 @@ TimeDelta PacedSender::OldestPacketWaitTime() const {
 
 int64_t PacedSender::TimeUntilNextProcess() {
   rtc::CritScope cs(&critsect_);
-
-  Timestamp next_send_time = pacing_controller_.NextSendTime();
-  TimeDelta sleep_time =
-      std::max(TimeDelta::Zero(), next_send_time - clock_->CurrentTime());
-  if (process_mode_ == PacingController::ProcessMode::kDynamic) {
-    return std::max(sleep_time, PacingController::kMinSleepTime).ms();
+  if (process_mode_ == PacingController::ProcessMode::kRealtime)
+    return PacingController::kMinSleepTime.ms();
+  else {
+    Timestamp next_send_time = pacing_controller_.NextSendTime();
+    TimeDelta sleep_time =
+        std::max(TimeDelta::Zero(), next_send_time - clock_->CurrentTime());
+    if (process_mode_ == PacingController::ProcessMode::kDynamic) {
+      return std::max(sleep_time, PacingController::kMinSleepTime).ms();
+    }
+    return sleep_time.ms();
   }
-  return sleep_time.ms();
 }
 
 void PacedSender::Process() {
@@ -181,7 +207,8 @@ void PacedSender::MaybeWakupProcessThread() {
   // Tell the process thread to call our TimeUntilNextProcess() method to get
   // a new time for when to call Process().
   if (process_thread_ &&
-      process_mode_ == PacingController::ProcessMode::kDynamic) {
+      (process_mode_ == PacingController::ProcessMode::kDynamic||
+       process_mode_ == PacingController::ProcessMode::kRealtime)) {
     process_thread_->WakeUp(&module_proxy_);
   }
 }
@@ -196,9 +223,10 @@ void PacedSender::SetQueueTimeLimit(TimeDelta limit) {
 
 void PacedSender::SendRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
                                 const PacedPacketInfo& cluster_info) {
-  critsect_.Leave();
+  // Since we don't generate padding for realtime mode, no lock required.
+  //critsect_.Leave();
   packet_router_->SendPacket(std::move(packet), cluster_info);
-  critsect_.Enter();
+  //critsect_.Enter();
 }
 
 std::vector<std::unique_ptr<RtpPacketToSend>> PacedSender::GeneratePadding(

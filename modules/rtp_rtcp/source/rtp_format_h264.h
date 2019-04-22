@@ -35,7 +35,8 @@ class RtpPacketizerH264 : public RtpPacketizer {
   RtpPacketizerH264(rtc::ArrayView<const uint8_t> payload,
                     PayloadSizeLimits limits,
                     H264PacketizationMode packetization_mode,
-                    const RTPFragmentationHeader& fragmentation);
+                    const RTPFragmentationHeader& fragmentation,
+                    bool end_of_frame = true);
 
   ~RtpPacketizerH264() override;
 
@@ -84,6 +85,7 @@ class RtpPacketizerH264 : public RtpPacketizer {
   size_t num_packets_left_;
   std::deque<rtc::ArrayView<const uint8_t>> input_fragments_;
   std::queue<PacketUnit> packets_;
+  bool end_of_frame_ = true;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH264);
 };

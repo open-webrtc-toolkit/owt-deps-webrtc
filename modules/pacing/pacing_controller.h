@@ -50,7 +50,7 @@ class PacingController {
   // e.g. every 5ms as implemented by PacedSender.
   // Dynamic mode allows for arbitrary time delta between calls to
   // ProcessPackets.
-  enum class ProcessMode { kPeriodic, kDynamic };
+  enum class ProcessMode { kPeriodic, kDynamic, kRealtime};
 
   class PacketSender {
    public:

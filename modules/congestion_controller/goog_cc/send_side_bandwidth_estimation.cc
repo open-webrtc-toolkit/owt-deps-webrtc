@@ -309,6 +309,10 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
                                                          DataRate bandwidth) {
   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
   // limitation.
+  if (field_trial::IsEnabled("OWT-LowLatencyMode")) {
+    // For low latency mode, we will always ignore REMB result.
+    return;
+  }
   receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
   ApplyTargetLimits(at_time);
 }
@@ -580,13 +584,23 @@ DataRate SendSideBandwidthEstimation::MaybeRampupOrBackoff(DataRate new_bitrate,
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  DataRate upper_limit = std::min(delay_based_limit_, receiver_limit_);
-  upper_limit = std::min(upper_limit, max_bitrate_configured_);
-  if (loss_based_bandwidth_estimation_.Enabled() &&
-      loss_based_bandwidth_estimation_.GetEstimate() > DataRate::Zero()) {
-    upper_limit =
-        std::min(upper_limit, loss_based_bandwidth_estimation_.GetEstimate());
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-DelayBweWeight");
+  double delay_weight = ::strtod(experiment_string.c_str(), nullptr);
+  double delay_fraction = delay_weight / 100.0;
+  double lost_fraction = 1 - delay_fraction;
+
+  // Calculate new weighted BWE using delay/loss limit.
+  DataRate weighted_limit = delay_based_limit_;
+  if (delay_weight < 100 && delay_weight >= 0) {
+    if (loss_based_bandwidth_estimation_.Enabled() &&
+        loss_based_bandwidth_estimation_.GetEstimate() > DataRate::Zero()) {
+      weighted_limit.BitsPerSec(delay_based_limit_.bps_or(0) * delay_fraction +
+                       loss_based_bandwidth_estimation_.GetEstimate().bps_or(0) * lost_fraction);
+    }
   }
+  DataRate upper_limit = std::min(weighted_limit, receiver_limit_);
+  upper_limit = std::min(upper_limit, max_bitrate_configured_);
   return upper_limit;
 }
 

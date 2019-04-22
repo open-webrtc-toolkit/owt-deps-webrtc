@@ -83,6 +83,7 @@ constexpr RtpExtensionSize kVideoExtensionSizes[] = {
      RtpGenericFrameDescriptorExtension00::kMaxSizeBytes},
     {RtpGenericFrameDescriptorExtension01::kId,
      RtpGenericFrameDescriptorExtension01::kMaxSizeBytes},
+    CreateExtensionSize<PictureId>(),
 };
 
 bool HasBweExtension(const RtpHeaderExtensionMap& extensions_map) {

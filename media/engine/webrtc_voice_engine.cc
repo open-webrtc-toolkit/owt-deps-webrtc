@@ -288,6 +288,15 @@ void WebRtcVoiceEngine::Init() {
     options.experimental_agc = false;
     options.experimental_ns = false;
     options.residual_echo_detector = true;
+    // Overrided for low latency mode
+    if (webrtc::field_trial::IsEnabled("OWT-LowLatencyMode")) {
+      options.echo_cancellation = false;
+      options.auto_gain_control = false;
+      options.noise_suppression = false;
+      options.highpass_filter = false;
+      options.typing_detection = false;
+      options.residual_echo_detector = false;
+    }
     bool error = ApplyOptions(options);
     RTC_DCHECK(error);
   }
@@ -549,7 +558,8 @@ WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
         webrtc::RtpExtension::kAbsSendTimeUri,
         webrtc::RtpExtension::kTransportSequenceNumberUri,
         webrtc::RtpExtension::kMidUri, webrtc::RtpExtension::kRidUri,
-        webrtc::RtpExtension::kRepairedRidUri}) {
+        webrtc::RtpExtension::kRepairedRidUri,
+        webrtc::RtpExtension::kPictureIdUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   return result;

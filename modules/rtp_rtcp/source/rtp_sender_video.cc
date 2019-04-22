@@ -160,7 +160,8 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
           config.frame_transformer
               ? new rtc::RefCountedObject<
                     RTPSenderVideoFrameTransformerDelegate>(
-                    this, std::move(config.frame_transformer))
+                    this,
+                    std::move(config.frame_transformer))
               : nullptr) {
   if (frame_transformer_delegate_)
     frame_transformer_delegate_->Init();
@@ -408,6 +409,18 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
         packet->SetExtension<RtpGenericFrameDescriptorExtension00>(
             generic_descriptor);
       }
+      if (video_header.codec == kVideoCodecH264 && last_packet) {
+        packet->SetExtension<PictureId>(
+            absl::get<RTPVideoHeaderH264>(video_header.video_type_header)
+                .picture_id);
+      }
+#ifndef DISABLE_H265
+      else if (video_header.codec == kVideoCodecH265 && last_packet) {
+        packet->SetExtension<PictureId>(
+            absl::get<RTPVideoHeaderH265>(video_header.video_type_header)
+                .picture_id);
+      }
+#endif
     }
   }
 }
@@ -434,11 +447,23 @@ bool RTPSenderVideo::SendVideo(
     return false;
 
   int32_t retransmission_settings = retransmission_settings_;
+  bool frame_completed = true;
   if (codec_type == VideoCodecType::kVideoCodecH264) {
     // Backward compatibility for older receivers without temporal layer logic.
     retransmission_settings = kRetransmitBaseLayer | kRetransmitHigherLayers;
+    if (!absl::get<RTPVideoHeaderH264>(video_header.video_type_header)
+             .has_last_fragement) {
+      frame_completed = false;
+    }
   }
-
+#ifndef DISABLE_H265
+  else if (codec_type == VideoCodecType::kVideoCodecH265) {
+    if (!absl::get<RTPVideoHeaderH265>(video_header.video_type_header)
+             .has_last_fragement) {
+      frame_completed = false;
+    }
+  }
+#endif
   MaybeUpdateCurrentPlayoutDelay(video_header);
   if (video_header.frame_type == VideoFrameType::kVideoFrameKey &&
       !IsNoopDelay(current_playout_delay_)) {
@@ -469,19 +494,21 @@ bool RTPSenderVideo::SendVideo(
   auto first_packet = std::make_unique<RtpPacketToSend>(*single_packet);
   auto middle_packet = std::make_unique<RtpPacketToSend>(*single_packet);
   auto last_packet = std::make_unique<RtpPacketToSend>(*single_packet);
-  // Simplest way to estimate how much extensions would occupy is to set them.
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
-                         /*first_packet=*/true, /*last_packet=*/true,
-                         single_packet.get());
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
-                         /*first_packet=*/true, /*last_packet=*/false,
-                         first_packet.get());
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
-                         /*first_packet=*/false, /*last_packet=*/false,
-                         middle_packet.get());
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
-                         /*first_packet=*/false, /*last_packet=*/true,
-                         last_packet.get());
+  if (frame_completed) {// Jianlin: Not adding extension if frame not completed yet.
+    // Simplest way to estimate how much extensions would occupy is to set them.
+    AddRtpHeaderExtensions(video_header, absolute_capture_time,
+                           /*first_packet=*/true, /*last_packet=*/true,
+                           single_packet.get());
+    AddRtpHeaderExtensions(video_header, absolute_capture_time,
+                           /*first_packet=*/true, /*last_packet=*/false,
+                           first_packet.get());
+    AddRtpHeaderExtensions(video_header, absolute_capture_time,
+                           /*first_packet=*/false, /*last_packet=*/false,
+                           middle_packet.get());
+    AddRtpHeaderExtensions(video_header, absolute_capture_time,
+                           /*first_packet=*/false, /*last_packet=*/true,
+                           last_packet.get());
+  }
 
   RTC_DCHECK_GT(packet_capacity, single_packet->headers_size());
   RTC_DCHECK_GT(packet_capacity, first_packet->headers_size());
@@ -558,7 +585,7 @@ bool RTPSenderVideo::SendVideo(
   }
 
   std::unique_ptr<RtpPacketizer> packetizer = RtpPacketizer::Create(
-      codec_type, payload, limits, video_header, fragmentation);
+      codec_type, payload, limits, video_header, fragmentation, frame_completed);
 
   // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
   // replaced by expected_retransmission_time_ms.has_value(). For now, though,

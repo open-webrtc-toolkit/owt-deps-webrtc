@@ -37,6 +37,7 @@ class SimulatedProcessThread : public ProcessThread,
 
   // ProcessThread interface
   void Start() override;
+  void StartWithHighPriority() override;
   void Stop() override;
   void WakeUp(Module* module) override;
   void RegisterModule(Module* module, const rtc::Location& from) override;

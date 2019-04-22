@@ -50,11 +50,14 @@ RtpPacketizerH264::RtpPacketizerH264(
     rtc::ArrayView<const uint8_t> payload,
     PayloadSizeLimits limits,
     H264PacketizationMode packetization_mode,
-    const RTPFragmentationHeader& fragmentation)
+    const RTPFragmentationHeader& fragmentation,
+    bool end_of_frame)
     : limits_(limits), num_packets_left_(0) {
   // Guard against uninitialized memory in packetization_mode.
   RTC_CHECK(packetization_mode == H264PacketizationMode::NonInterleaved ||
             packetization_mode == H264PacketizationMode::SingleNalUnit);
+
+  end_of_frame_ = end_of_frame;
 
   for (size_t i = 0; i < fragmentation.fragmentationVectorSize; ++i) {
     input_fragments_.push_back(
@@ -255,7 +258,7 @@ bool RtpPacketizerH264::NextPacket(RtpPacketToSend* rtp_packet) {
   } else {
     NextFragmentPacket(rtp_packet);
   }
-  rtp_packet->SetMarker(packets_.empty());
+  rtp_packet->SetMarker(packets_.empty() && end_of_frame_);
   --num_packets_left_;
   return true;
 }

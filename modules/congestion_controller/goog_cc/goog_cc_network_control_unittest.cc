@@ -223,7 +223,7 @@ class GoogCcNetworkControllerTest : public ::testing::Test {
       TransportPacketsFeedback feedback;
       feedback.feedback_time = packet.receive_time;
       feedback.packet_feedbacks.push_back(packet);
-      OnUpdate(controller_->OnTransportPacketsFeedback(feedback));
+      OnUpdate(controller_->OnTransportPacketsFeedback(feedback, 0));
       AdvanceTimeMilliseconds(50);
       OnUpdate(controller_->OnProcessInterval(DefaultInterval()));
     }

@@ -104,6 +104,33 @@ void SimulatedProcessThread::Start() {
   }
 }
 
+void SimulatedProcessThread::StartWithHighPriority() {
+  // same implementation as Start();
+  std::vector<Module*> starting;
+  {
+    rtc::CritScope lock(&lock_);
+    if (process_thread_running_)
+      return;
+    process_thread_running_ = true;
+    starting.swap(stopped_modules_);
+  }
+  for (auto& module : starting)
+    module->ProcessThreadAttached(this);
+
+  Timestamp at_time = handler_->CurrentTime();
+  rtc::CritScope lock(&lock_);
+  for (auto& module : starting)
+    delayed_modules_[GetNextTime(module, at_time)].push_back(module);
+
+  if (!queue_.empty()) {
+    next_run_time_ = Timestamp::MinusInfinity();
+  } else if (!delayed_modules_.empty()) {
+    next_run_time_ = delayed_modules_.begin()->first;
+  } else {
+    next_run_time_ = Timestamp::PlusInfinity();
+  }
+}
+
 void SimulatedProcessThread::Stop() {
   std::vector<Module*> stopping;
   {

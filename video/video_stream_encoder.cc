@@ -752,7 +752,10 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
     incoming_frame.set_timestamp_us(current_time_us);
 
   // Capture time may come from clock with an offset and drift from clock_.
+  // Jianlin: in case of slice-based encoding, the capturer will not set the
+  // ntp_time_ms and render_tim_ms.
   int64_t capture_ntp_time_ms;
+#if 0
   if (video_frame.ntp_time_ms() > 0) {
     capture_ntp_time_ms = video_frame.ntp_time_ms();
   } else if (video_frame.render_time_ms() != 0) {
@@ -760,6 +763,8 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
   } else {
     capture_ntp_time_ms = current_time_ms + delta_ntp_internal_ms_;
   }
+#endif
+  capture_ntp_time_ms = current_time_ms + delta_ntp_internal_ms_;
   incoming_frame.set_ntp_time_ms(capture_ntp_time_ms);
 
   // Convert NTP time, in ms, to RTP timestamp.
@@ -769,6 +774,11 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
 
   if (incoming_frame.ntp_time_ms() <= last_captured_timestamp_) {
     // We don't allow the same capture time for two frames, drop this one.
+    // Jianlin(implementation deviation: For push-mode, dropping frame due
+    // to same timestamp is not allowed.
+    // So make sure dropping is enabled for pull mode while disabled for
+    // push mode.
+#if 0
     RTC_LOG(LS_WARNING) << "Same/old NTP timestamp ("
                         << incoming_frame.ntp_time_ms()
                         << " <= " << last_captured_timestamp_
@@ -779,6 +789,7 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
       accumulated_update_rect_is_valid_ &= incoming_frame.has_update_rect();
     });
     return;
+#endif
   }
 
   bool log_stats = false;
@@ -805,7 +816,8 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
         bool cwnd_frame_drop =
             cwnd_frame_drop_interval_ &&
             (cwnd_frame_counter_++ % cwnd_frame_drop_interval_.value() == 0);
-        if (posted_frames_waiting_for_encode == 1 && !cwnd_frame_drop) {
+        if (field_trial::IsEnabled("OWT-LowLatencyMode") ||
+           (posted_frames_waiting_for_encode == 1 && !cwnd_frame_drop)) {
           MaybeEncodeVideoFrame(incoming_frame, post_time_us);
         } else {
           if (cwnd_frame_drop) {
@@ -1083,7 +1095,9 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
       !force_disable_frame_dropper_ &&
       !encoder_info_.has_trusted_rate_controller;
   frame_dropper_.Enable(frame_dropping_enabled);
-  if (frame_dropping_enabled && frame_dropper_.DropFrame()) {
+  // For low latency mode we don't drop frame
+  if (frame_dropping_enabled && frame_dropper_.DropFrame() &&
+      !field_trial::IsEnabled("OWT-LowLatencyMode")) {
     RTC_LOG(LS_VERBOSE)
         << "Drop Frame: "
            "target bitrate "

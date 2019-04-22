@@ -36,6 +36,10 @@ class ProcessThread : public TaskQueueBase {
   // Starts the worker thread.  Must be called from the construction thread.
   virtual void Start() = 0;
 
+  // Starts the worker thread at high priority. Special startup mode used at
+  // low latency mode. Used by congestion controller only.
+  virtual void StartWithHighPriority() = 0;
+
   // Stops the worker thread.  Must be called from the construction thread.
   virtual void Stop() = 0;
 

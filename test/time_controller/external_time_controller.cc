@@ -43,6 +43,12 @@ class ExternalTimeController::ProcessThreadWrapper : public ProcessThread {
     parent_->ScheduleNext();
   }
 
+  void StartWithHighPriority() override {
+    parent_->UpdateTime();
+    thread_->StartWithHighPriority();
+    parent_->ScheduleNext();
+  }
+
   void Stop() override {
     parent_->UpdateTime();
     thread_->Stop();

@@ -16,6 +16,7 @@
 
 #include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -172,6 +173,9 @@ void VCMTiming::IncomingTimestamp(uint32_t time_stamp, int64_t now_ms) {
 int64_t VCMTiming::RenderTimeMs(uint32_t frame_timestamp,
                                 int64_t now_ms) const {
   rtc::CritScope cs(&crit_sect_);
+  if (field_trial::IsEnabled("OWT-LowLatencyMode")) {
+    return 0;
+  }
   return RenderTimeMsInternal(frame_timestamp, now_ms);
 }
 

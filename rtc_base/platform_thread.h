@@ -68,6 +68,7 @@ class PlatformThread {
   // Stops (joins) the spawned thread.
   void Stop();
 
+  bool SetPriority(ThreadPriority priority);
  protected:
 #if defined(WEBRTC_WIN)
   // Exposed to derived classes to allow for special cases specific to Windows.
@@ -76,7 +77,6 @@ class PlatformThread {
 
  private:
   void Run();
-  bool SetPriority(ThreadPriority priority);
 
   ThreadRunFunction const run_function_ = nullptr;
   const ThreadPriority priority_ = kNormalPriority;

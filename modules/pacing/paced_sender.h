@@ -137,6 +137,8 @@ class PacedSender : public Module,
   // Called when the prober is associated with a process thread.
   void ProcessThreadAttached(ProcessThread* process_thread) override;
 
+  bool IsLowLatencyMode() const;
+
   // In dynamic process mode, refreshes the next process time.
   void MaybeWakupProcessThread();
 
@@ -166,6 +168,7 @@ class PacedSender : public Module,
     PacedSender* const delegate_;
   } module_proxy_{this};
 
+  const bool low_latency_mode_;
   rtc::CriticalSection critsect_;
   const PacingController::ProcessMode process_mode_;
   PacingController pacing_controller_ RTC_GUARDED_BY(critsect_);

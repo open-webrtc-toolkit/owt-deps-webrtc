@@ -85,6 +85,23 @@ void ProcessThreadImpl::Start() {
   thread_->Start();
 }
 
+void ProcessThreadImpl::StartWithHighPriority() {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(!thread_.get());
+  if (thread_.get())
+    return;
+
+  RTC_DCHECK(!stop_);
+
+  for (ModuleCallback& m : modules_)
+    m.module->ProcessThreadAttached(this);
+
+  thread_.reset(
+      new rtc::PlatformThread(&ProcessThreadImpl::Run, this, thread_name_));
+  thread_->Start();
+  thread_->SetPriority(rtc::kRealtimePriority);
+}
+
 void ProcessThreadImpl::Stop() {
   RTC_DCHECK(thread_checker_.IsCurrent());
   if (!thread_.get())

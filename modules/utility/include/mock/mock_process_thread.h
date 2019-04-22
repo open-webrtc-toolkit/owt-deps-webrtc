@@ -22,6 +22,7 @@ namespace webrtc {
 class MockProcessThread : public ProcessThread {
  public:
   MOCK_METHOD(void, Start, (), (override));
+  MOCK_METHOD0(StartWithHighPriority, void());
   MOCK_METHOD(void, Stop, (), (override));
   MOCK_METHOD(void, Delete, (), (override));
   MOCK_METHOD(void, WakeUp, (Module*), (override));

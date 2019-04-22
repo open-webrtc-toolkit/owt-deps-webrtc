@@ -43,6 +43,8 @@
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 
+static const int kRtpBufferSizeIncreased = 4 * 1024 * 1024;
+
 namespace cricket {
 
 namespace {
@@ -52,7 +54,8 @@ const int kMinLayerSize = 16;
 // If this field trial is enabled, we will enable sending FlexFEC and disable
 // sending ULPFEC whenever the former has been negotiated in the SDPs.
 bool IsFlexfecFieldTrialEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03");
+  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03");
+  return true;
 }
 
 // If this field trial is enabled, the "flexfec-03" codec will be advertised
@@ -62,7 +65,8 @@ bool IsFlexfecFieldTrialEnabled() {
 // MediaSession and added as "a=ssrc:" and "a=ssrc-group:" lines in the local
 // SDP.
 bool IsFlexfecAdvertisedFieldTrialEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
+  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
+  return true;
 }
 
 void AddDefaultFeedbackParams(VideoCodec* codec) {
@@ -591,7 +595,8 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
         webrtc::RtpExtension::kVideoTimingUri,
         webrtc::RtpExtension::kFrameMarkingUri,
         webrtc::RtpExtension::kColorSpaceUri, webrtc::RtpExtension::kMidUri,
-        webrtc::RtpExtension::kRidUri, webrtc::RtpExtension::kRepairedRidUri}) {
+        webrtc::RtpExtension::kRidUri, webrtc::RtpExtension::kRepairedRidUri,
+        webrtc::RtpExtension::kPictureIdUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   result.emplace_back(
@@ -1741,6 +1746,8 @@ void WebRtcVideoChannel::SetInterface(
   const std::string group_name =
       webrtc::field_trial::FindFullName("WebRTC-IncreasedReceivebuffers");
   int recv_buffer_size = kVideoRtpRecvBufferSize;
+  int send_buffer_size = kVideoRtpSendBufferSize;
+
   if (!group_name.empty() &&
       (sscanf(group_name.c_str(), "%d", &recv_buffer_size) != 1 ||
        recv_buffer_size <= 0)) {
@@ -1748,6 +1755,14 @@ void WebRtcVideoChannel::SetInterface(
     recv_buffer_size = kVideoRtpRecvBufferSize;
   }
 
+  // If in low latency mode and doing push-mode streaming, enlarge the buffer to
+  // 4MB.
+  bool is_low_latency_mode =
+      webrtc::field_trial::IsEnabled("OWT-LowLatencyMode");
+  if (is_low_latency_mode) {
+    recv_buffer_size = kRtpBufferSizeIncreased;
+    send_buffer_size = kRtpBufferSizeIncreased;
+  }
   MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_RCVBUF,
                           recv_buffer_size);
 
@@ -1756,7 +1771,7 @@ void WebRtcVideoChannel::SetInterface(
   // due to lack of socket buffer space, although it's not yet clear what the
   // ideal value should be.
   MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_SNDBUF,
-                          kVideoRtpSendBufferSize);
+                          send_buffer_size);
 }
 
 void WebRtcVideoChannel::SetFrameDecryptor(
@@ -1931,8 +1946,18 @@ WebRtcVideoChannel::WebRtcVideoSendStream::WebRtcVideoSendStream(
   // Maximum packet size may come in RtpConfig from external transport, for
   // example from QuicTransportInterface implementation, so do not exceed
   // given max_packet_size.
-  parameters_.config.rtp.max_packet_size =
-      std::min<size_t>(parameters_.config.rtp.max_packet_size, kVideoMtu);
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-LinkMTU");
+  if (!experiment_string.empty()) {
+    double link_mtu = ::strtod(experiment_string.c_str(), nullptr);
+    if (link_mtu > 0) {
+      parameters_.config.rtp.max_packet_size = link_mtu;
+    } else {
+      parameters_.config.rtp.max_packet_size = kVideoMtu;
+    }
+  } else {
+    parameters_.config.rtp.max_packet_size = kVideoMtu;
+  }
   parameters_.conference_mode = send_params.conference_mode;
 
   sp.GetPrimarySsrcs(&parameters_.config.rtp.ssrcs);

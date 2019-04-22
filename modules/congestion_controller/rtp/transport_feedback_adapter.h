@@ -73,6 +73,10 @@ class TransportFeedbackAdapter {
 
   DataSize GetOutstandingData() const;
 
+#ifdef INTEL_GPRA
+  int64_t GetCurrentOffsetMs();
+#endif
+
  private:
   enum class SendTimeHistoryStatus { kNotAdded, kOk, kDuplicate };
 
