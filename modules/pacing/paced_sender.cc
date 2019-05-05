@@ -407,12 +407,12 @@ bool PacedSender::SendPacket(const PacketQueueInterface::Packet& packet,
       return false;
     }
   }
-  critsect_.Leave();
+  //critsect_.Leave();
   RTC_LOG(LS_ERROR) << "b:" << clock_->TimeInMilliseconds();
   const bool success = packet_sender_->TimeToSendPacket(
       packet.ssrc, packet.sequence_number, packet.capture_time_ms,
       packet.retransmission, pacing_info);
-  critsect_.Enter();
+  //critsect_.Enter();
   RTC_LOG(LS_ERROR) << "a:" << clock_->TimeInMilliseconds();
   if (success) {
     if (first_sent_packet_ms_ == -1)
