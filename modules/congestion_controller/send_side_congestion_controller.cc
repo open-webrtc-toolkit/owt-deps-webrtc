@@ -147,7 +147,12 @@ SendSideCongestionController::SendSideCongestionController(
       pause_pacer_(false),
       pacer_paused_(false),
       min_bitrate_bps_(congestion_controller::GetMinBitrateBps()),
+#ifdef INTEL_GPRA
+      delay_based_bwe_(new NetworkPerfMeter()) {
+      RTC_LOG(LS_ERROR) << "DebugP Use GPRA BWE!!!";
+#else
       delay_based_bwe_(new DelayBasedBwe(event_log_)),
+#endif
       in_cwnd_experiment_(CwndExperimentEnabled()),
       accepted_queue_ms_(kDefaultAcceptedQueueMs),
       was_in_alr_(false),
@@ -245,7 +250,11 @@ void SendSideCongestionController::OnNetworkRouteChanged(
     rtc::CritScope cs(&bwe_lock_);
     transport_overhead_bytes_per_packet_ = network_route.packet_overhead;
     min_bitrate_bps_ = min_bitrate_bps;
+#ifdef INETL_GPRA
+    delay_based_bwe_.reset(new NetworkPerfMeter());
+#else
     delay_based_bwe_.reset(new DelayBasedBwe(event_log_));
+#endif
     acknowledged_bitrate_estimator_.reset(new AcknowledgedBitrateEstimator());
     delay_based_bwe_->SetStartBitrate(bitrate_bps);
     delay_based_bwe_->SetMinBitrate(min_bitrate_bps);
@@ -420,6 +429,21 @@ void SendSideCongestionController::OnTransportFeedback(
   DelayBasedBwe::Result result;
   {
     rtc::CritScope cs(&bwe_lock_);
+#if 1 // Debug purpose
+    for (std::vector<PacketFeedback>::iterator it = feedback_vector.begin();
+         it != feedback_vector.end(); it++) {
+      RTC_LOG(LS_INFO) << "DebugP TxFB SeqNum:" << (*it).sequence_number << ", Size"
+                       << (*it).payload_size << ", Cap:"
+                       << (*it).creation_time_ms << ", Tx"
+                       << (*it).send_time_ms << ", Rx"
+                       << (*it).arrival_time_ms << ", Cap Delay:"
+                       << ((*it).send_time_ms - (*it).creation_time_ms)
+                       << ", N/W Delay:" << ((*it).arrival_time_ms - (*it).send_time_ms);
+    }
+#endif
+#ifdef INTEL_GPRA
+    delay_based_bwe_->SetCurrentOffsetMs(transport_feedback_adapter_.GetCurrentOffsetMs());
+#endif
     result = delay_based_bwe_->IncomingPacketFeedbackVector(
         feedback_vector, acknowledged_bitrate_estimator_->bitrate_bps(),
         clock_->TimeInMilliseconds());

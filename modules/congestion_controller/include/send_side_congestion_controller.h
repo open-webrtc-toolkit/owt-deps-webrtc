@@ -27,6 +27,12 @@
 #include "rtc_base/networkroute.h"
 #include "rtc_base/race_checker.h"
 
+// To use INTEL GoodPut Rate Adaptation BWE
+#define INTEL_GPRA
+#ifdef INTEL_GPRA
+#include "NetworkPerfMeter.h"
+#endif
+
 namespace rtc {
 struct SentPacket;
 }
@@ -119,6 +125,10 @@ class SendSideCongestionController
 
   std::vector<PacketFeedback> GetTransportFeedbackVector() const;
 
+#if defined(INTEL_GPRA)
+  void SetBitrateEstimationWindowSize(int init_window, int rate_window);
+#endif
+
   void SetPacingFactor(float pacing_factor) override;
 
   void SetAllocatedBitrateWithoutFeedback(uint32_t bitrate_bps) override;
@@ -159,7 +169,12 @@ class SendSideCongestionController
   bool pacer_paused_;
   rtc::CriticalSection bwe_lock_;
   int min_bitrate_bps_ RTC_GUARDED_BY(bwe_lock_);
+#ifdef INTEL_GPRA
+  std::unique_ptr<NetworkPerfMeter> delay_based_bwe_ GUARDED_BY(bwe_lock_);
+#else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_ RTC_GUARDED_BY(bwe_lock_);
+#endif
+
   bool in_cwnd_experiment_;
   int64_t accepted_queue_ms_;
   bool was_in_alr_;

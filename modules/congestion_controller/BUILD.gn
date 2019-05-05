@@ -29,11 +29,18 @@ rtc_static_library("congestion_controller") {
     "receive_side_congestion_controller.cc",
     "send_side_congestion_controller.cc",
   ]
+  
+  include_dirs = [
+    "../gpra",
+  ]
 
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
+
+  #libs = ["gpra_lib.lib",
+  #]
 
   deps = [
     ":transport_feedback",
@@ -51,6 +58,7 @@ rtc_static_library("congestion_controller") {
     "../pacing",
     "../remote_bitrate_estimator",
     "../rtp_rtcp:rtp_rtcp_format",
+    #"../gpra",
     "goog_cc:delay_based_bwe",
     "goog_cc:estimators",
     "goog_cc:probe_controller",
