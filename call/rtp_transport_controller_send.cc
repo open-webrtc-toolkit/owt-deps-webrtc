@@ -80,7 +80,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
                        TaskQueueExperimentEnabled(), controller_factory);
 
   process_thread_->RegisterModule(&pacer_, RTC_FROM_HERE);
-  process_thread_->RegisterModule(send_side_cc_.get(), RTC_FROM_HERE);
+  //process_thread_->RegisterModule(send_side_cc_.get(), RTC_FROM_HERE);
   if (!LowLatencyStreamingEnabled()) {
     process_thread_->Start();
   } else {
@@ -90,7 +90,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
   process_thread_->Stop();
-  process_thread_->DeRegisterModule(send_side_cc_.get());
+  //process_thread_->DeRegisterModule(send_side_cc_.get());
   process_thread_->DeRegisterModule(&pacer_);
 }
 
