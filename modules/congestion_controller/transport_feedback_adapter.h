@@ -55,6 +55,8 @@ class TransportFeedbackAdapter {
 
   size_t GetOutstandingBytes() const;
 
+  int64_t GetCurrentOffsetMs();
+
  private:
   std::vector<PacketFeedback> GetPacketFeedbackVector(
       const rtcp::TransportFeedback& feedback);

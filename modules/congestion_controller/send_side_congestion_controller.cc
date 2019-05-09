@@ -32,6 +32,11 @@
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/runtime_enabled_features.h"
 
+
+#ifdef INTEL_GPRA
+#include "NetworkPerfMeter.h"
+#endif
+
 namespace webrtc {
 namespace {
 
@@ -148,8 +153,7 @@ SendSideCongestionController::SendSideCongestionController(
       pacer_paused_(false),
       min_bitrate_bps_(congestion_controller::GetMinBitrateBps()),
 #ifdef INTEL_GPRA
-      delay_based_bwe_(new NetworkPerfMeter()) {
-      RTC_LOG(LS_ERROR) << "DebugP Use GPRA BWE!!!";
+      delay_based_bwe_(new NetworkPerfMeter()),
 #else
       delay_based_bwe_(new DelayBasedBwe(event_log_)),
 #endif
@@ -162,6 +166,11 @@ SendSideCongestionController::SendSideCongestionController(
       pacer_pushback_experiment_(IsPacerPushbackExperimentEnabled()),
       congestion_window_pushback_controller_(
           MaybeCreateCongestionWindowPushbackController()) {
+#ifdef INTEL_GPRA
+  RTC_LOG(LS_ERROR) << "DebugP Use GPRA BWE!!!";
+#else
+  RTC_LOG(LS_ERROR) << "DebugP Use TransportCC BWE";
+#endif
   delay_based_bwe_->SetMinBitrate(min_bitrate_bps_);
   if (in_cwnd_experiment_ &&
       !ReadCwndExperimentParameter(&accepted_queue_ms_)) {
@@ -250,7 +259,7 @@ void SendSideCongestionController::OnNetworkRouteChanged(
     rtc::CritScope cs(&bwe_lock_);
     transport_overhead_bytes_per_packet_ = network_route.packet_overhead;
     min_bitrate_bps_ = min_bitrate_bps;
-#ifdef INETL_GPRA
+#ifdef INTEL_GPRA
     delay_based_bwe_.reset(new NetworkPerfMeter());
 #else
     delay_based_bwe_.reset(new DelayBasedBwe(event_log_));
@@ -444,9 +453,15 @@ void SendSideCongestionController::OnTransportFeedback(
 #ifdef INTEL_GPRA
     delay_based_bwe_->SetCurrentOffsetMs(transport_feedback_adapter_.GetCurrentOffsetMs());
 #endif
+
+#ifndef INTEL_GPRA
     result = delay_based_bwe_->IncomingPacketFeedbackVector(
         feedback_vector, acknowledged_bitrate_estimator_->bitrate_bps(),
         clock_->TimeInMilliseconds());
+#else
+	//Jianlin: current IncomingPacketFeedbackVector accepts 3 params instead of 1. Consider consolidate to upstream.
+    result = delay_based_bwe_->IncomingPacketFeedbackVector(feedback_vector);
+#endif
   }
   if (result.updated) {
     bitrate_controller_->OnDelayBasedBweResult(result);
