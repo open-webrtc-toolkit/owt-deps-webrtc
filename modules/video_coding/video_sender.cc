@@ -256,16 +256,13 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
   if (_encoder == nullptr)
     return VCM_UNINITIALIZED;
   SetEncoderParameters(encoder_params, encoder_has_internal_source);
-  if (_mediaOpt.DropFrame()) {
+  if (_mediaOpt.DropFrame() && !field_trial::IsEnabled("OWT-LowLatencyMode")) {
     RTC_LOG(LS_VERBOSE) << "Drop Frame "
                         << "target bitrate "
                         << encoder_params.target_bitrate.get_sum_bps()
                         << " loss rate " << encoder_params.loss_rate << " rtt "
                         << encoder_params.rtt << " input frame rate "
                         << encoder_params.input_frame_rate;
-    // For low latency mode we don't drop.
-    if (field_trial::IsEnabled("OWT-LowLatencyMode"))
-      return VCM_OK;
     post_encode_callback_->OnDroppedFrame(
         EncodedImageCallback::DropReason::kDroppedByMediaOptimizations);
     return VCM_OK;
@@ -304,7 +301,7 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
       _encoder->Encode(converted_frame, codecSpecificInfo, next_frame_types);
   if (ret < 0) {
     RTC_LOG(LS_ERROR) << "Failed to encode frame. Error code: " << ret;
-    return ret;
+    //return ret;
   }
 
   {

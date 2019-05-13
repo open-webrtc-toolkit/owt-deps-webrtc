@@ -49,6 +49,10 @@ namespace webrtc {
 const int64_t PacedSender::kMaxQueueLengthMs = 2000;
 const float PacedSender::kDefaultPaceMultiplier = 2.5f;
 
+int64_t capture_timestamp = 0;
+int64_t end_timestamp = 0;
+size_t total_size = 0;
+int64_t frame_count = 0;
 PacedSender::PacedSender(const Clock* clock,
                          PacketSender* packet_sender,
                          RtcEventLog* event_log)
@@ -92,6 +96,7 @@ PacedSender::PacedSender(const Clock* clock,
   UpdateBudgetWithElapsedTime(kMinPacketLimitMs);
   if (low_latency_mode_)
     prober_->SetEnabled(false);
+  recorder = fopen("pacer.txt", "a+");
 }
 
 PacedSender::~PacedSender() {}
@@ -356,6 +361,22 @@ void PacedSender::Process() {
                         << ",cu: " << clock_->TimeInMilliseconds()
                         << ",sz: " << packet.bytes
                         << ", q: " << packets_->SizeInPackets();
+
+      if (capture_timestamp != packet.capture_time_ms) {  // New frame
+        int64_t last_frame_cost = end_timestamp - capture_timestamp;
+        int64_t time_since_last_frame =
+            clock_->TimeInMilliseconds() - end_timestamp;
+        fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count, last_frame_cost,
+                total_size, time_since_last_frame);
+        frame_count++;
+        total_size = 0;
+        end_timestamp = clock_->TimeInMilliseconds();
+        capture_timestamp = packet.capture_time_ms;
+	  } else {
+        capture_timestamp = packet.capture_time_ms;
+        total_size += packet.bytes;
+        end_timestamp = clock_->TimeInMilliseconds();
+	  }
       if (is_probing && bytes_sent > recommended_probe_size)
         break;
     } else {
@@ -414,7 +435,7 @@ bool PacedSender::SendPacket(const PacketQueueInterface::Packet& packet,
       packet.retransmission, pacing_info);
   critsect_.Enter();
   RTC_LOG(LS_ERROR) << "a:" << clock_->TimeInMilliseconds();
-  if (success) {
+  if (success && !IsLowLatencyMode()) {
     if (first_sent_packet_ms_ == -1)
       first_sent_packet_ms_ = clock_->TimeInMilliseconds();
     if (!audio_packet || account_for_audio_) {
