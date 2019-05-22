@@ -82,6 +82,12 @@ VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
 
 namespace internal {
 
+const char kLogLatencyToFileFieldTrial[] = "OWT-Log-Latency-To-File";
+
+bool GetLogLatencyToFileIsFieldTrialEnabled() {
+  return webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial);
+}
+
 VideoReceiveStream::VideoReceiveStream(
     RtpStreamReceiverControllerInterface* receiver_controller,
     int num_cpu_cores,
@@ -150,11 +156,20 @@ VideoReceiveStream::VideoReceiveStream(
     rtx_receiver_ = receiver_controller->CreateReceiver(
         config_.rtp.rtx_ssrc, rtx_receive_stream_.get());
   }
+  recorder_pre_ = nullptr;
+  if (GetLogLatencyToFileIsFieldTrialEnabled()) {
+    char dump_file_name[128];
+    snprintf(dump_file_name, 128, "pre_decode_vrs-%p.txt", this);
+    recorder_pre_ = fopen(dump_file_name, "w+");
+  }
 }
 
 VideoReceiveStream::~VideoReceiveStream() {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_sequence_checker_);
   RTC_LOG(LS_INFO) << "~VideoReceiveStream: " << config_.ToString();
+  if (recorder_pre_ != nullptr) {
+    fclose(recorder_pre_);
+  }
   Stop();
 
   process_thread_->DeRegisterModule(&rtp_stream_sync_);
@@ -416,6 +431,10 @@ bool VideoReceiveStream::Decode() {
 
   if (frame) {
     int64_t now_ms = clock_->TimeInMilliseconds();
+    if (recorder_pre_ != nullptr) {
+      int32_t frame_ts = frame->Timestamp();
+      fprintf(recorder_pre_, "%d\t%lld\n", frame_ts, now_ms);
+    }
     RTC_DCHECK_EQ(res, video_coding::FrameBuffer::ReturnReason::kFrameFound);
     int decode_result = video_receiver_.Decode(frame.get());
     if (decode_result == WEBRTC_VIDEO_CODEC_OK ||

@@ -880,7 +880,7 @@ int AudioProcessingImpl::ProcessStream(const float* const* src,
   }
 
   capture_.capture_audio->CopyFrom(src, formats_.api_format.input_stream());
-  RETURN_ON_ERR(ProcessCaptureStreamLocked());
+  //RETURN_ON_ERR(ProcessCaptureStreamLocked());
   capture_.capture_audio->CopyTo(formats_.api_format.output_stream(), dest);
 
   if (aec_dump_) {

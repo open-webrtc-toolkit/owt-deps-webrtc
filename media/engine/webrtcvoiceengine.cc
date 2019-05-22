@@ -615,10 +615,6 @@ RtpCapabilities WebRtcVoiceEngine::GetCapabilities() const {
   // demuxing is completed.
   // capabilities.header_extensions.push_back(webrtc::RtpExtension(
   //     webrtc::RtpExtension::kMidUri, webrtc::RtpExtension::kMidDefaultId));
-  // Temporal scalability support.
-  capabilities.header_extensions.push_back(
-      webrtc::RtpExtension(webrtc::RtpExtension::kPictureIdUri,
-                           webrtc::RtpExtension::kPictureIdDefaultId));
   return capabilities;
 }
 

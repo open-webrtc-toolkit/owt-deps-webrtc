@@ -33,7 +33,8 @@
 namespace {
 // Time limit in milliseconds between packet bursts.
 const int64_t kMinPacketLimitMs = 5;
-const int64_t kMinPacketLimitLowLatency = 1; // For low latency mode we set process interval to 1ms instead.
+const int64_t kMinPacketLimitLowLatency =
+    1;  // For low latency mode we set process interval to 1ms instead.
 const int64_t kCongestedPacketIntervalMs = 500;
 const int64_t kPausedProcessIntervalMs = kCongestedPacketIntervalMs;
 const int64_t kMaxElapsedTimeMs = 2000;
@@ -48,6 +49,7 @@ namespace webrtc {
 
 const int64_t PacedSender::kMaxQueueLengthMs = 2000;
 const float PacedSender::kDefaultPaceMultiplier = 2.5f;
+const char kLogLatencyToFileFieldTrial[] = "OWT-Log-Latency-To-File";
 
 int64_t capture_timestamp = 0;
 int64_t end_timestamp = 0;
@@ -96,14 +98,21 @@ PacedSender::PacedSender(const Clock* clock,
   UpdateBudgetWithElapsedTime(kMinPacketLimitMs);
   if (low_latency_mode_)
     prober_->SetEnabled(false);
-  recorder = fopen("pacer.txt", "a+");
+  recorder = nullptr;
+  if (webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial))
+    recorder = fopen("pacer.txt", "a+");
 }
 
-PacedSender::~PacedSender() {}
+PacedSender::~PacedSender() {
+  if (recorder != nullptr) {
+    fclose(recorder);
+    recorder = nullptr;
+  }
+}
 
 void PacedSender::CreateProbeCluster(int bitrate_bps) {
   rtc::CritScope cs(&critsect_);
-  if (!low_latency_mode_) // Do not create probe cluster on low latency mode.
+  if (!low_latency_mode_)  // Do not create probe cluster on low latency mode.
     prober_->CreateProbeCluster(bitrate_bps, clock_->TimeInMilliseconds());
 }
 
@@ -300,7 +309,7 @@ void PacedSender::Process() {
     // congested state due to no feedback being received.
     int64_t elapsed_since_last_send_us = now_us - last_send_time_us_;
     if (elapsed_since_last_send_us >= kCongestedPacketIntervalMs * 1000) {
-      // We can not send padding unless a normal packet has first been sent. If
+      // We do not send padding unless a normal packet has first been sent. If
       // we do, timestamps get messed up.
       if (packet_counter_ > 0) {
         PacedPacketInfo pacing_info;
@@ -311,7 +320,7 @@ void PacedSender::Process() {
   }
   if (paused_) {
     RTC_LOG(LS_ERROR) << "Paused.";
-    //return;
+    // return;
   }
 
   if (elapsed_time_ms > 0) {
@@ -362,21 +371,24 @@ void PacedSender::Process() {
                         << ",sz: " << packet.bytes
                         << ", q: " << packets_->SizeInPackets();
 
-      if (capture_timestamp != packet.capture_time_ms) {  // New frame
-        int64_t last_frame_cost = end_timestamp - capture_timestamp;
-        int64_t time_since_last_frame =
-            clock_->TimeInMilliseconds() - end_timestamp;
-        fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count, last_frame_cost,
-                total_size, time_since_last_frame);
-        frame_count++;
-        total_size = 0;
-        end_timestamp = clock_->TimeInMilliseconds();
-        capture_timestamp = packet.capture_time_ms;
-	  } else {
-        capture_timestamp = packet.capture_time_ms;
-        total_size += packet.bytes;
-        end_timestamp = clock_->TimeInMilliseconds();
-	  }
+      if (webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial)) {
+        if (capture_timestamp != packet.capture_time_ms) {  // New frame
+          int64_t last_frame_cost = end_timestamp - capture_timestamp;
+          int64_t time_since_last_frame =
+              clock_->TimeInMilliseconds() - end_timestamp;
+          fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count,
+                  last_frame_cost, total_size, time_since_last_frame);
+          frame_count++;
+          total_size = 0;
+          end_timestamp = clock_->TimeInMilliseconds();
+          capture_timestamp = packet.capture_time_ms;
+        } else {
+          capture_timestamp = packet.capture_time_ms;
+          total_size += packet.bytes;
+          end_timestamp = clock_->TimeInMilliseconds();
+        }
+      }
+
       if (is_probing && bytes_sent > recommended_probe_size)
         break;
     } else {
@@ -389,12 +401,12 @@ void PacedSender::Process() {
 
   if (!IsLowLatencyMode()) {
     if (packets_->Empty() && !Congested()) {
-      // We can not send padding unless a normal packet has first been sent. If we
-      // do, timestamps get messed up.
+      // We can not send padding unless a normal packet has first been sent. If
+      // we do, timestamps get messed up.
       if (packet_counter_ > 0) {
         int padding_needed =
             static_cast<int>(is_probing ? (recommended_probe_size - bytes_sent)
-                                      : padding_budget_->bytes_remaining());
+                                        : padding_budget_->bytes_remaining());
         if (padding_needed > 0) {
           bytes_sent += SendPadding(padding_needed, pacing_info);
         }
@@ -422,9 +434,10 @@ bool PacedSender::SendPacket(const PacketQueueInterface::Packet& packet,
   bool apply_pacing =
       !audio_packet || account_for_audio_ || video_blocks_audio_;
   if (!IsLowLatencyMode()) {
-    if (apply_pacing && (Congested() || (media_budget_->bytes_remaining() == 0 &&
-                                       pacing_info.probe_cluster_id ==
-                                           PacedPacketInfo::kNotAProbe))) {
+    if (apply_pacing &&
+        (Congested() ||
+         (media_budget_->bytes_remaining() == 0 &&
+          pacing_info.probe_cluster_id == PacedPacketInfo::kNotAProbe))) {
       return false;
     }
   }
