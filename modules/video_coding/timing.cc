@@ -14,6 +14,8 @@
 
 #include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/field_trial.h"
+#include "system_wrappers/include/runtime_enabled_features.h"
 
 namespace webrtc {
 
@@ -173,6 +175,10 @@ int64_t VCMTiming::RenderTimeMs(uint32_t frame_timestamp,
 
 int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
                                         int64_t now_ms) const {
+  // For low latency mode, render immediately
+  if (webrtc::field_trial::IsEnabled(runtime_enabled_features::kLowLatencyMode)) {
+    return 0;
+  }
   if (min_playout_delay_ms_ == 0 && max_playout_delay_ms_ == 0) {
     // Render as soon as possible.
     return 0;

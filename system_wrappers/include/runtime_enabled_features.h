@@ -26,6 +26,7 @@ namespace webrtc {
 namespace runtime_enabled_features {
 
 const char kDualStreamModeFeatureName[] = "WebRtcDualStreamMode";
+const char kLowLatencyMode[] = "OWT-LowLatencyMode";
 
 bool IsFeatureEnabled(std::string feature_name);
 
