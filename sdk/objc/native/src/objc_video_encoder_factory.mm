@@ -57,7 +57,10 @@ class ObjCVideoEncoder : public VideoEncoder {
 
       // Handle types that can be converted into one of CodecSpecificInfo's hard coded cases.
       CodecSpecificInfo codecSpecificInfo;
-      if ([info isKindOfClass:[RTCCodecSpecificInfoH264 class]]) {
+      // Because of symbol conflict, isKindOfClass doesn't work as expected.
+      // See https://bugs.webkit.org/show_bug.cgi?id=198782.
+      if ([NSStringFromClass([info class]) isEqual:@"RTCCodecSpecificInfoH264"]) {
+        // if ([info isKindOfClass:[RTCCodecSpecificInfoH264 class]]) {
         codecSpecificInfo = [(RTCCodecSpecificInfoH264 *)info nativeCodecSpecificInfo];
       }
 
@@ -147,7 +150,10 @@ std::unique_ptr<VideoEncoder> ObjCVideoEncoderFactory::CreateVideoEncoder(
     const SdpVideoFormat &format) {
   RTCVideoCodecInfo *info = [[RTCVideoCodecInfo alloc] initWithNativeSdpVideoFormat:format];
   id<RTCVideoEncoder> encoder = [encoder_factory_ createEncoder:info];
-  if ([encoder isKindOfClass:[RTCWrappedNativeVideoEncoder class]]) {
+  // Because of symbol conflict, isKindOfClass doesn't work as expected.
+  // See https://bugs.webkit.org/show_bug.cgi?id=198782.
+  // if ([encoder isKindOfClass:[RTCWrappedNativeVideoEncoder class]]) {
+  if ([info.name isEqual:@"VP8"] || [info.name isEqual:@"VP9"]) {
     return [(RTCWrappedNativeVideoEncoder *)encoder releaseWrappedEncoder];
   } else {
     return std::unique_ptr<ObjCVideoEncoder>(new ObjCVideoEncoder(encoder));
