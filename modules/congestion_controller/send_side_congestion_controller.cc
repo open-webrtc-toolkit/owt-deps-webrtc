@@ -459,8 +459,9 @@ void SendSideCongestionController::OnTransportFeedback(
         feedback_vector, acknowledged_bitrate_estimator_->bitrate_bps(),
         clock_->TimeInMilliseconds());
 #else
-	//Jianlin: current IncomingPacketFeedbackVector accepts 3 params instead of 1. Consider consolidate to upstream.
-    result = delay_based_bwe_->IncomingPacketFeedbackVector(feedback_vector);
+    result = delay_based_bwe_->IncomingPacketFeedbackVector(
+        feedback_vector, *acknowledged_bitrate_estimator_->bitrate_bps(),
+        clock_->TimeInMilliseconds());
 #endif
   }
   if (result.updated) {
