@@ -34,7 +34,8 @@ class RtpPacketizerH264 : public RtpPacketizer {
 
   size_t SetPayloadData(const uint8_t* payload_data,
                         size_t payload_size,
-                        const RTPFragmentationHeader* fragmentation) override;
+                        const RTPFragmentationHeader* fragmentation,
+                        bool end_of_frame) override;
 
   // Get the next payload with H264 payload header.
   // Write payload and set marker bit of the |packet|.
@@ -47,11 +48,12 @@ class RtpPacketizerH264 : public RtpPacketizer {
   // Input fragments (NAL units), with an optionally owned temporary buffer,
   // used in case the fragment gets modified.
   struct Fragment {
-    Fragment(const uint8_t* buffer, size_t length);
+    Fragment(const uint8_t* buffer, size_t length, uint8_t type);
     explicit Fragment(const Fragment& fragment);
     ~Fragment();
     const uint8_t* buffer = nullptr;
     size_t length = 0;
+    uint8_t pl_type = 0;
     std::unique_ptr<rtc::Buffer> tmp_buffer;
   };
 
@@ -81,7 +83,9 @@ class RtpPacketizerH264 : public RtpPacketizer {
   };
 
   bool GeneratePackets();
-  void PacketizeFuA(size_t fragment_index);
+  // We modify the FU packetization to handle partial outputed NAL at the
+  // end or beginning of payload.
+  void PacketizeFuA(size_t fragment_index, bool slice_end, bool slice_begin);
   size_t PacketizeStapA(size_t fragment_index);
   bool PacketizeSingleNalu(size_t fragment_index);
   void NextAggregatePacket(RtpPacketToSend* rtp_packet, bool last);
@@ -93,6 +97,8 @@ class RtpPacketizerH264 : public RtpPacketizer {
   const H264PacketizationMode packetization_mode_;
   std::deque<Fragment> input_fragments_;
   std::queue<PacketUnit> packets_;
+  bool end_of_frame_;
+  uint8_t first_partial_fu_nal_header_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH264);
 };

@@ -117,7 +117,8 @@ RtpPacketizerH265::Fragment::Fragment(const Fragment& fragment)
 size_t RtpPacketizerH265::SetPayloadData(
     const uint8_t* payload_data,
     size_t payload_size,
-    const RTPFragmentationHeader* fragmentation) {
+    const RTPFragmentationHeader* fragmentation,
+    bool /*end_of_frame*/) {
   RTC_DCHECK(packets_.empty());
   RTC_DCHECK(input_fragments_.empty());
   RTC_DCHECK(fragmentation);

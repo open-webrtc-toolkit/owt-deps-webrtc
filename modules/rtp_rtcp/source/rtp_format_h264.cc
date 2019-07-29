@@ -85,7 +85,9 @@ RtpPacketizerH264::RtpPacketizerH264(size_t max_payload_len,
     : max_payload_len_(max_payload_len),
       last_packet_reduction_len_(last_packet_reduction_len),
       num_packets_left_(0),
-      packetization_mode_(packetization_mode) {
+      packetization_mode_(packetization_mode),
+      end_of_frame_(true),
+      first_partial_fu_nal_header_(0) {
   // Guard against uninitialized memory in packetization_mode.
   RTC_CHECK(packetization_mode == H264PacketizationMode::NonInterleaved ||
             packetization_mode == H264PacketizationMode::SingleNalUnit);
@@ -96,26 +98,33 @@ RtpPacketizerH264::~RtpPacketizerH264() {}
 
 RtpPacketizerH264::Fragment::~Fragment() = default;
 
-RtpPacketizerH264::Fragment::Fragment(const uint8_t* buffer, size_t length)
-    : buffer(buffer), length(length) {}
+RtpPacketizerH264::Fragment::Fragment(const uint8_t* buffer, size_t length, uint8_t type)
+    : buffer(buffer), length(length), pl_type(type) {}
 RtpPacketizerH264::Fragment::Fragment(const Fragment& fragment)
-    : buffer(fragment.buffer), length(fragment.length) {}
+    : buffer(fragment.buffer), length(fragment.length), pl_type(fragment.pl_type) {}
 
 size_t RtpPacketizerH264::SetPayloadData(
     const uint8_t* payload_data,
     size_t payload_size,
-    const RTPFragmentationHeader* fragmentation) {
+    const RTPFragmentationHeader* fragmentation,
+    bool end_of_frame) {
   RTC_DCHECK(packets_.empty());
   RTC_DCHECK(input_fragments_.empty());
   RTC_DCHECK(fragmentation);
+  end_of_frame_ = end_of_frame;
+
+  // Different fragments allows to be packetized as FU or STAP-A or NAL,
+  // so there's no need to look back into history about how previous slice
+  // was packetized before.
   for (int i = 0; i < fragmentation->fragmentationVectorSize; ++i) {
     const uint8_t* buffer =
         &payload_data[fragmentation->fragmentationOffset[i]];
     size_t length = fragmentation->fragmentationLength[i];
+    uint8_t pl_type = fragmentation->fragmentationPlType[i];
 
     bool updated_sps = false;
     H264::NaluType nalu_type = H264::ParseNaluType(buffer[0]);
-    if (nalu_type == H264::NaluType::kSps) {
+    if (pl_type == 0 && nalu_type == H264::NaluType::kSps) {  // pl_type set to non-zero when current fragment is part of previous NAL.
       // Check if stream uses picture order count type 0, and if so rewrite it
       // to enable faster decoding. Streams in that format incur additional
       // delay because it allows decode order to differ from render order.
@@ -141,7 +150,7 @@ size_t RtpPacketizerH264::SetPayloadData(
       switch (result) {
         case SpsVuiRewriter::ParseResult::kVuiRewritten:
           input_fragments_.push_back(
-              Fragment(output_buffer->data(), output_buffer->size()));
+              Fragment(output_buffer->data(), output_buffer->size(), pl_type));
           input_fragments_.rbegin()->tmp_buffer = std::move(output_buffer);
           updated_sps = true;
           RTC_HISTOGRAM_ENUMERATION(kSpsValidHistogramName,
@@ -167,7 +176,7 @@ size_t RtpPacketizerH264::SetPayloadData(
     }
 
     if (!updated_sps)
-      input_fragments_.push_back(Fragment(buffer, length));
+      input_fragments_.push_back(Fragment(buffer, length, pl_type));
   }
   if (!GeneratePackets()) {
     // If failed to generate all the packets, discard already generated
@@ -183,6 +192,25 @@ size_t RtpPacketizerH264::SetPayloadData(
 }
 
 bool RtpPacketizerH264::GeneratePackets() {
+  // If there's only 1 fragement, handle specially.
+  if (input_fragments_.size() == 1 && input_fragments_[0].pl_type != 0) {
+    // It's part of previous NAL. S-bit must not be set. E-bit set if end_of_frame_ flag is set.
+    // BUGBUG: This is not neccessarily true, but for Titan SDK'case, there would be only 1-slice
+    // so OK to do so.
+    if (end_of_frame_) {
+      PacketizeFuA(0, true, false);
+    } else {
+      PacketizeFuA(0, false, false);
+    }
+    first_partial_fu_nal_header_ = input_fragments_[0].pl_type;
+    return true;
+  }
+
+  // More than 1 fragments.
+  // cases:   1st part of previous NALU, last is not end of frame: FU first without S, with E;  FU last with S, without E.
+  //          1st part of previous NALU,  last is end of frame:  FU first withou S, with E;  Last with normal process.
+  //          1st is begin of frame, last is not end of frame:  FU last with S and without E.
+  //          1st is begin of frame, last is end of fram. Normal process with all fragments.
   for (size_t i = 0; i < input_fragments_.size();) {
     switch (packetization_mode_) {
       case H264PacketizationMode::SingleNalUnit:
@@ -192,13 +220,32 @@ bool RtpPacketizerH264::GeneratePackets() {
         break;
       case H264PacketizationMode::NonInterleaved:
         size_t fragment_len = input_fragments_[i].length;
+
+        if (i == 0) {
+          if (input_fragments_[i].pl_type != 0) {// this is part of previous in-complete NAL
+            PacketizeFuA(0, true /*end*/, false /*begin*/); // S-bit must not be set. But E-bit depends
+            first_partial_fu_nal_header_ = input_fragments_[0].pl_type;
+            ++i;
+            break;
+          }
+        }
         if (i + 1 == input_fragments_.size()) {
           // Pretend that last fragment is larger instead of making last packet
           // smaller.
           fragment_len += last_packet_reduction_len_;
+          // If it's the last fragment in current payload and end_of_frame_ flag
+          // is not set, current packet must be fragmented into FU-A.
+          if (!end_of_frame_) {
+            PacketizeFuA(i, false, true);    // If not the last slice of the frame, then E-bit must not be set.
+          } else {
+            PacketizeFuA(i, true, true);
+          }
+          ++i;
+          break;
         }
+
         if (fragment_len > max_payload_len_) {
-          PacketizeFuA(i);
+          PacketizeFuA(i, true, true);
           ++i;
         } else {
           i = PacketizeStapA(i);
@@ -209,13 +256,25 @@ bool RtpPacketizerH264::GeneratePackets() {
   return true;
 }
 
-void RtpPacketizerH264::PacketizeFuA(size_t fragment_index) {
+void RtpPacketizerH264::PacketizeFuA(size_t fragment_index, bool set_e_bit, bool set_s_bit) {
   // Fragment payload into packets (FU-A).
   // Strip out the original header and leave room for the FU-A header.
   const Fragment& fragment = input_fragments_[fragment_index];
   bool is_last_fragment = fragment_index + 1 == input_fragments_.size();
+  // override is_last_fragment flag
+  if (!set_e_bit) {
+    is_last_fragment = false;
+  }
   size_t payload_left = fragment.length - kNalHeaderSize;
-  size_t offset = kNalHeaderSize;
+  if (!set_s_bit)
+    payload_left = fragment.length;
+
+  size_t offset;
+  if (set_s_bit) {
+    offset = kNalHeaderSize;
+  } else {
+    offset = 0;
+  }
   size_t per_packet_capacity = max_payload_len_ - kFuAHeaderSize;
 
   // Instead of making the last packet smaller we pretend that all packets are
@@ -252,10 +311,11 @@ void RtpPacketizerH264::PacketizeFuA(size_t fragment_index) {
       }
     }
     RTC_CHECK_GT(packet_length, 0);
-    packets_.push(PacketUnit(Fragment(fragment.buffer + offset, packet_length),
-                             offset - kNalHeaderSize == 0,
-                             payload_left == packet_length, false,
-                             fragment.buffer[0]));
+    // fragment.buffer[0] does not neccessarily contain the nal_header. So if set_s_bit is false, get the NAL header info from first input fragment header.
+    packets_.push(PacketUnit(Fragment(fragment.buffer + offset, packet_length, fragment.pl_type),
+                             offset - kNalHeaderSize == 0,  //if this FU is with offset to 0, it will also be marked as not first_fragment.
+                             (payload_left == packet_length && set_e_bit), false,
+                             set_s_bit? fragment.buffer[0] : first_partial_fu_nal_header_));
     offset += packet_length;
     payload_left -= packet_length;
     --num_packets;
@@ -348,7 +408,10 @@ bool RtpPacketizerH264::NextPacket(RtpPacketToSend* rtp_packet) {
     RTC_DCHECK_LE(rtp_packet->payload_size(),
                   max_payload_len_ - last_packet_reduction_len_);
   }
-  rtp_packet->SetMarker(packets_.empty());
+  // We will only set marker if this is really last slice
+  // of the AU.
+  if (end_of_frame_)
+    rtp_packet->SetMarker(packets_.empty());
   --num_packets_left_;
   return true;
 }
@@ -396,6 +459,7 @@ void RtpPacketizerH264::NextFragmentPacket(RtpPacketToSend* rtp_packet) {
   fu_header |= (packet->first_fragment ? kSBit : 0);
   fu_header |= (packet->last_fragment ? kEBit : 0);
   uint8_t type = packet->header & kTypeMask;
+  //
   fu_header |= type;
   const Fragment& fragment = packet->source_fragment;
   uint8_t* buffer =
