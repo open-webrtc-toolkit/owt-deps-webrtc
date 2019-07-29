@@ -22,6 +22,7 @@ class NetworkControllerFactoryInterface;
 class VideoEncoderFactory;
 class VideoDecoderFactory;
 class AudioProcessing;
+class PeerConnectionFactoryInterface;
 
 }  // namespace webrtc
 
@@ -87,6 +88,9 @@ NS_ASSUME_NONNULL_BEGIN
                         decoderFactory:(nullable id<RTCVideoDecoderFactory>)decoderFactory
                  mediaTransportFactory:
                      (std::unique_ptr<webrtc::MediaTransportFactory>)mediaTransportFactory;
+
+- (instancetype)initWithNativePeerConnectionFactory:(
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory;
 @end
 
 NS_ASSUME_NONNULL_END
