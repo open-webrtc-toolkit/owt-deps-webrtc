@@ -335,7 +335,7 @@ void AudioConferenceMixerImpl::Process() {
             _outputFrequency <= AudioProcessing::kMaxNativeSampleRateHz;
 
         // 1. mix AnonomouslyFromList
-        generalFrame->UpdateFrame(-1, _timeStamp, NULL, 0, _outputFrequency,
+        generalFrame->UpdateFrame(-1, 0, NULL, 0, _outputFrequency,
                 AudioFrame::kNormalSpeech,
                 AudioFrame::kVadPassive, num_mixed_channels);
 
@@ -390,9 +390,10 @@ void AudioConferenceMixerImpl::Process() {
             }
 
             mixedAudio->id_ = id;
-            mixedAudio->timestamp_ = _timeStamp;
-            _timeStamp += static_cast<uint32_t>(_sampleSize);
+            mixedAudio->timestamp_ = _timeStamp * mixedAudio->sample_rate_hz_ / 1000;
         }
+
+        _timeStamp += 10;
 
         // woogeen vad
         if(_vadEnabled && --_amountOf10MsRemainder == 0) {
