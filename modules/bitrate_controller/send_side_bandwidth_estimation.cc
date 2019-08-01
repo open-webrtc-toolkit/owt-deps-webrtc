@@ -414,7 +414,7 @@ void SendSideBandwidthEstimation::UpdateMinHistory(int64_t now_ms) {
 void SendSideBandwidthEstimation::CapBitrateToThresholds(int64_t now_ms,
                                                          uint32_t bitrate_bps) {
   std::string experiment_string =
-      webrtc::field_trial::FindFullName("OWT-DelayBWEWeidght");
+      webrtc::field_trial::FindFullName("OWT-DelayBweWeight");
   double delay_weight = ::strtod(experiment_string.c_str(), nullptr);
   double delay_fraction = delay_weight / 100.0;
   double lost_fraction = 1 - delay_fraction;
