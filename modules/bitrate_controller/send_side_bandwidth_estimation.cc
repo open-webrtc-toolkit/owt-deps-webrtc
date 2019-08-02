@@ -422,7 +422,9 @@ void SendSideBandwidthEstimation::CapBitrateToThresholds(int64_t now_ms,
   if (bwe_incoming_ > 0 && bitrate_bps > bwe_incoming_) {
     bitrate_bps = bwe_incoming_;
   }
-  if (delay_based_bitrate_bps_ > 0 && bitrate_bps > delay_based_bitrate_bps_) {
+  if (delay_weight == 100) {
+    bitrate_bps = delay_based_bitrate_bps_;
+  } else if (delay_based_bitrate_bps_ > 0 && bitrate_bps > delay_based_bitrate_bps_) {
     if (delay_weight <= 100 && delay_weight >= 0)
       bitrate_bps = bitrate_bps * lost_fraction +
                     delay_based_bitrate_bps_ * delay_fraction;
