@@ -15,7 +15,7 @@
 #include <deque>
 #include <string>
 #include <vector>
-
+#include <fstream>
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -110,6 +110,8 @@ class VideoEncoderWrapper : public VideoEncoder {
   GofInfoVP9 gof_;  // Contains each frame's temporal information for
                     // non-flexible VP9 mode.
   size_t gof_idx_;
+  FILE* dump_output_;
+  bool enable_dump_;
 };
 
 /* If the j_encoder is a wrapped native encoder, unwrap it. If it is not,

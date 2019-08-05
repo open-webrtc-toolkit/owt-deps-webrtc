@@ -36,6 +36,8 @@ VideoEncoderWrapper::VideoEncoderWrapper(JNIEnv* jni,
 
   initialized_ = false;
   num_resets_ = 0;
+  dump_output_ = nullptr;
+  enable_dump_ = false;
 }
 VideoEncoderWrapper::~VideoEncoderWrapper() = default;
 
@@ -49,6 +51,15 @@ int32_t VideoEncoderWrapper::InitEncode(const VideoCodec* codec_settings,
   num_resets_ = 0;
   encoder_queue_ = rtc::TaskQueue::Current();
 
+  if(enable_dump_ && codec_settings_.codecType == kVideoCodecH264) {
+    std::string outfile = "/sdcard/dump_encoder_" + std::to_string(reinterpret_cast<long>(this))  + ".h264";
+    dump_output_ = fopen(outfile.c_str(), "wb");
+    if(dump_output_) {
+      RTC_LOG(LS_INFO) << "Open "<<outfile.c_str()<<"successed!";
+    }else{
+      RTC_LOG(LS_INFO) << "Open "<<outfile.c_str()<<"failed!";
+    }
+  }
   return InitEncodeInternal(jni);
 }
 
@@ -103,6 +114,10 @@ int32_t VideoEncoderWrapper::Release() {
   frame_extra_infos_.clear();
   initialized_ = false;
   encoder_queue_ = nullptr;
+  if(dump_output_) {
+    fclose(dump_output_);
+    dump_output_ = nullptr;
+  }
 
   return status;
 }
@@ -274,6 +289,9 @@ void VideoEncoderWrapper::OnEncodedFrame(JNIEnv* jni,
           video_encoder_wrapper->ParseFragmentationHeader(task_buffer);
       EncodedImage frame(const_cast<uint8_t*>(task_buffer.data()),
                          task_buffer.size(), task_buffer.size());
+      if(video_encoder_wrapper->dump_output_){
+        fwrite((void*)(task_buffer.data()), task_buffer.size(), 1, video_encoder_wrapper->dump_output_);
+      }
       frame._encodedWidth = encoded_width;
       frame._encodedHeight = encoded_height;
       frame.SetTimestamp(frame_extra_info.timestamp_rtp);
