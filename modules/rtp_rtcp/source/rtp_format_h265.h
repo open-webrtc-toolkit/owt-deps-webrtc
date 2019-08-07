@@ -25,7 +25,7 @@ class RtpPacketizerH265 : public RtpPacketizer {
 
   size_t SetPayloadData(const uint8_t* payload_data,
                         size_t payload_size,
-                        const RTPFragmentationHeader* fragmentation) override;
+                        const RTPFragmentationHeader* fragmentation, bool end_of_frame) override;
 
   // Get the next payload with H.265 payload header.
   // buffer is a pointer to where the output will be written.

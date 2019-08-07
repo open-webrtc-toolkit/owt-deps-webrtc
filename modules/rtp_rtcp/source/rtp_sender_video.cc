@@ -295,6 +295,7 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
   size_t fec_packet_overhead;
   bool red_enabled;
   int32_t retransmission_settings;
+  bool frame_completed = true;
   {
     rtc::CritScope cs(&crit_);
     // According to
@@ -307,7 +308,12 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
     // packet in each group of packets which make up another type of frame
     // (e.g. a P-Frame) only if the current value is different from the previous
     // value sent.
-    if (video_header) {
+    if (video_header && video_header->codec == kVideoCodecH264 &&
+        !absl::get<RTPVideoHeaderH264>(video_header->video_type_header)
+             .has_last_fragement) {
+      frame_completed = false;
+    }
+    if (video_header && frame_completed) {
       // Set rotation when key frame or when changed (to follow standard).
       // Or when different from 0 (to follow current receiver implementation).
       VideoRotation current_rotation = video_header->rotation;
@@ -363,8 +369,8 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
       video_header ? GetTemporalId(*video_header) : kNoTemporalIdx;
   StorageType storage = GetStorageType(temporal_id, retransmission_settings,
                                        expected_retransmission_time_ms);
-  size_t num_packets =
-      packetizer->SetPayloadData(payload_data, payload_size, fragmentation);
+  size_t num_packets = packetizer->SetPayloadData(
+      payload_data, payload_size, fragmentation, frame_completed);
 
   if (num_packets == 0)
     return false;

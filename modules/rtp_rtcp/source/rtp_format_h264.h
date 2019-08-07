@@ -34,7 +34,8 @@ class RtpPacketizerH264 : public RtpPacketizer {
 
   size_t SetPayloadData(const uint8_t* payload_data,
                         size_t payload_size,
-                        const RTPFragmentationHeader* fragmentation) override;
+                        const RTPFragmentationHeader* fragmentation,
+                        bool end_of_frame) override;
 
   // Get the next payload with H264 payload header.
   // Write payload and set marker bit of the |packet|.
@@ -93,6 +94,7 @@ class RtpPacketizerH264 : public RtpPacketizer {
   const H264PacketizationMode packetization_mode_;
   std::deque<Fragment> input_fragments_;
   std::queue<PacketUnit> packets_;
+  bool end_of_frame_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH264);
 };

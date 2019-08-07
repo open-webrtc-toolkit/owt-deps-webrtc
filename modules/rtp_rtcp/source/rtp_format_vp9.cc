@@ -478,7 +478,8 @@ std::string RtpPacketizerVp9::ToString() {
 size_t RtpPacketizerVp9::SetPayloadData(
     const uint8_t* payload,
     size_t payload_size,
-    const RTPFragmentationHeader* fragmentation) {
+    const RTPFragmentationHeader* fragmentation,
+    bool /*end_of_frame*/) {
   payload_ = payload;
   payload_size_ = payload_size;
   GeneratePackets();

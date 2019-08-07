@@ -39,7 +39,8 @@ class RtpPacketizerGeneric : public RtpPacketizer {
   // Returns total number of packets to be generated.
   size_t SetPayloadData(const uint8_t* payload_data,
                         size_t payload_size,
-                        const RTPFragmentationHeader* fragmentation) override;
+                        const RTPFragmentationHeader* fragmentation,
+                        bool end_of_frame) override;
 
   // Get the next payload with generic payload header.
   // Write payload and set marker bit of the |packet|.
