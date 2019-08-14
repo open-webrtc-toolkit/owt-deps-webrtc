@@ -8,11 +8,13 @@
 
 import("../../webrtc.gni")
 
+defines = []
+
 config("bwe_test_logging") {
   if (rtc_enable_bwe_test_logging) {
-    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
+    defines += [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
   } else {
-    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0" ]
+    defines += [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0" ]
   }
 }
 
@@ -30,17 +32,18 @@ rtc_static_library("congestion_controller") {
     "send_side_congestion_controller.cc",
   ]
 
-  include_dirs = [
-    "../gpra/include",
-  ]
-
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  libs = ["gpra_lib.lib",
-  ]
+  if (owt_use_gpra) {
+     # use INTEL GoodPut Rate Adaptation BWE
+     include_dirs = [ owt_gpra_header_root ]
+     libs = [ "gpra_lib.lib" ]
+     lib_dirs = [ owt_gpra_lib_root ]
+     defines += [ "INTEL_GPRA" ]
+  }
 
   deps = [
     ":transport_feedback",
@@ -58,7 +61,6 @@ rtc_static_library("congestion_controller") {
     "../pacing",
     "../remote_bitrate_estimator",
     "../rtp_rtcp:rtp_rtcp_format",
-    "../gpra",
     "goog_cc:delay_based_bwe",
     "goog_cc:estimators",
     "goog_cc:probe_controller",

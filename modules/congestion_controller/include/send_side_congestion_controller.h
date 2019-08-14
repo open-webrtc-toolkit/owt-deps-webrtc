@@ -26,8 +26,6 @@
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/networkroute.h"
 #include "rtc_base/race_checker.h"
-// To use INTEL GoodPut Rate Adaptation BWE
-#define INTEL_GPRA
 
 namespace rtc {
 struct SentPacket;
