@@ -40,7 +40,7 @@ class ProbeController;
 class RateLimiter;
 class RtcEventLog;
 class CongestionWindowPushbackController;
-class NetworkPerfMeter;
+class GPRABwe;
 
 class SendSideCongestionController
     : public SendSideCongestionControllerInterface {
@@ -165,7 +165,7 @@ class SendSideCongestionController
   rtc::CriticalSection bwe_lock_;
   int min_bitrate_bps_ RTC_GUARDED_BY(bwe_lock_);
 #ifdef INTEL_GPRA
-  std::unique_ptr<NetworkPerfMeter> delay_based_bwe_ RTC_GUARDED_BY(bwe_lock_);
+  std::unique_ptr<GPRABwe> delay_based_bwe_ RTC_GUARDED_BY(bwe_lock_);
 #else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_ RTC_GUARDED_BY(bwe_lock_);
 #endif

@@ -34,7 +34,7 @@
 
 
 #ifdef INTEL_GPRA
-#include "NetworkPerfMeter.h"
+#include "gpra_bwe.h"
 #endif
 
 namespace webrtc {
@@ -153,7 +153,7 @@ SendSideCongestionController::SendSideCongestionController(
       pacer_paused_(false),
       min_bitrate_bps_(congestion_controller::GetMinBitrateBps()),
 #ifdef INTEL_GPRA
-      delay_based_bwe_(new NetworkPerfMeter()),
+      delay_based_bwe_(new GPRABwe()),
 #else
       delay_based_bwe_(new DelayBasedBwe(event_log_)),
 #endif
@@ -260,7 +260,7 @@ void SendSideCongestionController::OnNetworkRouteChanged(
     transport_overhead_bytes_per_packet_ = network_route.packet_overhead;
     min_bitrate_bps_ = min_bitrate_bps;
 #ifdef INTEL_GPRA
-    delay_based_bwe_.reset(new NetworkPerfMeter());
+    delay_based_bwe_.reset(new GPRABwe());
 #else
     delay_based_bwe_.reset(new DelayBasedBwe(event_log_));
 #endif
