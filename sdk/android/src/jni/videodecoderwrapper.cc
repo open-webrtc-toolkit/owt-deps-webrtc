@@ -48,6 +48,8 @@ VideoDecoderWrapper::VideoDecoderWrapper(JNIEnv* jni,
 
 {
   decoder_thread_checker_.DetachFromThread();
+  dump_output_ = nullptr;
+  enable_dump_ = true;
 }
 
 VideoDecoderWrapper::~VideoDecoderWrapper() = default;
@@ -58,6 +60,16 @@ int32_t VideoDecoderWrapper::InitDecode(const VideoCodec* codec_settings,
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
   codec_settings_ = *codec_settings;
   number_of_cores_ = number_of_cores;
+
+  if(enable_dump_ && codec_settings_.codecType == kVideoCodecH264) {
+    std::string outfile = "/sdcard/dump_decoder_" + std::to_string(reinterpret_cast<long>(this))  + ".h264";
+    dump_output_ = fopen(outfile.c_str(), "wb");
+    if(dump_output_) {
+      RTC_LOG(LS_INFO) << "Open "<<outfile.c_str()<<"successed!";
+    }else{
+      RTC_LOG(LS_INFO) << "Open "<<outfile.c_str()<<"failed!";
+    }
+  }
   return InitDecodeInternal(jni);
 }
 
@@ -92,6 +104,10 @@ int32_t VideoDecoderWrapper::Decode(
   if (!initialized_) {
     // Most likely initializing the codec failed.
     return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
+  }
+
+  if(dump_output_){
+    fwrite((void*)(image_param._buffer, image_param._size, 1, dump_output_);
   }
 
   // Make a mutable copy so we can modify the timestamp.
@@ -136,6 +152,10 @@ int32_t VideoDecoderWrapper::Release() {
   {
     rtc::CritScope cs(&frame_extra_infos_lock_);
     frame_extra_infos_.clear();
+  }
+  if(dump_output_) {
+    fclose(dump_output_);
+    dump_output_ = nullptr;
   }
   initialized_ = false;
   // It is allowed to reinitialize the codec on a different thread.

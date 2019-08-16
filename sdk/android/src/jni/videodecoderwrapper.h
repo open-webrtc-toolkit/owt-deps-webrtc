@@ -15,6 +15,7 @@
 #include <atomic>
 #include <deque>
 
+#include <fstream>
 #include "api/video_codecs/video_decoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "rtc_base/race_checker.h"
@@ -67,6 +68,9 @@ class VideoDecoderWrapper : public VideoDecoder {
     uint32_t timestamp_rtp;
     int64_t timestamp_ntp;
     absl::optional<uint8_t> qp;
+
+    FILE* dump_output_;
+    bool enable_dump_;
 
     FrameExtraInfo();
     FrameExtraInfo(const FrameExtraInfo&);
