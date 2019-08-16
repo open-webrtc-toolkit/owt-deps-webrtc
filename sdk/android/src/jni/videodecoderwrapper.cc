@@ -107,7 +107,7 @@ int32_t VideoDecoderWrapper::Decode(
   }
 
   if(dump_output_){
-    fwrite((void*)(image_param._buffer, image_param._size, 1, dump_output_);
+    fwrite((void*)(image_param._buffer), image_param._size, 1, dump_output_);
   }
 
   // Make a mutable copy so we can modify the timestamp.

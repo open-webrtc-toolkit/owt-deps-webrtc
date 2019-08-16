@@ -69,9 +69,6 @@ class VideoDecoderWrapper : public VideoDecoder {
     int64_t timestamp_ntp;
     absl::optional<uint8_t> qp;
 
-    FILE* dump_output_;
-    bool enable_dump_;
-
     FrameExtraInfo();
     FrameExtraInfo(const FrameExtraInfo&);
     ~FrameExtraInfo();
@@ -112,6 +109,10 @@ class VideoDecoderWrapper : public VideoDecoder {
   rtc::CriticalSection frame_extra_infos_lock_;
   std::deque<FrameExtraInfo> frame_extra_infos_
       RTC_GUARDED_BY(frame_extra_infos_lock_);
+
+  FILE* dump_output_;
+  bool enable_dump_;
+
 };
 
 /* If the j_decoder is a wrapped native decoder, unwrap it. If it is not,
