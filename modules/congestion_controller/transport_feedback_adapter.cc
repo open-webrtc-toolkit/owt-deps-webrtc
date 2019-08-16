@@ -89,6 +89,12 @@ void TransportFeedbackAdapter::SetNetworkIds(uint16_t local_id,
   remote_net_id_ = remote_id;
 }
 
+#ifdef INTEL_GPRA
+int64_t TransportFeedbackAdapter::GetCurrentOffsetMs() {
+  return current_offset_ms_;
+}
+#endif
+
 std::vector<PacketFeedback> TransportFeedbackAdapter::GetPacketFeedbackVector(
     const rtcp::TransportFeedback& feedback) {
   int64_t timestamp_us = feedback.GetBaseTimeUs();
