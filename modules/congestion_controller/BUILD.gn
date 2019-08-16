@@ -79,6 +79,10 @@ rtc_static_library("transport_feedback") {
     "transport_feedback_adapter.h",
   ]
 
+  if (owt_use_gpra) {
+     defines += [ "INTEL_GPRA" ]
+  }
+
   deps = [
     "../../modules:module_api",
     "../../rtc_base:checks",
