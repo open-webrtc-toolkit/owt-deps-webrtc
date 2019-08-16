@@ -35,7 +35,7 @@ class RtpPacketizer {
   virtual size_t SetPayloadData(
       const uint8_t* payload_data,
       size_t payload_size,
-      const RTPFragmentationHeader* fragmentation) = 0;
+      const RTPFragmentationHeader* fragmentation, bool end_of_frame) = 0;
 
   // Get the next payload with payload header.
   // Write payload and set marker bit of the |packet|.

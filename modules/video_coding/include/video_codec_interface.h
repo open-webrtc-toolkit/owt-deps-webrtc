@@ -71,6 +71,7 @@ struct CodecSpecificInfoH264 {
   H264PacketizationMode packetization_mode;
   uint8_t simulcast_idx;
   int16_t picture_id; // Required by temporal scalability
+  bool last_fragment_in_frame;
 };
 
 union CodecSpecificInfoUnion {

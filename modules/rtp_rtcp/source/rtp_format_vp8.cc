@@ -175,7 +175,8 @@ RtpPacketizerVp8::~RtpPacketizerVp8() {}
 size_t RtpPacketizerVp8::SetPayloadData(
     const uint8_t* payload_data,
     size_t payload_size,
-    const RTPFragmentationHeader* /* fragmentation */) {
+    const RTPFragmentationHeader* /* fragmentation */,
+    bool /*end_of_frame*/) {
   payload_data_ = payload_data;
   payload_size_ = payload_size;
   if (GeneratePackets() < 0) {

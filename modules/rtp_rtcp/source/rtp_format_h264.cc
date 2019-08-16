@@ -85,7 +85,8 @@ RtpPacketizerH264::RtpPacketizerH264(size_t max_payload_len,
     : max_payload_len_(max_payload_len),
       last_packet_reduction_len_(last_packet_reduction_len),
       num_packets_left_(0),
-      packetization_mode_(packetization_mode) {
+      packetization_mode_(packetization_mode),
+      end_of_frame_(true) {
   // Guard against uninitialized memory in packetization_mode.
   RTC_CHECK(packetization_mode == H264PacketizationMode::NonInterleaved ||
             packetization_mode == H264PacketizationMode::SingleNalUnit);
@@ -104,10 +105,16 @@ RtpPacketizerH264::Fragment::Fragment(const Fragment& fragment)
 size_t RtpPacketizerH264::SetPayloadData(
     const uint8_t* payload_data,
     size_t payload_size,
-    const RTPFragmentationHeader* fragmentation) {
+    const RTPFragmentationHeader* fragmentation,
+    bool end_of_frame) {
   RTC_DCHECK(packets_.empty());
   RTC_DCHECK(input_fragments_.empty());
   RTC_DCHECK(fragmentation);
+  end_of_frame_ = end_of_frame;
+
+  // Different fragments allows to be packetized as FU or STAP-A or NAL,
+  // so there's no need to look back into history about how previous slice
+  // was packetized before.
   for (int i = 0; i < fragmentation->fragmentationVectorSize; ++i) {
     const uint8_t* buffer =
         &payload_data[fragmentation->fragmentationOffset[i]];
@@ -348,7 +355,10 @@ bool RtpPacketizerH264::NextPacket(RtpPacketToSend* rtp_packet) {
     RTC_DCHECK_LE(rtp_packet->payload_size(),
                   max_payload_len_ - last_packet_reduction_len_);
   }
-  rtp_packet->SetMarker(packets_.empty());
+  // We will only set marker if this is really last slice
+  // of the AU.
+  rtp_packet->SetMarker(packets_.empty() && end_of_frame_);
+
   --num_packets_left_;
   return true;
 }
