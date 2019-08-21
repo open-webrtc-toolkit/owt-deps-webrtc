@@ -132,7 +132,6 @@ static const char* kPayloadNameH264 = "H264";
 #ifndef DISABLE_H265
 static const char* kPayloadNameH265 = "H265";
 #endif
-static const char* kPayloadNameI420 = "I420";
 static const char* kPayloadNameGeneric = "Generic";
 static const char* kPayloadNameMultiplex = "Multiplex";
 
