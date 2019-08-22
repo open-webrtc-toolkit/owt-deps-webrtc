@@ -144,7 +144,7 @@ bool RtpPacketizerH265::GeneratePackets(
   // For HEVC we follow non-interleaved mode for the packetization,
   // and don't support single-nalu mode at present.
   for (size_t i = 0; i < input_fragments_.size();) {
-    size_t fragment_len = input_fragments_[i].length;
+    int fragment_len = input_fragments_[i].length;
     int single_packet_capacity = limits_.max_payload_len;
     if (input_fragments_.size() == 1)
       single_packet_capacity -= limits_.single_packet_reduction_len;
