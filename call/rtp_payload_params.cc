@@ -269,6 +269,9 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
       return;
     case VideoCodecType::kVideoCodecH264:
       // TODO(philipel): Implement H264 to new generic descriptor.
+#ifndef DISABLE_H265
+    case VideoCodecType::kVideoCodecH265:
+#endif
     case VideoCodecType::kVideoCodecMultiplex:
       return;
   }
