@@ -453,9 +453,14 @@ void SendSideCongestionController::OnTransportFeedback(
 #endif
     delay_based_bwe_->SetCurrentOffsetMs(transport_feedback_adapter_.GetCurrentOffsetMs());
 
+    // massage argument for GPRA that doesn't take optional
+    uint32_t bitrate_bps = 0;
+    absl::optional<uint32_t> optional_bitrate = acknowledged_bitrate_estimator_->bitrate_bps();
+    if (optional_bitrate) {
+      bitrate_bps = 0;
+    }
     result = delay_based_bwe_->IncomingPacketFeedbackVector(
-        feedback_vector, *acknowledged_bitrate_estimator_->bitrate_bps(),
-        clock_->TimeInMilliseconds());
+        feedback_vector, bitrate_bps, clock_->TimeInMilliseconds());
 #else
     result = delay_based_bwe_->IncomingPacketFeedbackVector(
         feedback_vector, acknowledged_bitrate_estimator_->bitrate_bps(),
