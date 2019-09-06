@@ -569,6 +569,9 @@ void SendSideCongestionController::MaybeTriggerOnNetworkChanged() {
     {
       rtc::CritScope cs(&bwe_lock_);
       probing_interval_ms = delay_based_bwe_->GetExpectedBwePeriodMs();
+#ifdef INTEL_GPRA
+      delay_based_bwe_->SetCurrentPacketLossRate(fraction_loss);
+#endif
     }
     {
       rtc::CritScope cs(&observer_lock_);
