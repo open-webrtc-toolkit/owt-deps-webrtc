@@ -88,7 +88,7 @@ class VideoEncoderConfig {
     void FillVideoCodecH265(VideoCodecH265* h265_settings) const override;
 
    private:
-    VideoCodecH264 specifics_;
+    VideoCodecH265 specifics_;
   };
 #endif
   class Vp8EncoderSpecificSettings : public EncoderSpecificSettings {
