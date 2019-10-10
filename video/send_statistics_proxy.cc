@@ -74,6 +74,7 @@ HistogramCodecType PayloadNameToHistogramCodecType(
     case kVideoCodecH264:
       return kVideoH264;
 #ifndef DISABLE_H265
+    case kVideoCodecH265:
       return kVideoH265;
 #endif
     default:
