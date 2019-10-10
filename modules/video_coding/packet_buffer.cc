@@ -326,7 +326,7 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
         max_recv_time =
             std::max(max_recv_time, data_buffer_[start_index].receive_time_ms);
 
-        if (!is_h264 && sequence_buffer_[start_index].frame_begin)
+        if (!is_h264 && !is_h265 && sequence_buffer_[start_index].frame_begin)
           break;
 
         if (is_h264 && !is_h264_keyframe) {
@@ -361,7 +361,9 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
               has_h265_sps = true;
             } else if (h265_header->nalus[j].type == H265::NaluType::kPps) {
               has_h265_pps = true;
-            } else if (h265_header->nalus[j].type == H265::NaluType::kIdr) {
+            } else if (h265_header->nalus[j].type == H265::NaluType::kIdrWRadl
+                       || h265_header->nalus[j].type == H265::NaluType::kIdrNLp
+                       || h265_header->nalus[j].type == H265::NaluType::kCra) {
               has_h265_idr = true;
             }
           }
@@ -381,7 +383,7 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
         // the timestamp of that packet is the same as this one. This may cause
         // the PacketBuffer to hand out incomplete frames.
         // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=7106
-        if (is_h264 &&
+        if ((is_h264 || is_h265) &&
             (!sequence_buffer_[start_index].used ||
              data_buffer_[start_index].timestamp != frame_timestamp)) {
           break;
@@ -431,6 +433,44 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
           return found_frames;
         }
       }
+
+#ifndef DISABLE_H265
+      if (is_h265) {
+        // Warn if this is an unsafe frame.
+        if (has_h265_idr && (!has_h265_sps || !has_h265_pps)) {
+          std::stringstream ss;
+          ss << "Received H.265-IDR frame "
+             << "(SPS: " << has_h265_sps << ", PPS: " << has_h265_pps << "). ";
+          ss << "Treating as delta frame since "
+                "WebRTC-SpsPpsIdrIsH265Keyframe is always enabled.";
+          RTC_LOG(LS_WARNING) << ss.str();
+        }
+
+        // Now that we have decided whether to treat this frame as a key frame
+        // or delta frame in the frame buffer, we update the field that
+        // determines if the RtpFrameObject is a key frame or delta frame.
+        const size_t first_packet_index = start_seq_num % size_;
+        RTC_CHECK_LT(first_packet_index, size_);
+        if (is_h265_keyframe) {
+          data_buffer_[first_packet_index].video_header.frame_type = VideoFrameType::kVideoFrameKey;
+        } else {
+          data_buffer_[first_packet_index].video_header.frame_type = VideoFrameType::kVideoFrameDelta;
+        }
+
+        // If this is not a key frame, make sure there are no gaps in the
+        // packet sequence numbers up until this point.
+        if (!is_h265_keyframe && missing_packets_.upper_bound(start_seq_num) !=
+                                     missing_packets_.begin()) {
+          uint16_t stop_index = (index + 1) % size_;
+          while (start_index != stop_index) {
+            sequence_buffer_[start_index].frame_created = false;
+            start_index = (start_index + 1) % size_;
+          }
+
+          return found_frames;
+        }
+      }
+#endif
 
       missing_packets_.erase(missing_packets_.begin(),
                              missing_packets_.upper_bound(seq_num));

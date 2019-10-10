@@ -64,7 +64,9 @@ H265VpsSpsPpsTracker::PacketAction H265VpsSpsPpsTracker::CopyAndFixBitstream(
         pps_data_[nalu.pps_id].sps_id = nalu.sps_id;
         break;
       }
-      case H265::NaluType::kIdr: {
+      case H265::NaluType::kIdrWRadl:
+      case H265::NaluType::kIdrNLp:
+      case H265::NaluType::kCra: {
         // If this is the first packet of an IDR, make sure we have the required
         // SPS/PPS and also calculate how much extra space we need in the buffer
         // to prepend the SPS/PPS to the bitstream with start codes.
@@ -193,7 +195,7 @@ H265VpsSpsPpsTracker::PacketAction H265VpsSpsPpsTracker::CopyAndFixBitstream(
       h265_header.nalus[h265_header.nalus_length++] = sps_info;
       h265_header.nalus[h265_header.nalus_length++] = pps_info;
     } else {
-      RTC_LOG(LS_WARNING) << "Not enough space in H.264 codec header to insert "
+      RTC_LOG(LS_WARNING) << "Not enough space in H.265 codec header to insert "
                              "SPS/PPS provided out-of-band.";
     }
   }
