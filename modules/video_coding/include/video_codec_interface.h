@@ -87,12 +87,23 @@ struct CodecSpecificInfoH264 {
   bool base_layer_sync;
   bool idr_frame;
 };
+
+#ifndef DISABLE_H265
+struct CodecSpecificInfoH265 {
+  H265PacketizationMode packetization_mode;
+  bool idr_frame;
+};
+#endif
+
 static_assert(std::is_pod<CodecSpecificInfoH264>::value, "");
 
 union CodecSpecificInfoUnion {
   CodecSpecificInfoVP8 VP8;
   CodecSpecificInfoVP9 VP9;
   CodecSpecificInfoH264 H264;
+#ifndef DISABLE_H265
+  CodecSpecificInfoH265 H265;
+#endif
 };
 static_assert(std::is_pod<CodecSpecificInfoUnion>::value, "");
 
