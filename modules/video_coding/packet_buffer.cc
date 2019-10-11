@@ -307,8 +307,10 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
       bool has_h264_pps = false;
       bool has_h264_idr = false;
       bool is_h264_keyframe = false;
+
+      bool is_h265 = false;
 #ifndef DISABLE_H265
-      bool is_h265 = data_buffer_[start_index].codec() == kVideoCodecH265;
+      is_h265 = data_buffer_[start_index].codec() == kVideoCodecH265;
       bool has_h265_sps = false;
       bool has_h265_pps = false;
       bool has_h265_idr = false;

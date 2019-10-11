@@ -171,7 +171,7 @@ bool RtpPacketizerH265::PacketizeFu(size_t fragment_index) {
   // Strip out the original header and leave room for the FU header.
   const Fragment& fragment = input_fragments_[fragment_index];
   PayloadSizeLimits limits = limits_;
-  limits.max_payload_len -= kHevcFuHeaderSize;
+  limits.max_payload_len -= kHevcFuHeaderSize + kHevcNalHeaderSize;
 
   // Update single/first/last packet reductions unless it is single/first/last
   // fragment.
@@ -202,10 +202,11 @@ bool RtpPacketizerH265::PacketizeFu(size_t fragment_index) {
   for (size_t i = 0; i < payload_sizes.size(); ++i) {
     int packet_length = payload_sizes[i];
     RTC_CHECK_GT(packet_length, 0);
+    uint16_t header = (fragment.buffer[0] << 8) | fragment.buffer[1];
     packets_.push(PacketUnit(Fragment(fragment.buffer + offset, packet_length),
                              /*first_fragment=*/i == 0,
                              /*last_fragment=*/i == payload_sizes.size() - 1,
-                             false, fragment.buffer[0]));
+                             false, header));
     offset += packet_length;
     payload_left -= packet_length;
   }
