@@ -26,11 +26,14 @@ public class VideoCodecInfo {
 
   public static final String H264_PROFILE_CONSTRAINED_BASELINE = "42e0";
   public static final String H264_PROFILE_CONSTRAINED_HIGH = "640c";
+  public static final String H264_PROFILE_BASELINE = "4200";
   public static final String H264_LEVEL_3_1 = "1f"; // 31 in hex.
   public static final String H264_CONSTRAINED_HIGH_3_1 =
       H264_PROFILE_CONSTRAINED_HIGH + H264_LEVEL_3_1;
   public static final String H264_CONSTRAINED_BASELINE_3_1 =
       H264_PROFILE_CONSTRAINED_BASELINE + H264_LEVEL_3_1;
+  public static final String H264_BASELINE_3_1 =
+      H264_PROFILE_BASELINE + H264_LEVEL_3_1;
 
   public final String name;
   public final Map<String, String> params;

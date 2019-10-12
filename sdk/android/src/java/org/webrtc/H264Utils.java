@@ -33,7 +33,7 @@ class H264Utils {
     params.put(VideoCodecInfo.H264_FMTP_PACKETIZATION_MODE, "1");
     params.put(VideoCodecInfo.H264_FMTP_PROFILE_LEVEL_ID,
         isHighProfile ? VideoCodecInfo.H264_CONSTRAINED_HIGH_3_1
-                      : VideoCodecInfo.H264_CONSTRAINED_BASELINE_3_1);
+                      : VideoCodecInfo.H264_BASELINE_3_1);
     return params;
   }
 
