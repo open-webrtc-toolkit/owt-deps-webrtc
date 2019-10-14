@@ -28,7 +28,8 @@ import javax.annotation.Nullable;
 @SuppressWarnings("deprecation") // API level 16 requires use of deprecated methods.
 public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
   private static final String TAG = "HardwareVideoDecoderFactory";
-
+  private final VideoCapabilityParser vcp = new VideoCapabilityParser();
+  private final String extraMediaCodecFile = "sdcard/mediaCodec.xml";
   private final EglBase.Context sharedContext;
 
   /** Creates a HardwareVideoDecoderFactory that does not use surface textures. */
@@ -132,21 +133,25 @@ public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             || name.startsWith(EXYNOS_PREFIX) || name.startsWith(NVIDIA_PREFIX)
             // Hisi seems to support VP8.
-            || name.startsWith(HISI_PREFIX);
+            || name.startsWith(HISI_PREFIX)
+            || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp8", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case VP9:
         // QCOM and Exynos supported for VP9.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX)
             // Hisi seems to support VP9.
-            || name.startsWith(HISI_PREFIX);
+            || name.startsWith(HISI_PREFIX)
+            || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp9", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case H264:
         // QCOM, Intel, and Exynos supported for H264.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             // Hisi seems to support H264.
-            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX);
+            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX)
+            || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case H265:
         // H265 is copied from H264. More testing is needed.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
-            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX);
+            || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX)
+            || vcp.isExtraHardwareSupported(name, "video/hevc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       default:
         return false;
     }
