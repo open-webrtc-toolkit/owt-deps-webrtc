@@ -248,6 +248,7 @@ bool H264AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
   return true;
 }
 
+#ifdef OWT_USE_H265
 bool H265CMSampleBufferToAnnexBBuffer(
     CMSampleBufferRef hvcc_sample_buffer,
     bool is_keyframe,
@@ -474,6 +475,7 @@ bool H265AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
   CFRelease(contiguous_buffer);
   return true;
 }
+#endif
 
 CMVideoFormatDescriptionRef CreateVideoFormatDescription(
     const uint8_t* annexb_buffer,
@@ -505,6 +507,7 @@ CMVideoFormatDescriptionRef CreateVideoFormatDescription(
   return description;
 }
 
+#ifdef OWT_USE_H265
 CMVideoFormatDescriptionRef CreateH265VideoFormatDescription(
     const uint8_t* annexb_buffer,
     size_t annexb_buffer_size) {
@@ -539,6 +542,7 @@ CMVideoFormatDescriptionRef CreateH265VideoFormatDescription(
   }
   return description;
 }
+#endif
 
 AnnexBBufferReader::AnnexBBufferReader(const uint8_t* annexb_buffer,
                                        size_t length)
@@ -587,6 +591,7 @@ bool AnnexBBufferReader::SeekToNextNaluOfType(NaluType type) {
   return false;
 }
 
+#ifdef OWT_USE_H265
 bool AnnexBBufferReader::SeekToNextNaluOfType(H265::NaluType type) {
   for (; offset_ != offsets_.end(); ++offset_) {
     if (offset_->payload_size < 1)
@@ -596,6 +601,7 @@ bool AnnexBBufferReader::SeekToNextNaluOfType(H265::NaluType type) {
   }
   return false;
 }
+#endif
 
 AvccBufferWriter::AvccBufferWriter(uint8_t* const avcc_buffer, size_t length)
     : start_(avcc_buffer), offset_(0), length_(length) {

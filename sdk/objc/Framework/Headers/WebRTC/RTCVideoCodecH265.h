@@ -15,10 +15,7 @@
 #import <WebRTC/RTCMacros.h>
 #import <WebRTC/RTCVideoCodecFactory.h>
 
-RTC_OBJC_EXPORT
-API_AVAILABLE(ios(11.0))
-@interface RTCCodecSpecificInfoH265 : NSObject <RTCCodecSpecificInfo>
-@end
+RTC_OBJC_EXPORT extern NSString *const kRTCVideoCodecH265Name;
 
 /** Encoder. */
 RTC_OBJC_EXPORT

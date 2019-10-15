@@ -11,21 +11,19 @@
 /* This file is borrowed from
  * webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodecH265.mm */
 
+#import "WebRTC/RTCVideoCodec.h"
 #import "WebRTC/RTCVideoCodecH265.h"
 
 #include <vector>
-
-#import "WebRTC/RTCVideoCodec.h"
-
+#include "media/base/media_constants.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/field_trial.h"
+
+NSString *const kRTCVideoCodecH265Name = @(cricket::kH265CodecName);
 
 static NSString* kH265CodecName = @"H265";
 // TODO(jianjunz): This is value is not correct.
 static NSString* kLevel31Main = @"4d001f";
-
-@implementation RTCCodecSpecificInfoH265
-@end
 
 // Encoder factory.
 @implementation RTCVideoEncoderFactoryH265
