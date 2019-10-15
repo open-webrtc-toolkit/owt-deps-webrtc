@@ -206,6 +206,8 @@ config("common_inherited_config") {
 
   if (!rtc_use_h265) {
     defines += [ "DISABLE_H265" ]
+  } else {
+    defines += [ "OWT_USE_H265" ]
   }
 }
 
