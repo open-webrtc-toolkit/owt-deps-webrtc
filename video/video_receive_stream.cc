@@ -15,6 +15,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <inttypes.h>
 
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
@@ -433,7 +434,7 @@ bool VideoReceiveStream::Decode() {
     int64_t now_ms = clock_->TimeInMilliseconds();
     if (recorder_pre_ != nullptr) {
       int32_t frame_ts = frame->Timestamp();
-      fprintf(recorder_pre_, "%d\t%lld\n", frame_ts, now_ms);
+      fprintf(recorder_pre_, "%d\t%" PRId64 "\n", frame_ts, now_ms);
     }
     RTC_DCHECK_EQ(res, video_coding::FrameBuffer::ReturnReason::kFrameFound);
     int decode_result = video_receiver_.Decode(frame.get());

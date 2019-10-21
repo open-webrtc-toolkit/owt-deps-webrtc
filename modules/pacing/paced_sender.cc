@@ -16,6 +16,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <inttypes.h>
 
 #include "absl/memory/memory.h"
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
@@ -376,7 +377,7 @@ void PacedSender::Process() {
           int64_t last_frame_cost = end_timestamp - capture_timestamp;
           int64_t time_since_last_frame =
               clock_->TimeInMilliseconds() - end_timestamp;
-          fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count,
+          fprintf(recorder, "%" PRId64 "\t%" PRId64 "\t%zd\t%" PRId64 "\n", frame_count,
                   last_frame_cost, total_size, time_since_last_frame);
           frame_count++;
           total_size = 0;
