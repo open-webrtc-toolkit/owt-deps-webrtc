@@ -15,6 +15,7 @@ import static org.webrtc.MediaCodecUtils.INTEL_PREFIX;
 import static org.webrtc.MediaCodecUtils.NVIDIA_PREFIX;
 import static org.webrtc.MediaCodecUtils.QCOM_PREFIX;
 import static org.webrtc.MediaCodecUtils.HISI_PREFIX;
+import static org.webrtc.MediaCodecUtils.IMG_PREFIX;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -133,24 +134,26 @@ public class HardwareVideoDecoderFactory implements VideoDecoderFactory {
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             || name.startsWith(EXYNOS_PREFIX) || name.startsWith(NVIDIA_PREFIX)
             // Hisi seems to support VP8.
-            || name.startsWith(HISI_PREFIX)
+            || name.startsWith(HISI_PREFIX) || name.startsWith(IMG_PREFIX)
             || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp8", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case VP9:
         // QCOM and Exynos supported for VP9.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX)
             // Hisi seems to support VP9.
-            || name.startsWith(HISI_PREFIX)
+            || name.startsWith(HISI_PREFIX) || name.startsWith(IMG_PREFIX)
             || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp9", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case H264:
         // QCOM, Intel, and Exynos supported for H264.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             // Hisi seems to support H264.
             || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX)
+            || name.startsWith(IMG_PREFIX)
             || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       case H265:
         // H265 is copied from H264. More testing is needed.
         return name.startsWith(QCOM_PREFIX) || name.startsWith(INTEL_PREFIX)
             || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX)
+            || name.startsWith(IMG_PREFIX)
             || vcp.isExtraHardwareSupported(name, "video/hevc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
       default:
         return false;
