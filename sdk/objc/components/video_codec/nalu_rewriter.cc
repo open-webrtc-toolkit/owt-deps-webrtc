@@ -401,12 +401,6 @@ bool H265AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
       RTC_LOG(LS_ERROR) << "Failed to read PPS";
       return false;
     }
-    if (reader.SeekToNextNaluOfType(H265::kPrefixSei)) {
-      if (!reader.ReadNalu(&data, &data_len)) {
-        RTC_LOG(LS_ERROR) << "Failed to read SEI";
-        return false;
-      }
-    }
   } else {
     // No SPS NALU - start reading from the first NALU in the buffer
     reader.SeekToStart();
