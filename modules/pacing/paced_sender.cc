@@ -293,7 +293,6 @@ int64_t PacedSender::TimeUntilNextProcess() {
 }
 
 void PacedSender::Process() {
-  RTC_LOG(LS_ERROR) << "p.";
   int64_t now_us = clock_->TimeInMicroseconds();
   rtc::CritScope cs(&critsect_);
   int64_t elapsed_time_ms = (now_us - time_last_process_us_ + 500) / 1000;
@@ -365,12 +364,6 @@ void PacedSender::Process() {
       bytes_sent += packet.bytes;
       // Send succeeded, remove it from the queue.
       packets_->FinalizePop(packet);
-      RTC_LOG(LS_ERROR) << "PS#:" << packet.sequence_number
-                        << ",ca: " << packet.capture_time_ms
-                        << ",cu: " << clock_->TimeInMilliseconds()
-                        << ",sz: " << packet.bytes
-                        << ", q: " << packets_->SizeInPackets();
-
       if (webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial)) {
         if (capture_timestamp != packet.capture_time_ms) {  // New frame
           int64_t last_frame_cost = end_timestamp - capture_timestamp;
@@ -442,12 +435,12 @@ bool PacedSender::SendPacket(const PacketQueueInterface::Packet& packet,
     }
   }
   critsect_.Leave();
-  RTC_LOG(LS_ERROR) << "b:" << clock_->TimeInMilliseconds();
+  //RTC_LOG(LS_ERROR) << "b:" << clock_->TimeInMilliseconds();
   const bool success = packet_sender_->TimeToSendPacket(
       packet.ssrc, packet.sequence_number, packet.capture_time_ms,
       packet.retransmission, pacing_info);
   critsect_.Enter();
-  RTC_LOG(LS_ERROR) << "a:" << clock_->TimeInMilliseconds();
+  //RTC_LOG(LS_ERROR) << "a:" << clock_->TimeInMilliseconds();
   if (success && !IsLowLatencyMode()) {
     if (first_sent_packet_ms_ == -1)
       first_sent_packet_ms_ = clock_->TimeInMilliseconds();

@@ -328,6 +328,11 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
             video_header->content_type);
       }
       if (video_header->video_timing.flags != VideoSendTiming::kInvalid) {
+        RTC_LOG(LS_VERBOSE) << "video_timing:"
+                          << "start_delta:"
+                          << video_header->video_timing.encode_start_delta_ms
+                          << "end_delta:"
+                          << video_header->video_timing.encode_finish_delta_ms;
         last_packet->SetExtension<VideoTimingExtension>(
             video_header->video_timing);
       }
@@ -393,7 +398,8 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
 
     // Put packetization finish timestamp into extension.
     if (packet->HasExtension<VideoTimingExtension>()) {
-      packet->set_packetization_finish_time_ms(clock_->TimeInMilliseconds());
+	  // capture_time_ms_ is reset by stack. so the value here needs to be basing on the encode_end_ms;
+      packet->set_packetization_finish_time_ms(clock_->TimeInMilliseconds(), video_header->video_timing.encode_finish_delta_ms);
       // TODO(ilnik): Due to webrtc:7859, packets with timing extensions are not
       // protected by FEC. It reduces FEC efficiency a bit. When FEC is moved
       // below the pacer, it can be re-enabled for these packets.
