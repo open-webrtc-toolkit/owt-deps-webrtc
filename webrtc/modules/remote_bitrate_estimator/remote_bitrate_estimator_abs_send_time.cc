@@ -97,6 +97,11 @@ bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
     network_thread_.DetachFromThread();
 }
 
+RemoteBitrateEstimatorAbsSendTime::~RemoteBitrateEstimatorAbsSendTime() {
+  rtc::CritScope lock(&crit_);
+  ssrcs_.clear();
+}
+
 void RemoteBitrateEstimatorAbsSendTime::ComputeClusters(
     std::list<Cluster>* clusters) const {
   Cluster current;
