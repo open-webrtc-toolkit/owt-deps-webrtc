@@ -45,15 +45,16 @@ class RtpPacketToSend : public RtpPacket {
     application_data_.assign(data.begin(), data.end());
   }
 
-  void set_packetization_finish_time_ms(int64_t time) {
+  void set_packetization_finish_time_ms(int64_t time, uint16_t base) {
+    base_delta = base;
     SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_ms_, time),
+        VideoSendTiming::GetDeltaCappedMs(capture_time_ms_, time) + base,
         VideoSendTiming::kPacketizationFinishDeltaOffset);
   }
 
   void set_pacer_exit_time_ms(int64_t time) {
     SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_ms_, time),
+        VideoSendTiming::GetDeltaCappedMs(capture_time_ms_, time) + base_delta,
         VideoSendTiming::kPacerExitDeltaOffset);
   }
 
@@ -71,6 +72,7 @@ class RtpPacketToSend : public RtpPacket {
 
  private:
   int64_t capture_time_ms_ = 0;
+  uint16_t base_delta = 0;
   std::vector<uint8_t> application_data_;
 };
 

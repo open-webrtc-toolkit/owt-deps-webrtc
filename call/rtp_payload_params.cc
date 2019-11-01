@@ -100,6 +100,11 @@ void SetVideoTiming(const EncodedImage& image, VideoSendTiming* timing) {
       image.capture_time_ms_, image.timing_.encode_start_ms);
   timing->encode_finish_delta_ms = VideoSendTiming::GetDeltaCappedMs(
       image.capture_time_ms_, image.timing_.encode_finish_ms);
+  RTC_LOG(LS_VERBOSE) << "SetVideoTiming:"
+                    << "start:" << image.timing_.encode_start_ms
+                    << ", delta:" << timing->encode_start_delta_ms
+                    << "end:" << image.timing_.encode_finish_ms
+                    << ",delta:" << timing->encode_finish_delta_ms;
   timing->packetization_finish_delta_ms = 0;
   timing->pacer_exit_delta_ms = 0;
   timing->network_timestamp_delta_ms = 0;

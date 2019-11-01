@@ -312,8 +312,12 @@ absl::optional<int64_t> VCMEncodedFrameCallback::ExtractEncodeStartTime(
 
 void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
                                              EncodedImage* encoded_image) {
-  absl::optional<size_t> outlier_frame_size;
-  absl::optional<int64_t> encode_start_ms;
+  size_t outlier_frame_size = 0;
+  //absl::optional<int64_t> encode_start_ms;
+  int64_t encode_start_ms;
+  int64_t encode_end_ms;
+  int64_t end_start_delta = encoded_image->timing_.encode_finish_ms -
+                            encoded_image->timing_.encode_start_ms;
   uint8_t timing_flags = VideoSendTiming::kNotTriggered;
   {
     rtc::CritScope crit(&timing_params_lock_);
@@ -322,7 +326,7 @@ void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
     // |timing_frames_info_| may be not filled here.
     if (!internal_source_) {
       encode_start_ms =
-          ExtractEncodeStartTime(simulcast_svc_idx, encoded_image);
+          ExtractEncodeStartTime(simulcast_svc_idx, encoded_image).value_or(0);
     }
 
     if (timing_frames_info_.size() > simulcast_svc_idx) {
@@ -331,7 +335,7 @@ void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
       if (framerate_ > 0 && target_bitrate > 0) {
         // framerate and target bitrate were reported by encoder.
         size_t average_frame_size = target_bitrate / framerate_;
-        outlier_frame_size.emplace(
+        outlier_frame_size = (
             average_frame_size *
             timing_frames_thresholds_.outlier_ratio_percent / 100);
       }
@@ -339,7 +343,7 @@ void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
 
     // Outliers trigger timing frames, but do not affect scheduled timing
     // frames.
-    if (outlier_frame_size && encoded_image->_length >= *outlier_frame_size) {
+    if (encoded_image->_length >= outlier_frame_size) {
       timing_flags |= VideoSendTiming::kTriggeredBySize;
     }
 
@@ -363,13 +367,16 @@ void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
   // are not in the WebRTC clock.
   if (internal_source_ && encoded_image->timing_.encode_finish_ms > 0 &&
       encoded_image->timing_.encode_start_ms > 0) {
-    int64_t clock_offset_ms = now_ms - encoded_image->timing_.encode_finish_ms;
+    //int64_t clock_offset_ms = now_ms - encoded_image->timing_.encode_finish_ms;
+    int64_t clock_offset_ms = now_ms - encoded_image->capture_time_ms_;
     // Translate capture timestamp to local WebRTC clock.
-    encoded_image->capture_time_ms_ += clock_offset_ms;
+    encoded_image->capture_time_ms_ += clock_offset_ms;  //It's actually now_ms;
     encoded_image->SetTimestamp(
         static_cast<uint32_t>(encoded_image->capture_time_ms_ * 90));
-    encode_start_ms.emplace(encoded_image->timing_.encode_start_ms +
-                            clock_offset_ms);
+    //encode_start_ms.emplace(encoded_image->timing_.encode_start_ms +
+    //                        clock_offset_ms);
+    encode_start_ms = encoded_image->timing_.encode_start_ms + clock_offset_ms;
+    encode_end_ms = encode_start_ms + end_start_delta;
   }
 
   // If encode start is not available that means that encoder uses internal
@@ -377,8 +384,8 @@ void VCMEncodedFrameCallback::FillTimingInfo(size_t simulcast_svc_idx,
   // drift relative to rtc::TimeMillis(). We can't use it for Timing frames,
   // because to being sent in the network capture time required to be less than
   // all the other timestamps.
-  if (encode_start_ms) {
-    encoded_image->SetEncodeTime(*encode_start_ms, now_ms);
+  if (encode_start_ms > 0) {
+    encoded_image->SetEncodeTime(encode_start_ms, encode_end_ms);
     encoded_image->timing_.flags = timing_flags;
   } else {
     encoded_image->timing_.flags = VideoSendTiming::kInvalid;

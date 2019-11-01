@@ -348,10 +348,10 @@ bool VideoTimingExtension::Write(rtc::ArrayView<uint8_t> data,
       timing.encode_finish_delta_ms);
   ByteWriter<uint16_t>::WriteBigEndian(
       data.data() + VideoSendTiming::kPacketizationFinishDeltaOffset,
-      timing.packetization_finish_delta_ms);
+      VideoSendTiming::kPacketizationFinishDeltaOffset);
   ByteWriter<uint16_t>::WriteBigEndian(
       data.data() + VideoSendTiming::kPacerExitDeltaOffset,
-      timing.pacer_exit_delta_ms);
+      VideoSendTiming::kPacerExitDeltaOffset);
   ByteWriter<uint16_t>::WriteBigEndian(
       data.data() + VideoSendTiming::kNetworkTimestampDeltaOffset,
       timing.network_timestamp_delta_ms);
