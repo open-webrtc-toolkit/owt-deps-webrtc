@@ -31,6 +31,10 @@ std::unique_ptr<VideoRtpDepacketizer> CreateVideoRtpDepacketizer(
       return std::make_unique<VideoRtpDepacketizerVp8>();
     case kVideoCodecVP9:
       return std::make_unique<VideoRtpDepacketizerVp9>();
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+	  return std::make_unique<VideoRtpDepacketizerH265>();
+#endif
     case kVideoCodecAV1:
       return std::make_unique<VideoRtpDepacketizerAv1>();
     case kVideoCodecGeneric:

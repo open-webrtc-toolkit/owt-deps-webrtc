@@ -585,6 +585,18 @@ void RtpVideoStreamReceiver::OnReceivedPayloadData(
         break;
     }
 
+#ifndef DISABLE_H265
+  } else if (packet.codec() == kVideoCodecH265) {
+    switch (h265_tracker_.CopyAndFixBitstream(&packet)) {
+      case video_coding::H265VpsSpsPpsTracker::kRequestKeyframe:
+        keyframe_request_sender_->RequestKeyFrame();
+        RTC_FALLTHROUGH();
+      case video_coding::H265VpsSpsPpsTracker::kDrop:
+        return 0;
+      case video_coding::H265VpsSpsPpsTracker::kInsert:
+        break;
+    }
+#else
   } else {
     packet->video_payload = std::move(codec_payload);
   }
