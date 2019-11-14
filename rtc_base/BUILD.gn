@@ -594,6 +594,7 @@ config("rtc_json_suppressions") {
 
 rtc_source_set("rtc_json") {
   public_configs = [ ":rtc_json_suppressions" ]
+  visibility = [ "*", "//talk/owt::owt_deps" ]
   defines = []
   sources = [
     "strings/json.cc",
