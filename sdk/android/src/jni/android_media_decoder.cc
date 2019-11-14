@@ -236,6 +236,11 @@ int32_t MediaCodecVideoDecoder::InitDecodeOnCodecThread() {
     case kVideoCodecH264:
       max_pending_frames_ = kMaxPendingFramesH264;
       break;
+#ifndef DISABLE_H265
+    case kVideoCodecH265:
+      max_pending_frames_ = kMaxPendingFramesH265;
+      break;
+#endif
     default:
       max_pending_frames_ = 0;
   }

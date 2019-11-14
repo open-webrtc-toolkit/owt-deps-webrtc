@@ -22,6 +22,9 @@
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/h264/h264_common.h"
 #include "common_video/h264/profile_level_id.h"
+#ifndef DISABLE_H265
+#include "common_video/h265/h265_common.h"
+#endif
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/engine/internal_encoder_factory.h"
@@ -1081,6 +1084,24 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
           header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
           header.fragmentationLength[i] = nalu_idxs[i].payload_size;
         }
+#ifndef DISABLE_H265
+      } else if (codec_type == kVideoCodecH265) {
+        const std::vector<H265::NaluIndex> nalu_idxs =
+            H265::FindNaluIndices(payload, payload_size);
+        if (nalu_idxs.empty()) {
+          ALOGE << "Start code is not found!";
+          ALOGE << "Data:" << image->data()[0] << " " << image->data()[1] << " "
+                << image->data()[2] << " " << image->data()[3] << " "
+                << image->data()[4] << " " << image->data()[5];
+          ProcessHWError(true /* reset_if_fallback_unavailable */);
+          return false;
+        }
+        header.VerifyAndAllocateFragmentationHeader(nalu_idxs.size());
+        for (size_t i = 0; i < nalu_idxs.size(); i++) {
+          header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
+          header.fragmentationLength[i] = nalu_idxs[i].payload_size;
+        }
+#endif
       }
 
       callback_result = callback_->OnEncodedImage(*image, &info, &header);
