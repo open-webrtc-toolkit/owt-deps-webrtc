@@ -868,7 +868,7 @@ if (is_ios) {
     action("umbrella_header_$target_name") {
       forward_variables_from(invoker, [ "public_headers" ])
 
-      script = "//tools_webrtc/ios/generate_umbrella_header.py"
+      script = "../tools_webrtc/ios/generate_umbrella_header.py"
 
       outputs = [ umbrella_header_path ]
       args = [
@@ -934,7 +934,7 @@ if (is_mac) {
     }
 
     action("modulemap_$this_target_name") {
-      script = "//tools_webrtc/ios/generate_modulemap.py"
+      script = "../tools_webrtc/ios/generate_modulemap.py"
       args = [
         "--out",
         rebase_path(modulemap_path, root_build_dir),
@@ -953,7 +953,7 @@ if (is_mac) {
     action("umbrella_header_$this_target_name") {
       forward_variables_from(invoker, [ "sources" ])
 
-      script = "//tools_webrtc/ios/generate_umbrella_header.py"
+      script = "../tools_webrtc/ios/generate_umbrella_header.py"
 
       outputs = [ umbrella_header_path ]
       args = [
