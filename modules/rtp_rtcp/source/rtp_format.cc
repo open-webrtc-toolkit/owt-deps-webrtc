@@ -14,14 +14,14 @@
 
 #include "absl/types/variant.h"
 #include "modules/rtp_rtcp/source/rtp_format_h264.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "modules/rtp_rtcp/source/rtp_format_h265.h"
 #endif
 #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp9.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "modules/video_coding/codecs/h265/include/h265_globals.h"
 #endif
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
@@ -50,7 +50,7 @@ std::unique_ptr<RtpPacketizer> RtpPacketizer::Create(
       return std::make_unique<RtpPacketizerH264>(
           payload, limits, h264.packetization_mode, *fragmentation);
     }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265: {
       RTC_CHECK(fragmentation);
       const auto& h265 =
@@ -160,7 +160,7 @@ RtpDepacketizer* RtpDepacketizer::Create(absl::optional<VideoCodecType> type) {
   }
 
   switch (*type) {
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265:
       return new RtpDepacketizerH265();
 #endif

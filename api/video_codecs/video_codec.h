@@ -83,7 +83,7 @@ struct VideoCodecH264 {
   uint8_t numberOfTemporalLayers;
 };
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 struct VideoCodecH265 {
   bool operator==(const VideoCodecH265& other) const;
   bool operator!=(const VideoCodecH265& other) const {
@@ -108,7 +108,7 @@ union VideoCodecUnion {
   VideoCodecVP8 VP8;
   VideoCodecVP9 VP9;
   VideoCodecH264 H264;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   VideoCodecH265 H265;
 #endif
 };
@@ -172,7 +172,7 @@ class RTC_EXPORT VideoCodec {
   const VideoCodecVP9& VP9() const;
   VideoCodecH264* H264();
   const VideoCodecH264& H264() const;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   VideoCodecH265* H265();
   const VideoCodecH265& H265() const;
 #endif

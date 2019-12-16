@@ -151,7 +151,7 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header) {
         }
         break;
       }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
       case kVideoCodecH265: {
         _codecSpecificInfo.codecType = kVideoCodecH265;
         break;

@@ -135,7 +135,7 @@ extern const char kComfortNoiseCodecName[];
 RTC_EXPORT extern const char kVp8CodecName[];
 RTC_EXPORT extern const char kVp9CodecName[];
 RTC_EXPORT extern const char kH264CodecName[];
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 RTC_EXPORT extern const char kH265CodecName[];
 #endif
 
@@ -146,7 +146,7 @@ RTC_EXPORT extern const char kH264FmtpPacketizationMode[];
 extern const char kH264FmtpSpropParameterSets[];
 extern const char kH264ProfileLevelConstrainedBaseline[];
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 // RFC 7798 RTP Payload Format for H.265 video
 RTC_EXPORT extern const char kH265FmtpProfileSpace[];
 RTC_EXPORT extern const char kH265FmtpProfileId[];

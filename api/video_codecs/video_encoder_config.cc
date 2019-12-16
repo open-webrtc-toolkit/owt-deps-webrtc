@@ -92,7 +92,7 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
     FillVideoCodecVp8(codec->VP8());
   } else if (codec->codecType == kVideoCodecVP9) {
     FillVideoCodecVp9(codec->VP9());
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   } else if (codec->codecType == kVideoCodecH265) {
     FillVideoCodecH265(codec->H265());
 #endif
@@ -106,7 +106,7 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH264(
   RTC_NOTREACHED();
 }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH265(
     VideoCodecH265* h265_settings) const {
   RTC_NOTREACHED();
@@ -132,7 +132,7 @@ void VideoEncoderConfig::H264EncoderSpecificSettings::FillVideoCodecH264(
   *h264_settings = specifics_;
 }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 VideoEncoderConfig::H265EncoderSpecificSettings::H265EncoderSpecificSettings(
     const VideoCodecH265& specifics)
     : specifics_(specifics) {}

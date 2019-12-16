@@ -800,7 +800,7 @@ uint8_t RTPSenderVideo::GetTemporalId(const RTPVideoHeader& header) {
       return vp9.temporal_idx;
     }
     uint8_t operator()(const RTPVideoHeaderH264&) { return kNoTemporalIdx; }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     uint8_t operator()(const RTPVideoHeaderH265&) { return kNoTemporalIdx; }
 #endif
     uint8_t operator()(const absl::monostate&) { return kNoTemporalIdx; }

@@ -14,7 +14,7 @@
 #ifndef MODULES_VIDEO_CODING_CODECS_H265_INCLUDE_H265_GLOBALS_H_
 #define MODULES_VIDEO_CODING_CODECS_H265_INCLUDE_H265_GLOBALS_H_
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 

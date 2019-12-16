@@ -281,7 +281,7 @@ absl::optional<VideoCodecType> GetVideoCodecType(const RtpConfig& config) {
       video_type = kVideoCodecVP9;
     } else if (absl::EqualsIgnoreCase(config.payload_name, "H264")) {
       video_type = kVideoCodecH264;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     } else if (absl::EqualsIgnoreCase(config.payload_name, "H265")) {
       video_type = kVideoCodecH265;
 #endif

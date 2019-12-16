@@ -46,7 +46,7 @@ bool VideoCodecH264::operator==(const VideoCodecH264& other) const {
           numberOfTemporalLayers == other.numberOfTemporalLayers);
 }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 bool VideoCodecH265::operator==(const VideoCodecH265& other) const {
   return (frameDroppingOn == other.frameDroppingOn &&
           keyFrameInterval == other.keyFrameInterval &&
@@ -115,7 +115,7 @@ const VideoCodecH264& VideoCodec::H264() const {
   return codec_specific_.H264;
 }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 VideoCodecH265* VideoCodec::H265() {
   RTC_DCHECK_EQ(codecType, kVideoCodecH265);
   return &codec_specific_.H265;
@@ -130,7 +130,7 @@ const VideoCodecH265& VideoCodec::H265() const {
 static const char* kPayloadNameVp8 = "VP8";
 static const char* kPayloadNameVp9 = "VP9";
 static const char* kPayloadNameH264 = "H264";
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 static const char* kPayloadNameH265 = "H265";
 #endif
 static const char* kPayloadNameGeneric = "Generic";
@@ -144,7 +144,7 @@ const char* CodecTypeToPayloadString(VideoCodecType type) {
       return kPayloadNameVp9;
     case kVideoCodecH264:
       return kPayloadNameH264;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265:
       return kPayloadNameH265;
 #endif
@@ -163,7 +163,7 @@ VideoCodecType PayloadStringToCodecType(const std::string& name) {
     return kVideoCodecH264;
   if (absl::EqualsIgnoreCase(name, kPayloadNameMultiplex))
     return kVideoCodecMultiplex;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   if (absl::EqualsIgnoreCase(name, kPayloadNameH265))
     return kVideoCodecH265;
 #endif

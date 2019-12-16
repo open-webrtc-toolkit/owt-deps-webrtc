@@ -19,12 +19,12 @@
 #include "absl/types/variant.h"
 #include "api/video/encoded_frame.h"
 #include "common_video/h264/h264_common.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "common_video/h265/h265_common.h"
 #endif
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "modules/video_coding/codecs/h265/include/h265_globals.h"
 #endif
 #include "modules/video_coding/frame_object.h"
@@ -321,7 +321,7 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
       bool is_h264_keyframe = false;
 
       bool is_h265 = false;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
       is_h265 = data_buffer_[start_index].codec() == kVideoCodecH265;
       bool has_h265_sps = false;
       bool has_h265_pps = false;
@@ -371,7 +371,7 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
             is_h264_keyframe = true;
           }
         }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
         if (is_h265 && !is_h265_keyframe) {
           const auto* h265_header = absl::get_if<RTPVideoHeaderH265>(
               &data_buffer_[start_index].video_header.video_type_header);
@@ -459,7 +459,7 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
         }
       }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
       if (is_h265) {
         // Warn if this is an unsafe frame.
         if (has_h265_idr && (!has_h265_sps || !has_h265_pps)) {

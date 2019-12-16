@@ -65,7 +65,7 @@ class VCMSessionInfo {
   int Tl0PicId() const;
 
   std::vector<NaluInfo> GetNaluInfos() const;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   std::vector<H265NaluInfo> GetH265NaluInfos() const;
 #endif
 

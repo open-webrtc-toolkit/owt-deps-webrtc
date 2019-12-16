@@ -212,8 +212,8 @@ config("common_inherited_config") {
     cflags += [ "-fsanitize=float-cast-overflow" ]
   }
 
-  if (!rtc_use_h265) {
-    defines += [ "DISABLE_H265" ]
+  if (rtc_use_h265) {
+    defines += [ "OWT_ENABLE_H265" ]
   }
 }
 

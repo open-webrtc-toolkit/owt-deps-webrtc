@@ -15,7 +15,7 @@
 #import "base/RTCVideoEncoder.h"
 #import "base/RTCVideoEncoderFactory.h"
 #import "components/video_codec/RTCCodecSpecificInfoH264+Private.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #import "components/video_codec/RTCCodecSpecificInfoH265+Private.h"
 #endif
 #import "sdk/objc/api/peerconnection/RTCEncodedImage+Private.h"
@@ -64,7 +64,7 @@ class ObjCVideoEncoder : public VideoEncoder {
       if ([NSStringFromClass([info class]) isEqual:@"RTCCodecSpecificInfoH264"]) {
         // if ([info isKindOfClass:[RTCCodecSpecificInfoH264 class]]) {
         codecSpecificInfo = [(RTCCodecSpecificInfoH264 *)info nativeCodecSpecificInfo];
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
       } else if ([NSStringFromClass([info class]) isEqual:@"RTCCodecSpecificInfoH265"]) {
         // if ([info isKindOfClass:[RTCCodecSpecificInfoH265 class]]) {
         codecSpecificInfo = [(RTCCodecSpecificInfoH265 *)info nativeCodecSpecificInfo];

@@ -58,7 +58,7 @@ VideoCodecH264 VideoEncoder::GetDefaultH264Settings() {
   return h264_settings;
 }
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 VideoCodecH265 VideoEncoder::GetDefaultH265Settings() {
   VideoCodecH265 h265_settings;
   memset(&h265_settings, 0, sizeof(h265_settings));

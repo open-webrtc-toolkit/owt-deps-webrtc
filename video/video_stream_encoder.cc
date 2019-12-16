@@ -141,7 +141,7 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
         return true;
       }
       break;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265:
       if (new_send_codec.H265() != prev_send_codec.H265()) {
         return true;

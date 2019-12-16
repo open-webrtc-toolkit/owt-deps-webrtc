@@ -20,7 +20,7 @@
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "modules/video_coding/codecs/h265/include/h265_globals.h"
 #endif
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -93,7 +93,7 @@ struct CodecSpecificInfoH264 {
   bool idr_frame;
 };
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 struct CodecSpecificInfoH265 {
   H265PacketizationMode packetization_mode;
   bool idr_frame;
@@ -106,7 +106,7 @@ union CodecSpecificInfoUnion {
   CodecSpecificInfoVP8 VP8;
   CodecSpecificInfoVP9 VP9;
   CodecSpecificInfoH264 H264;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   CodecSpecificInfoH265 H265;
 #endif
 };
