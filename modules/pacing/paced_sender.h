@@ -17,6 +17,7 @@
 #include "modules/pacing/pacer.h"
 #include "modules/pacing/packet_queue_interface.h"
 #include "rtc_base/criticalsection.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -168,7 +169,6 @@ class PacedSender : public Pacer {
   const bool low_latency_mode_;
   const bool send_padding_if_silent_;
   const bool video_blocks_audio_;
-
 
   rtc::CriticalSection critsect_;
   bool paused_ RTC_GUARDED_BY(critsect_);

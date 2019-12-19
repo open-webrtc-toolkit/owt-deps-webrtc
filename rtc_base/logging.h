@@ -60,6 +60,12 @@
 #include "rtc_base/system/inline.h"
 #include "rtc_base/thread_annotations.h"
 
+#ifdef INTEL_TELEMETRY
+#ifdef WEBRTC_WIN
+#include <windows.h>
+#endif
+#endif
+
 #if !defined(NDEBUG) || defined(DLOG_ALWAYS_ON)
 #define RTC_DLOG_IS_ON 1
 #else
@@ -630,6 +636,21 @@ inline const char* AdaptString(const std::string& str) {
 #define RTC_DLOG(sev) RTC_DLOG_EAT_STREAM_PARAMS()
 #define RTC_DLOG_V(sev) RTC_DLOG_EAT_STREAM_PARAMS()
 #define RTC_DLOG_F(sev) RTC_DLOG_EAT_STREAM_PARAMS()
+#endif
+
+// This adds telemetry support besides logging.
+#ifdef INTEL_TELEMETRY
+class Telemetry {
+ public:
+  typedef void (*PFN_GaugeRecordSample)(int, int);
+  static void RecordSample(int measure, int value);
+
+  static bool IsTelemetryEnabled() {
+    return (getenv("TELEMETRY_WEBRTC_ENABLE") != nullptr);
+  }
+ private:
+  static PFN_GaugeRecordSample fnGaugeRecordSample_;
+};
 #endif
 
 }  // namespace rtc

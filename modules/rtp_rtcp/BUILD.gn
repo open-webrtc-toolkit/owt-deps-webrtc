@@ -204,6 +204,12 @@ rtc_static_library("rtp_rtcp") {
     defines += ["DISABLE_H265"]
   }
 
+  if (owt_use_gauge) {
+    # Use guage library for telemetry
+    include_dirs = [ owt_gauge_header_root ]
+    defines += [ "INTEL_TELEMETRY" ]
+  }
+
   deps = [
     ":rtp_rtcp_format",
     "..:module_api",

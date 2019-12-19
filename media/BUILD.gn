@@ -292,7 +292,6 @@ rtc_static_library("rtc_audio_video") {
     deps += [ "../modules/video_capture:video_capture" ]
   } else {
     public_configs += [ ":rtc_media_defines_config" ]
-    #deps += [ "../modules/video_capture:video_capture_internal_impl" ]
     deps += [ "../modules/video_capture:video_capture" ]
   }
   if (rtc_enable_protobuf) {

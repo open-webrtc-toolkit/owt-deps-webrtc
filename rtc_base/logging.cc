@@ -577,4 +577,30 @@ void Log(const LogArgType* fmt, ...) {
 }
 
 }  // namespace webrtc_logging_impl
+
+#ifdef INTEL_TELEMETRY
+Telemetry::PFN_GaugeRecordSample Telemetry::fnGaugeRecordSample_ = nullptr;
+void rtc::Telemetry::RecordSample(int measure, int value) {
+  // If the API address is not acquired, acquire it.
+  if (getenv("TELEMETRY_WEBRTC_ENABLE") != nullptr) {
+#ifdef WEBRTC_WIN  // At present we only enable this for Windows.
+    if (fnGaugeRecordSample_ == nullptr) {
+      HMODULE hTelemetry = LoadLibrary(TEXT("gauges.dll"));
+      if (hTelemetry) {
+        fnGaugeRecordSample_ = (PFN_GaugeRecordSample)GetProcAddress(
+            hTelemetry, "GaugeRecordSample");
+        if (!fnGaugeRecordSample_) {
+          return;
+        }
+      } else {
+        return;
+      }
+    }
+    if (fnGaugeRecordSample_) {
+      fnGaugeRecordSample_(measure, value);
+    }
+#endif
+  }
+}
+#endif
 }  // namespace rtc

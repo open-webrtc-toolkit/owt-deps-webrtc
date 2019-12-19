@@ -10,6 +10,9 @@
 
 #include "common_types.h"  // NOLINT(build/include)
 #include "common_video/libyuv/include/webrtc_libyuv.h"
+#ifdef INTEL_TELEMETRY
+#include "measures.h"
+#endif
 #include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -316,6 +319,14 @@ int32_t VideoReceiver::Decode(uint16_t maxWaitTimeMs) {
                      << (frame->Complete() ? "complete" : "incomplete")
                      << " decodable video frame";
   }
+#ifdef INTEL_TELEMETRY
+  if (last_decode_invoke_ms_ != 0) {
+    uint64_t decode_gap = clock_->TimeInMilliseconds() - last_decode_invoke_ms_;
+    rtc::Telemetry::RecordSample(gauges::kWebRTCDecodeGapMeasure,
+                                 (int)decode_gap);
+  }
+  last_decode_invoke_ms_ = clock_->TimeInMilliseconds();
+#endif
 
   const int32_t ret = Decode(*frame);
   _receiver.ReleaseFrame(frame);
