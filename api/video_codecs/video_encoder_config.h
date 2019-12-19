@@ -65,7 +65,7 @@ class VideoEncoderConfig {
     virtual void FillVideoCodecVp8(VideoCodecVP8* vp8_settings) const;
     virtual void FillVideoCodecVp9(VideoCodecVP9* vp9_settings) const;
     virtual void FillVideoCodecH264(VideoCodecH264* h264_settings) const;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     virtual void FillVideoCodecH265(VideoCodecH265* h265_settings) const;
 #endif
 
@@ -83,7 +83,7 @@ class VideoEncoderConfig {
     VideoCodecH264 specifics_;
   };
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   class H265EncoderSpecificSettings : public EncoderSpecificSettings {
    public:
     explicit H265EncoderSpecificSettings(const VideoCodecH265& specifics);

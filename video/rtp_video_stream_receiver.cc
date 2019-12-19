@@ -388,7 +388,7 @@ int32_t RtpVideoStreamReceiver::OnReceivedPayloadData(
         break;
     }
   }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   else if (packet.codec() == kVideoCodecH265) {
     switch (h265_tracker_.CopyAndFixBitstream(&packet)) {
       case video_coding::H265VpsSpsPpsTracker::kRequestKeyframe:

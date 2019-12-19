@@ -216,10 +216,8 @@ rtc_static_library("rtp_rtcp") {
       "source/rtp_format_h265.cc",
       "source/rtp_format_h265.h",
     ]
-  }
 
-  if (!rtc_use_h265) {
-    defines += ["DISABLE_H265"]
+    defines += ["OWT_ENABLE_H265"]
   }
 
   deps = [

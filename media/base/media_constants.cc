@@ -106,7 +106,7 @@ const char kComfortNoiseCodecName[] = "CN";
 const char kVp8CodecName[] = "VP8";
 const char kVp9CodecName[] = "VP9";
 const char kH264CodecName[] = "H264";
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 const char kH265CodecName[] = "H265";
 #endif
 
@@ -116,7 +116,7 @@ const char kH264FmtpLevelAsymmetryAllowed[] = "level-asymmetry-allowed";
 const char kH264FmtpPacketizationMode[] = "packetization-mode";
 const char kH264FmtpSpropParameterSets[] = "sprop-parameter-sets";
 const char kH264ProfileLevelConstrainedBaseline[] = "42e01f";
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 // RFC 7798 RTP Payload Format for H.265 video
 const char kH265FmtpProfileSpace[] = "profile-space";
 const char kH265FmtpProfileId[] = "profile-id";

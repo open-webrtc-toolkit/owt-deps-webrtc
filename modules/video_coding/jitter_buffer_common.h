@@ -54,7 +54,7 @@ enum VCMFrameBufferStateEnum {
 };
 
 enum { kH264StartCodeLengthBytes = 4 };
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 enum { kH265StartCodeLengthBytes = 4 };
 #endif
 }  // namespace webrtc

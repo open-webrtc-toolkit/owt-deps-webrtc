@@ -296,7 +296,7 @@ class RTC_EXPORT VideoEncoder {
   static VideoCodecVP8 GetDefaultVp8Settings();
   static VideoCodecVP9 GetDefaultVp9Settings();
   static VideoCodecH264 GetDefaultH264Settings();
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   static VideoCodecH265 GetDefaultH265Settings();
 #endif
 

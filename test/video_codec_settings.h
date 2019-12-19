@@ -56,7 +56,7 @@ static void CodecSettings(VideoCodecType codec_type, VideoCodec* settings) {
     case kVideoCodecVP9:
       *(settings->VP9()) = VideoEncoder::GetDefaultVp9Settings();
       return;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265:
       *(settings->H265()) = VideoEncoder::GetDefaultH265Settings();
       return;

@@ -102,7 +102,7 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       }
       return;
     }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case kVideoCodecH265: {
       auto& h265_header = rtp->video_type_header.emplace<RTPVideoHeaderH265>();
       h265_header.packetization_mode =
@@ -283,7 +283,7 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                       is_keyframe, rtp_video_header);
       }
       return;
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
     case VideoCodecType::kVideoCodecH265:
 #endif
     case VideoCodecType::kVideoCodecMultiplex:

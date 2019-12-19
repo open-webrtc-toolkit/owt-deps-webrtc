@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "common_video/h264/h264_common.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "common_video/h265/h265_common.h"
 #endif
 #include "modules/include/module_common_types.h"
@@ -50,7 +50,7 @@ bool H264AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
                                       CMSampleBufferRef* out_sample_buffer,
                                       CMMemoryPoolRef memory_pool);
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 // Converts a sample buffer emitted from the VideoToolbox encoder into a buffer
 // suitable for RTP. The sample buffer is in hvcc format whereas the rtp buffer
 // needs to be in Annex B format. Data is written directly to |annexb_buffer|
@@ -82,7 +82,7 @@ CMVideoFormatDescriptionRef CreateVideoFormatDescription(
     const uint8_t* annexb_buffer,
     size_t annexb_buffer_size);
 
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 CMVideoFormatDescriptionRef CreateH265VideoFormatDescription(
     const uint8_t* annexb_buffer,
     size_t annexb_buffer_size)
@@ -113,7 +113,7 @@ class AnnexBBufferReader final {
   // Return true if a NALU of the desired type is found, false if we
   // reached the end instead
   bool SeekToNextNaluOfType(H264::NaluType type);
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
   bool SeekToNextNaluOfType(H265::NaluType type);
 #endif
 

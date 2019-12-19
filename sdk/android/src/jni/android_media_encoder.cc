@@ -22,7 +22,7 @@
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/h264/h264_common.h"
 #include "common_video/h264/profile_level_id.h"
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
 #include "common_video/h265/h265_common.h"
 #endif
 #include "media/base/codec.h"
@@ -1084,7 +1084,7 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
           header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
           header.fragmentationLength[i] = nalu_idxs[i].payload_size;
         }
-#ifndef DISABLE_H265
+#ifdef OWT_ENABLE_H265
       } else if (codec_type == kVideoCodecH265) {
         const std::vector<H265::NaluIndex> nalu_idxs =
             H265::FindNaluIndices(payload, payload_size);
