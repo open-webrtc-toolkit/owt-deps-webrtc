@@ -50,6 +50,10 @@ const char kCongestionPushbackExperiment[] = "WebRTC-CongestionWindowPushback";
 
 const int64_t kDefaultAcceptedQueueMs = 250;
 
+//add by huan
+static uint8_t fraction_loss_rec = 0;
+static int64_t rtt_rec= 0;
+
 bool CwndExperimentEnabled() {
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kCwndExperiment);
@@ -536,6 +540,10 @@ void SendSideCongestionController::MaybeTriggerOnNetworkChanged() {
   int64_t rtt;
   bool estimate_changed = bitrate_controller_->GetNetworkParameters(
       &bitrate_bps, &fraction_loss, &rtt);
+  //add by huan
+  fraction_loss_rec = fraction_loss;
+  rtt_rec = rtt;
+
   if (estimate_changed) {
     pacer_->SetEstimatedBitrate(bitrate_bps);
     {
@@ -587,6 +595,21 @@ void SendSideCongestionController::MaybeTriggerOnNetworkChanged() {
     }
   }
 }
+
+//add by huan
+void SendSideCongestionController::
+GetLatestTransportFeedback(uint8_t* last_reported_fraction_loss,
+                                   int64_t* rtt){
+  *last_reported_fraction_loss = fraction_loss_rec;
+  *rtt = rtt_rec;
+  return;
+}
+
+SendSideCongestionController*
+  SendSideCongestionController::GetSendSideCongestionController() {
+    return this;
+}
+
 
 bool SendSideCongestionController::HasNetworkParametersToReportChanged(
     uint32_t bitrate_bps,

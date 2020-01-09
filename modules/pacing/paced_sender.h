@@ -61,6 +61,9 @@ class PacedSender : public Pacer {
   // overshoots from the encoder.
   static const float kDefaultPaceMultiplier;
 
+  //add by huan for padding data counter
+  static uint32_t total_bytes_padding_data_and_redundant_payloads;
+
   PacedSender(const Clock* clock,
               PacketSender* packet_sender,
               RtcEventLog* event_log);
@@ -143,6 +146,10 @@ class PacedSender : public Pacer {
   void SetQueueTimeLimit(int limit_ms);
 
   bool IsLowLatencyMode() const;
+
+  //add by huan for padding data counter
+  void UpdatePaddingAndReduandentBytesSent(uint32_t total_bytes_sent);
+  static void GetPaddingAndReduandentBytesSent(uint32_t* total_bytes_sent);
 
  private:
   // Updates the number of bytes that can be sent for the next time interval.

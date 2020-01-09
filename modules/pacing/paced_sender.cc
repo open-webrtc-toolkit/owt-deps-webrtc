@@ -51,6 +51,10 @@ const int64_t PacedSender::kMaxQueueLengthMs = 2000;
 const float PacedSender::kDefaultPaceMultiplier = 2.5f;
 const char kLogLatencyToFileFieldTrial[] = "OWT-Log-Latency-To-File";
 
+//add by huan for padding data counter
+uint32_t PacedSender::total_bytes_padding_data_and_redundant_payloads = 0;
+
+
 int64_t capture_timestamp = 0;
 int64_t end_timestamp = 0;
 size_t total_size = 0;
@@ -468,9 +472,22 @@ size_t PacedSender::SendPadding(size_t padding_needed,
 
   if (bytes_sent > 0) {
     UpdateBudgetWithBytesSent(bytes_sent);
+    //add by huan for padding data counters
+    UpdatePaddingAndReduandentBytesSent((uint32_t)bytes_sent);
   }
   last_send_time_us_ = clock_->TimeInMicroseconds();
   return bytes_sent;
+}
+
+//add by huan for padding data counter
+void PacedSender::UpdatePaddingAndReduandentBytesSent(uint32_t total_bytes_sent){
+  PacedSender::total_bytes_padding_data_and_redundant_payloads = total_bytes_sent;
+  return;
+}
+
+void PacedSender::GetPaddingAndReduandentBytesSent(uint32_t* total_bytes_sent){
+  *total_bytes_sent = PacedSender::total_bytes_padding_data_and_redundant_payloads;
+  return;
 }
 
 void PacedSender::UpdateBudgetWithElapsedTime(int64_t delta_time_ms) {

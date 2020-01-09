@@ -97,6 +97,10 @@ class SendSideCongestionController
 
   TransportFeedbackObserver* GetTransportFeedbackObserver() override;
 
+  //add by huan
+  static void GetLatestTransportFeedback(uint8_t* last_reported_fraction_loss, int64_t* rtt);
+  SendSideCongestionController* GetSendSideCongestionController();
+
   RTC_DEPRECATED virtual RateLimiter* GetRetransmissionRateLimiter();
 
   void SetPerPacketFeedbackAvailable(bool available) override;

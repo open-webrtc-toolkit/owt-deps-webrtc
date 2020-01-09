@@ -126,6 +126,11 @@ class RTPSender {
                         const PacedPacketInfo& pacing_info);
   size_t TimeToSendPadding(size_t bytes, const PacedPacketInfo& pacing_info);
 
+  //add by huan for padding data counter
+  void UpdatePaddingBytesSent(uint32_t padding_data_bytes);
+  void UpdateReduandentBytesSent(uint32_t redundant_payloads_bytes);
+  static void GetPaddingAndReduandentBytesSent(uint32_t* padding_data_bytes, uint32_t* redundant_payloads_bytes);
+
   // NACK.
   int SelectiveRetransmissions() const;
   int SetSelectiveRetransmissions(uint8_t settings);
@@ -277,6 +282,10 @@ class RTPSender {
   bool sending_media_ RTC_GUARDED_BY(send_critsect_);
 
   size_t max_packet_size_;
+
+  //add by huan for padding data counter
+  static uint32_t redundant_payloads_bytes;
+  static uint32_t padding_data_bytes;
 
   int8_t last_payload_type_ RTC_GUARDED_BY(send_critsect_);
   std::map<int8_t, RtpUtility::Payload*> payload_type_map_;

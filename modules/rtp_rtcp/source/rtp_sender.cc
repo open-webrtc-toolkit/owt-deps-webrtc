@@ -101,6 +101,10 @@ void CountPacket(RtpPacketCounter* counter, const RtpPacketToSend& packet) {
 
 }  // namespace
 
+//add by huan for padding data counter
+uint32_t RTPSender::redundant_payloads_bytes = 0;
+uint32_t RTPSender::padding_data_bytes = 0;
+
 RTPSender::RTPSender(
     bool audio,
     Clock* clock,
@@ -894,12 +898,35 @@ bool RTPSender::IsFecPacket(const RtpPacketToSend& packet) const {
 
 size_t RTPSender::TimeToSendPadding(size_t bytes,
                                     const PacedPacketInfo& pacing_info) {
+  uint32_t redundant_payloads_bytes = 0;
+  uint32_t padding_data_bytes = 0;
   if (bytes == 0)
     return 0;
   size_t bytes_sent = TrySendRedundantPayloads(bytes, pacing_info);
+  redundant_payloads_bytes = bytes_sent;
+  UpdateReduandentBytesSent(redundant_payloads_bytes);
   if (bytes_sent < bytes)
-    bytes_sent += SendPadData(bytes - bytes_sent, pacing_info);
+    padding_data_bytes = SendPadData(bytes - bytes_sent, pacing_info);
+    UpdatePaddingBytesSent(padding_data_bytes);
+    bytes_sent += padding_data_bytes;
   return bytes_sent;
+}
+
+//add by huan for padding data counter
+void RTPSender::UpdateReduandentBytesSent(uint32_t redundant_payloads_bytes){
+  RTPSender::redundant_payloads_bytes = redundant_payloads_bytes;
+  return;
+}
+
+void RTPSender::UpdatePaddingBytesSent(uint32_t padding_data_bytes){
+  RTPSender::padding_data_bytes = padding_data_bytes;
+  return;
+}
+
+void RTPSender::GetPaddingAndReduandentBytesSent(uint32_t* padding_data_bytes, uint32_t* redundant_payloads_bytes){
+  *padding_data_bytes = RTPSender::padding_data_bytes;
+  *redundant_payloads_bytes = RTPSender::redundant_payloads_bytes;
+  return;
 }
 
 bool RTPSender::SendToNetwork(std::unique_ptr<RtpPacketToSend> packet,
