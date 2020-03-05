@@ -42,7 +42,13 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
+#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/ntp_time.h"
+
+#ifdef INTEL_TELEMETRY
+#include <algorithm>
+#include "measures.h"
+#endif
 
 namespace webrtc {
 namespace {
@@ -61,6 +67,42 @@ const int64_t kRtcpMinFrameLengthMs = 17;
 // Maximum number of received RRTRs that will be stored.
 const size_t kMaxNumberOfStoredRrtrs = 200;
 
+#ifdef INTEL_TELEMETRY
+const int64_t kReportLossBurstMinNacks = 20;
+const int64_t kReportLossBurstMinConsecSeqs = 4;
+const char kNackLossBurstExperiment[] = "OWT-NackLossBurstExperiment";
+
+bool NackBurstExperimentEnabled() {
+  std::string expr_str =
+      webrtc::field_trial::FindFullName(kNackLossBurstExperiment);
+  return expr_str.find("Enabled") == 0;
+}
+
+bool ReadNackBurstExperimentParameters(
+    uint32_t * low_consecutive_seq_threshold,
+    uint32_t* low_total_seq_threshold) {
+  RTC_DCHECK(low_consecutive_seq_threshold);
+  RTC_DCHECK(low_total_seq_threshold);
+  std::string expr_str =
+      webrtc::field_trial::FindFullName(kNackLossBurstExperiment);
+  int parsed_values =
+      sscanf(expr_str.c_str(), "Enabled-%u,%u", low_consecutive_seq_threshold,
+             low_total_seq_threshold);
+  if (parsed_values == 2) {
+    RTC_CHECK_GT(*low_consecutive_seq_threshold, 0)
+        << "Consecutive loss threshold must be larger than 0.";
+    RTC_CHECK_GT(*low_total_seq_threshold, 0)
+        << "Total loss seq number must be larger than 0.";
+    return true;
+  }
+  RTC_LOG(LS_WARNING)
+      << "Failed to parse parameters for OWT-NackLossBurstExperiment.";
+  *low_consecutive_seq_threshold = kReportLossBurstMinConsecSeqs;
+  *low_total_seq_threshold = kReportLossBurstMinNacks;
+  return false;
+}
+
+#endif
 }  // namespace
 
 struct RTCPReceiver::PacketInformation {
@@ -152,6 +194,19 @@ RTCPReceiver::RTCPReceiver(
       num_skipped_packets_(0),
       last_skipped_packets_warning_ms_(clock->TimeInMilliseconds()) {
   RTC_DCHECK(owner);
+#if INTEL_TELEMETRY
+  if (NackBurstExperimentEnabled()) {
+    if (ReadNackBurstExperimentParameters(&low_burst_consecutive_seqs_threshold_,
+            &low_burst_total_seqs_threshold_)) {
+      RTC_LOG(LS_INFO) << "Enabled NackLossBurstExperiment with parameters "
+                       << low_burst_consecutive_seqs_threshold_ << ", "
+                       << low_burst_total_seqs_threshold_;
+    }
+  } else {
+    low_burst_consecutive_seqs_threshold_ = kReportLossBurstMinConsecSeqs;
+    low_burst_total_seqs_threshold_ = kReportLossBurstMinNacks;
+  }
+#endif
 }
 
 RTCPReceiver::~RTCPReceiver() {}
@@ -945,6 +1000,42 @@ RtcpStatisticsCallback* RTCPReceiver::GetRtcpStatisticsCallback() {
   return stats_callback_;
 }
 
+#ifdef INTEL_TELEMETRY
+// Currently it's a simplified decision making process:
+// if nack lists grows to larger than 20, we have a burst loss;
+// and otherwise, if we have consecutive 4 packets that is missing,
+// it is also a burst loss. The threshold can be adjusted by field trial.
+webrtc::PacketLossPattern RTCPReceiver::GetCurrentPacketLossPattern(
+    const std::vector<uint16_t>& nack_sequence_numbers) {
+  if (nack_sequence_numbers.size() == 0)
+    return PacketLossPattern::kPacketLossNone;
+
+  if (nack_sequence_numbers.size() >= low_burst_total_seqs_threshold_)
+    return PacketLossPattern::kPacketLossBurst;
+
+  // Since we're handling list of less than 20 elements, sorting is
+  // acceptable.
+  std::vector<uint16_t> new_vec(nack_sequence_numbers);
+  std::sort(new_vec.begin(), new_vec.end());
+  uint16_t last_val = new_vec[0];
+  uint32_t ascend_series = 1;
+  for (auto i : new_vec) {
+    if (i == last_val)
+      continue;
+    if (i == last_val + 1)
+      ascend_series++;
+    else
+      ascend_series = 1;
+
+    last_val = i;
+    if (ascend_series >= low_burst_consecutive_seqs_threshold_) {
+      return PacketLossPattern::kPacketLossBurst;
+    }
+  }
+  return PacketLossPattern::kPacketLossRandom;
+}
+#endif
+
 // Holding no Critical section.
 void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     const PacketInformation& packet_information) {
@@ -969,6 +1060,13 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     if (!packet_information.nack_sequence_numbers.empty()) {
       RTC_LOG(LS_VERBOSE) << "Incoming NACK length: "
                           << packet_information.nack_sequence_numbers.size();
+#if INTEL_TELEMETRY
+      // Enabling telemetry of congestion mode through analysis of nack list
+      rtc::Telemetry::RecordSample(
+          gauges::kWebRTCLossPatternMeasure,
+          GetCurrentPacketLossPattern(
+              packet_information.nack_sequence_numbers));
+#endif
       rtp_rtcp_->OnReceivedNack(packet_information.nack_sequence_numbers);
     }
   }

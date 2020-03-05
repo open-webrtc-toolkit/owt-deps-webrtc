@@ -18,6 +18,11 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+
+#ifdef INTEL_TELEMETRY
+#include "measures.h"
+#endif
+
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "modules/include/module_common_types.h"
 #include "modules/pacing/bitrate_prober.h"
@@ -364,12 +369,24 @@ void PacedSender::Process() {
       bytes_sent += packet.bytes;
       // Send succeeded, remove it from the queue.
       packets_->FinalizePop(packet);
-      if (webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial)) {
+      bool log_to_file_enabled =
+          webrtc::field_trial::IsEnabled(kLogLatencyToFileFieldTrial);
+      bool is_telemetry_enabled = false;
+#ifdef INTEL_TELEMETRY
+      is_telemetry_enabled = rtc::Telemetry::IsTelemetryEnabled();
+#endif
+      if (log_to_file_enabled || is_telemetry_enabled) {
         if (capture_timestamp != packet.capture_time_ms) {  // New frame
           int64_t last_frame_cost = end_timestamp - capture_timestamp;
           int64_t time_since_last_frame =
               clock_->TimeInMilliseconds() - end_timestamp;
-          fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count,
+#ifdef INTEL_TELEMETRY
+          if (is_telemetry_enabled)
+            rtc::Telemetry::RecordSample(gauges::kWebRTCPacingTimeMeasure,
+                  int(last_frame_cost));
+#endif
+          if (log_to_file_enabled)
+            fprintf(recorder, "%lld\t%lld\t%zd\t%lld\n", frame_count,
                   last_frame_cost, total_size, time_since_last_frame);
           frame_count++;
           total_size = 0;
@@ -387,7 +404,6 @@ void PacedSender::Process() {
     } else {
       // Send failed, put it back into the queue.
       packets_->CancelPop(packet);
-      RTC_LOG(LS_ERROR) << "f";
       break;
     }
   }

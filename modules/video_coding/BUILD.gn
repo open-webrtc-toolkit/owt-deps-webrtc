@@ -152,6 +152,14 @@ rtc_static_library("video_coding") {
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
+  defines = []
+
+  if (owt_use_gauge) {
+    # Use guage library for telemetry
+    include_dirs = [ owt_gauge_header_root ]
+    defines += [ "INTEL_TELEMETRY" ]
+  }
+
   deps += [
     ":codec_globals_headers",
     ":encoded_frame",

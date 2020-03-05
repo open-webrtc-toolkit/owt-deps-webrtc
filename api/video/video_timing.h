@@ -47,7 +47,6 @@ struct VideoSendTiming {
   // https://webrtc.org/experiments/rtp-hdrext/video-timing/ extension stores
   // 16-bit deltas of timestamps from packet capture time.
   static uint16_t GetDeltaCappedMs(int64_t base_ms, int64_t time_ms) {
-    RTC_DCHECK_GE(time_ms, base_ms);
     return rtc::saturated_cast<uint16_t>(time_ms - base_ms);
   }
 

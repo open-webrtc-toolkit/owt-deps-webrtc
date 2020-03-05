@@ -21,6 +21,7 @@
 #include "modules/rtp_rtcp/source/rtcp_nack_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "rtc_base/criticalsection.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/ntp_time.h"
 
@@ -33,6 +34,14 @@ class Rrtr;
 class TargetBitrate;
 class TmmbItem;
 }  // namespace rtcp
+
+#ifdef INTEL_TELEMETRY
+enum PacketLossPattern {
+  kPacketLossNone = 0,
+  kPacketLossBurst,
+  kPacketLossRandom
+};
+#endif
 
 class RTCPReceiver {
  public:
@@ -206,6 +215,12 @@ class RTCPReceiver {
                                PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
+#if INTEL_TELEMETRY
+  // This parses the nack list and decides the packet loss pattern.
+  webrtc::PacketLossPattern GetCurrentPacketLossPattern(
+      const std::vector<uint16_t>& nack_sequence_numbers);
+#endif
+
   Clock* const clock_;
   const bool receiver_only_;
   ModuleRtpRtcp* const rtp_rtcp_;
@@ -265,6 +280,10 @@ class RTCPReceiver {
 
   size_t num_skipped_packets_;
   int64_t last_skipped_packets_warning_ms_;
+#ifdef INTEL_TELEMETRY
+  uint32_t low_burst_consecutive_seqs_threshold_;
+  uint32_t low_burst_total_seqs_threshold_;
+#endif
 };
 }  // namespace webrtc
 #endif  // MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_H_

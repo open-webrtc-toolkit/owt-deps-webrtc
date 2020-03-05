@@ -241,6 +241,9 @@ class VideoReceiver : public Module {
 #if RTC_DCHECK_IS_ON
   bool decoder_thread_is_running_ = false;
 #endif
+#ifdef INTEL_TELEMETRY
+  uint64_t last_decode_invoke_ms_ = 0;
+#endif
 };
 
 }  // namespace vcm

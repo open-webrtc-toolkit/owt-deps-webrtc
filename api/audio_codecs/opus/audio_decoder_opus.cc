@@ -33,7 +33,7 @@ absl::optional<AudioDecoderOpus::Config> AudioDecoderOpus::SdpToConfig(
         return absl::nullopt;  // Bad stereo parameter.
       }
     }
-    return 1;  // Default to mono.
+    return 2;  // Default to stero
   }();
   if (STR_CASE_CMP(format.name.c_str(), "opus") == 0 &&
       format.clockrate_hz == 48000 && format.num_channels == 2 &&
