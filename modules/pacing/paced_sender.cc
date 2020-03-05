@@ -404,7 +404,6 @@ void PacedSender::Process() {
     } else {
       // Send failed, put it back into the queue.
       packets_->CancelPop(packet);
-      RTC_LOG(LS_ERROR) << "f";
       break;
     }
   }

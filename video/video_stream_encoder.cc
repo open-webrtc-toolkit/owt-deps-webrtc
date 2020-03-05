@@ -695,16 +695,16 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
         const int posted_frames_waiting_for_encode =
             posted_frames_waiting_for_encode_.fetch_sub(1);
         RTC_DCHECK_GT(posted_frames_waiting_for_encode, 0);
-        if (posted_frames_waiting_for_encode == 1) {
+        //if (posted_frames_waiting_for_encode == 1) {
           MaybeEncodeVideoFrame(incoming_frame, post_time_us);
-        } else {
+        //} else {
           // There is a newer frame in flight. Do not encode this frame.
-          RTC_LOG(LS_VERBOSE)
-              << "Incoming frame dropped due to that the encoder is blocked.";
-          ++dropped_frame_count_;
-          encoder_stats_observer_->OnFrameDropped(
-              VideoStreamEncoderObserver::DropReason::kEncoderQueue);
-        }
+          //RTC_LOG(LS_VERBOSE)
+          //    << "Incoming frame dropped due to that the encoder is blocked.";
+          //++dropped_frame_count_;
+          //encoder_stats_observer_->OnFrameDropped(
+          //    VideoStreamEncoderObserver::DropReason::kEncoderQueue);
+        //}
         if (log_stats) {
           RTC_LOG(LS_INFO) << "Number of frames: captured "
                            << captured_frame_count_

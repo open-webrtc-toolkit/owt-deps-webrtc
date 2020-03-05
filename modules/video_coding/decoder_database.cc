@@ -137,7 +137,7 @@ std::unique_ptr<VCMGenericDecoder> VCMDecoderDataBase::CreateAndInitDecoder(
     const VCMEncodedFrame& frame,
     VideoCodec* new_codec) const {
   uint8_t payload_type = frame.PayloadType();
-  RTC_LOG(LS_INFO) << "Initializing decoder with payload type '"
+  RTC_LOG(LS_INFO) << "Initializing decoder with payload type of'"
                    << static_cast<int>(payload_type) << "'.";
   RTC_DCHECK(new_codec);
   const VCMDecoderMapItem* decoder_item = FindDecoderItem(payload_type);
@@ -151,13 +151,16 @@ std::unique_ptr<VCMGenericDecoder> VCMDecoderDataBase::CreateAndInitDecoder(
       FindExternalDecoderItem(payload_type);
   if (external_dec_item) {
     // External codec.
+    RTC_LOG(LS_ERROR) << "Trying external.";
     ptr_decoder.reset(new VCMGenericDecoder(
         external_dec_item->external_decoder_instance, true));
   } else {
     RTC_LOG(LS_ERROR) << "No decoder of this type exists.";
   }
-  if (!ptr_decoder)
+  if (!ptr_decoder) {
+    RTC_LOG(LS_ERROR) << "no decoder found.";
     return nullptr;
+  }
 
   // Copy over input resolutions to prevent codec reinitialization due to
   // the first frame being of a different resolution than the database values.
@@ -170,9 +173,11 @@ std::unique_ptr<VCMGenericDecoder> VCMDecoderDataBase::CreateAndInitDecoder(
   }
   if (ptr_decoder->InitDecode(decoder_item->settings.get(),
                               decoder_item->number_of_cores) < 0) {
+    RTC_LOG(LS_ERROR) << "Initialize failed.";
     return nullptr;
   }
   memcpy(new_codec, decoder_item->settings.get(), sizeof(VideoCodec));
+  RTC_LOG(LS_ERROR) << "Decoder inited.";
   return ptr_decoder;
 }
 
