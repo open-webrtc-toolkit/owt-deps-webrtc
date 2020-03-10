@@ -215,7 +215,7 @@ class RTCPReceiver {
                                PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-#if INTEL_TELEMETRY
+#ifdef INTEL_TELEMETRY
   // This parses the nack list and decides the packet loss pattern.
   webrtc::PacketLossPattern GetCurrentPacketLossPattern(
       const std::vector<uint16_t>& nack_sequence_numbers);
