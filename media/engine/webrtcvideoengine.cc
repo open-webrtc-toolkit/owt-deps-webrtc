@@ -39,6 +39,8 @@
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 
+static const int kRtpBufferSizeIncreased = 4 * 1024 * 1024;
+
 namespace cricket {
 
 // Hack in order to pass in |receive_stream_id| to legacy clients.
@@ -159,7 +161,8 @@ class NullVideoDecoder : public webrtc::VideoDecoder {
 // If this field trial is enabled, we will enable sending FlexFEC and disable
 // sending ULPFEC whenever the former has been negotiated in the SDPs.
 bool IsFlexfecFieldTrialEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03");
+  return true;
+  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03");
 }
 
 // If this field trial is enabled, the "flexfec-03" codec will be advertised
@@ -169,7 +172,8 @@ bool IsFlexfecFieldTrialEnabled() {
 // MediaSession and added as "a=ssrc:" and "a=ssrc-group:" lines in the local
 // SDP.
 bool IsFlexfecAdvertisedFieldTrialEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
+  return true;
+  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
 }
 
 void AddDefaultFeedbackParams(VideoCodec* codec) {
@@ -1523,11 +1527,20 @@ void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
   const std::string group_name =
       webrtc::field_trial::FindFullName("WebRTC-IncreasedReceivebuffers");
   int recv_buffer_size = kVideoRtpBufferSize;
+  int send_buffer_size = kVideoRtpBufferSize;
+
   if (!group_name.empty() &&
       (sscanf(group_name.c_str(), "%d", &recv_buffer_size) != 1 ||
        recv_buffer_size <= 0)) {
     RTC_LOG(LS_WARNING) << "Invalid receive buffer size: " << group_name;
     recv_buffer_size = kVideoRtpBufferSize;
+  }
+  // If in low latency mode and doing push-mode streaming, enlarge the buffer to 4MB.
+  bool is_low_latency_mode =
+      webrtc::field_trial::IsEnabled("OWT-LowLatencyMode");
+  if (is_low_latency_mode) {
+    recv_buffer_size = kRtpBufferSizeIncreased;
+    send_buffer_size = kRtpBufferSizeIncreased;
   }
   MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_RCVBUF,
                           recv_buffer_size);
@@ -1537,7 +1550,7 @@ void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
   // due to lack of socket buffer space, although it's not yet clear what the
   // ideal value should be.
   MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_SNDBUF,
-                          kVideoRtpBufferSize);
+                          send_buffer_size);
 }
 
 absl::optional<uint32_t> WebRtcVideoChannel::GetDefaultReceiveStreamSsrc() {
