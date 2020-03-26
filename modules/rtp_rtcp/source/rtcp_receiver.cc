@@ -194,6 +194,7 @@ RTCPReceiver::RTCPReceiver(
       num_skipped_packets_(0),
       last_skipped_packets_warning_ms_(clock->TimeInMilliseconds()) {
   RTC_DCHECK(owner);
+
 #ifdef INTEL_TELEMETRY
   if (NackBurstExperimentEnabled()) {
     if (ReadNackBurstExperimentParameters(&low_burst_consecutive_seqs_threshold_,
@@ -1060,6 +1061,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     if (!packet_information.nack_sequence_numbers.empty()) {
       RTC_LOG(LS_VERBOSE) << "Incoming NACK length: "
                           << packet_information.nack_sequence_numbers.size();
+
 #ifdef INTEL_TELEMETRY
       // Enabling telemetry of congestion mode through analysis of nack list
       rtc::Telemetry::RecordSample(
