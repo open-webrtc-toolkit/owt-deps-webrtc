@@ -53,7 +53,7 @@ VCMPacket::VCMPacket(const uint8_t* ptr,
       is_first_packet_in_frame(
           rtpHeader.video_header().is_first_packet_in_frame),
       completeNALU(kNaluIncomplete),
-      insertStartCode(rtpHeader.video_header().codec == kVideoCodecH264 &&
+      insertStartCode((rtpHeader.video_header().codec == kVideoCodecH264 || rtpHeader.video_header().codec == kVideoCodecH265) &&
                       rtpHeader.video_header().is_first_packet_in_frame),
       width(rtpHeader.video_header().width),
       height(rtpHeader.video_header().height),

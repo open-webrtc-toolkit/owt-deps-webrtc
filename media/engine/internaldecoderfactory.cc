@@ -45,6 +45,11 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
     formats.push_back(format);
   for (const SdpVideoFormat& h264_format : SupportedH264Codecs())
     formats.push_back(h264_format);
+
+#ifndef DISABLE_H265
+  formats.push_back(SdpVideoFormat(cricket::kH265CodecName));
+#endif
+
   return formats;
 }
 
@@ -61,6 +66,7 @@ std::unique_ptr<VideoDecoder> InternalDecoderFactory::CreateVideoDecoder(
     return VP9Decoder::Create();
   if (cricket::CodecNamesEq(format.name, cricket::kH264CodecName))
     return H264Decoder::Create();
+
 
   RTC_NOTREACHED();
   return nullptr;

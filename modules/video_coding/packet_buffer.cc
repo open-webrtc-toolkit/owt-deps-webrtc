@@ -349,7 +349,10 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
               has_h265_sps = true;
             } else if (h265_header->nalus[j].type == H265::NaluType::kPps) {
               has_h265_pps = true;
-            } else if (h265_header->nalus[j].type == H265::NaluType::kIdr) {
+            } else if (h265_header->nalus[j].type ==
+                           H265::NaluType::kIdrWRadl ||
+                       h265_header->nalus[j].type == H265::NaluType::kIdrNlp ||
+                       h265_header->nalus[j].type == H265::NaluType::kCra) {
               has_h265_idr = true;
             }
           }

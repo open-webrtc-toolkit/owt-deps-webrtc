@@ -513,7 +513,9 @@ bool RtpDepacketizerH265::ProcessApOrSingleNalu(
         }
         break;
       }
-      case H265::NaluType::kIdr:
+      case H265::NaluType::kIdrWRadl:
+      case H265::NaluType::kIdrNlp:
+      case H265::NaluType::kCra:
         parsed_payload->frame_type = kVideoFrameKey;
         RTC_FALLTHROUGH();
       case H265::NaluType::kTrailN:
@@ -540,7 +542,6 @@ bool RtpDepacketizerH265::ProcessApOrSingleNalu(
       case H265::NaluType::kRadlR:
       case H265::NaluType::kBlaWLp:
       case H265::NaluType::kBlaWRadl:
-      case H265::NaluType::kIdrWRadl:
       case H265::NaluType::kPrefixSei:
       case H265::NaluType::kSuffixSei:
         break;
@@ -603,7 +604,9 @@ bool RtpDepacketizerH265::ParseFuNalu(
     length_ -= (kHevcNalHeaderSize + kHevcFuHeaderSize);
   }
 
-  if (original_nal_type == H265::NaluType::kIdr) {
+  if (original_nal_type == H265::NaluType::kIdrWRadl ||
+      original_nal_type == H265::NaluType::kIdrNlp ||
+      original_nal_type == H265::NaluType::kCra) {
     parsed_payload->frame_type = kVideoFrameKey;
   } else {
     parsed_payload->frame_type = kVideoFrameDelta;
