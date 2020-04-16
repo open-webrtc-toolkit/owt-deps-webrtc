@@ -19,6 +19,7 @@
 #include "api/rtpparameters.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 
 #ifdef _WIN32
 // Disable warning C4355: 'this' : used in base member initializer list.
@@ -140,7 +141,18 @@ ModuleRtpRtcpImpl::ModuleRtpRtcpImpl(const Configuration& configuration)
   // TODO(nisse): Kind-of duplicates
   // webrtc::VideoSendStream::Config::Rtp::kDefaultMaxPacketSize.
   const size_t kTcpOverIpv4HeaderSize = 40;
-  SetMaxRtpPacketSize(IP_PACKET_SIZE - kTcpOverIpv4HeaderSize);
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-LinkMTU");
+  if (!experiment_string.empty()) {
+    double link_mtu = ::strtod(experiment_string.c_str(), nullptr);
+    if (link_mtu > 0) {
+      SetMaxRtpPacketSize(link_mtu - kTcpOverIpv4HeaderSize);
+    } else {
+      SetMaxRtpPacketSize(IP_PACKET_SIZE - kTcpOverIpv4HeaderSize);
+    }
+  } else {
+    SetMaxRtpPacketSize(IP_PACKET_SIZE - kTcpOverIpv4HeaderSize);
+  }
 }
 
 ModuleRtpRtcpImpl::~ModuleRtpRtcpImpl() = default;

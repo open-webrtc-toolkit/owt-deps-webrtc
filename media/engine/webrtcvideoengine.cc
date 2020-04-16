@@ -1614,7 +1614,18 @@ WebRtcVideoChannel::WebRtcVideoSendStream::WebRtcVideoSendStream(
       parameters_(std::move(config), options, max_bitrate_bps, codec_settings),
       rtp_parameters_(CreateRtpParametersWithEncodings(sp)),
       sending_(false) {
-  parameters_.config.rtp.max_packet_size = kVideoMtu;
+  std::string experiment_string =
+      webrtc::field_trial::FindFullName("OWT-LinkMTU");
+  if (!experiment_string.empty()) {
+    double link_mtu = ::strtod(experiment_string.c_str(), nullptr);
+    if (link_mtu > 0) {
+      parameters_.config.rtp.max_packet_size = link_mtu;
+    } else {
+      parameters_.config.rtp.max_packet_size = kVideoMtu;
+    }
+  } else {
+    parameters_.config.rtp.max_packet_size = kVideoMtu;
+  }
   parameters_.conference_mode = send_params.conference_mode;
 
   sp.GetPrimarySsrcs(&parameters_.config.rtp.ssrcs);
