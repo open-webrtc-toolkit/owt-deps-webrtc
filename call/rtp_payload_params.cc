@@ -79,6 +79,13 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       h264_header.picture_id = info.codecSpecific.H264.picture_id;
       return;
     }
+#ifndef DISABLE_H265
+    case kVideoCodecH265: {
+      auto& h265_header = rtp->video_type_header.emplace<RTPVideoHeaderH265>();
+      h265_header.picture_id = info.codecSpecific.H265.picture_id;
+      return;
+    }
+#endif
     case kVideoCodecMultiplex:
     case kVideoCodecGeneric:
       rtp->codec = kVideoCodecGeneric;

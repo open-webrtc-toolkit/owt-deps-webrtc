@@ -74,11 +74,22 @@ struct CodecSpecificInfoH264 {
   bool last_fragment_in_frame;
 };
 
+#ifndef DISABLE_H265
+struct CodecSpecificInfoH265 {
+  int16_t picture_id; //Does hevc need this?
+  bool idr_frame;
+  bool last_fragment_in_frame;
+};
+#endif
+
 union CodecSpecificInfoUnion {
   CodecSpecificInfoGeneric generic;
   CodecSpecificInfoVP8 VP8;
   CodecSpecificInfoVP9 VP9;
   CodecSpecificInfoH264 H264;
+#ifndef DISABLE_H265
+  CodecSpecificInfoH265 H265;
+#endif
 };
 
 // Note: if any pointers are added to this struct or its sub-structs, it

@@ -313,6 +313,13 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
              .has_last_fragement) {
       frame_completed = false;
     }
+#ifndef DISABLE_H265
+    else if (video_header && video_header->codec == kVideoCodecH265 &&
+        !absl::get<RTPVideoHeaderH265>(video_header->video_type_header)
+             .has_last_fragement) {
+      frame_completed = false;
+    }
+#endif
     if (video_header && frame_completed) {
       // Set rotation when key frame or when changed (to follow standard).
       // Or when different from 0 (to follow current receiver implementation).
@@ -341,6 +348,13 @@ bool RTPSenderVideo::SendVideo(enum VideoCodecType video_type,
             absl::get<RTPVideoHeaderH264>(video_header->video_type_header)
                   .picture_id);
       }
+#ifndef DISABLE_H265
+      else if (video_header && video_header->codec == kVideoCodecH265) {
+        last_packet->SetExtension<PictureId>(
+            absl::get<RTPVideoHeaderH265>(video_header->video_type_header)
+                .picture_id);
+      }
+#endif
     }
 
     // FEC settings.

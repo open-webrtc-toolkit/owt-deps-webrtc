@@ -324,9 +324,19 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   RTC_DCHECK_LT(stream_index, rtp_modules_.size());
   RTPVideoHeader rtp_video_header = params_[stream_index].GetRtpVideoHeader(
       encoded_image, codec_specific_info, shared_frame_id_);
-  if (codec_specific_info->codecSpecific.H264.last_fragment_in_frame)
+  if (rtp_video_header.codec == VideoCodecType::kVideoCodecH264 &&
+      codec_specific_info->codecSpecific.H264.last_fragment_in_frame) {
     absl::get<RTPVideoHeaderH264>(rtp_video_header.video_type_header)
         .has_last_fragement = true;
+  }
+#ifndef DISABLE_H265
+  else if (rtp_video_header.codec ==
+             VideoCodecType::kVideoCodecH265 && codec_specific_info->codecSpecific
+                 .H265.last_fragment_in_frame) {
+    absl::get<RTPVideoHeaderH265>(rtp_video_header.video_type_header)
+        .has_last_fragement = true;
+  }
+#endif
   uint32_t frame_id;
   if (!rtp_modules_[stream_index]->Sending()) {
     // The payload router could be active but this module isn't sending.
