@@ -12,6 +12,7 @@ import("//build/config/ozone.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/sysroot.gni")
 import("//build_overrides/build.gni")
+import("//build_overrides/ssl/ssl.gni")
 
 if (!build_with_chromium && is_component_build) {
   print("The Gn argument `is_component_build` is currently " +
@@ -110,7 +111,7 @@ declare_args() {
 
   # Used to specify an external OpenSSL include path when not compiling the
   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
-  rtc_ssl_root = ""
+  rtc_ssl_root = owt_openssl_header_root
 
   # Enable when an external authentication mechanism is used for performing
   # packet authentication for RTP packets instead of libsrtp.
@@ -253,7 +254,7 @@ declare_args() {
   rtc_build_libvpx = !build_with_mozilla
   rtc_libvpx_build_vp9 = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
-  rtc_build_ssl = !build_with_mozilla
+  rtc_build_ssl = !owt_use_openssl
 
   # Enable libevent task queues on platforms that support it.
   if (is_win || is_mac || is_ios || is_nacl || is_fuchsia ||
@@ -1068,7 +1069,7 @@ if (is_mac || is_ios) {
     }
 
     action("modulemap_$this_target_name") {
-      script = "//tools_webrtc/ios/generate_modulemap.py"
+      script = "../tools_webrtc/ios/generate_modulemap.py"
       args = [
         "--out",
         rebase_path(modulemap_path, root_build_dir),
@@ -1088,7 +1089,7 @@ if (is_mac || is_ios) {
       sources = get_target_outputs(
               ":create_bracket_include_headers_$this_target_name")
 
-      script = "//tools_webrtc/ios/generate_umbrella_header.py"
+      script = "../tools_webrtc/ios/generate_umbrella_header.py"
 
       outputs = [ umbrella_header_path ]
       args = [

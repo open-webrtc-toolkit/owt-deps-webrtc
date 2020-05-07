@@ -795,6 +795,7 @@ config("rtc_json_suppressions") {
 rtc_library("rtc_json") {
   public_configs = [ ":rtc_json_suppressions" ]
   poisonous = [ "rtc_json" ]
+  visibility = [ "*", "//talk/owt::owt_deps" ]
   defines = []
   sources = [
     "strings/json.cc",

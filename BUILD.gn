@@ -193,6 +193,25 @@ config("common_inherited_config") {
       target_gen_dir,
     ]
   }
+  if (build_with_owt) {
+    include_dirs = [
+      # The overrides must be included first as that is the mechanism for
+      # selecting the override headers in Chromium.
+      #"../webrtc_overrides",
+
+      # Allow includes to be prefixed with webrtc/ in case it is not an
+      # immediate subdirectory of the top-level.
+      ".",
+
+      # Just like the root WebRTC directory is added to include path, the
+      # corresponding directory tree with generated files needs to be added too.
+      # Note: this path does not change depending on the current target, e.g.
+      # it is always "//gen/third_party/webrtc" when building with Chromium.
+      # See also: http://cs.chromium.org/?q=%5C"default_include_dirs
+      # https://gn.googlesource.com/gn/+/master/docs/reference.md#target_gen_dir
+      target_gen_dir,
+    ]
+  }
   if (is_posix || is_fuchsia) {
     defines += [ "WEBRTC_POSIX" ]
   }
@@ -236,6 +255,10 @@ config("common_inherited_config") {
 
   if (is_ubsan) {
     cflags += [ "-fsanitize=float-cast-overflow" ]
+  }
+
+  if (!rtc_use_h265) {
+    defines += [ "DISABLE_H265" ]
   }
 }
 
@@ -329,7 +352,7 @@ config("common_config") {
     ]
   }
 
-  if (build_with_chromium) {
+  if (build_with_chromium || build_with_owt) {
     defines += [
       # NOTICE: Since common_inherited_config is used in public_configs for our
       # targets, there's no point including the defines in that config here.
@@ -457,10 +480,13 @@ if (!build_with_chromium) {
   rtc_static_library("webrtc") {
     # Only the root target and the test should depend on this.
     visibility = [
-      "//:default",
-      "//:webrtc_lib_link_test",
+      ".:default",
+      ":webrtc_lib_link_test",
     ]
 
+    if (build_with_owt) {
+      visibility += [ "//talk/owt" ]
+    }
     sources = []
     complete_static_lib = true
     suppressed_configs += [ "//build/config/compiler:thin_archive" ]

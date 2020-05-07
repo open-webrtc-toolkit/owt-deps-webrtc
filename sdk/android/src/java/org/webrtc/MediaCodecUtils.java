@@ -84,6 +84,7 @@ class MediaCodecUtils {
     switch (type) {
       case VP8:
       case VP9:
+	  case H265:
       case AV1:
         return new HashMap<String, String>();
       case H264:

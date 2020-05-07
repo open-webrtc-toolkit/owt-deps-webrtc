@@ -105,6 +105,16 @@ class VideoEncoderConfig {
     friend class VideoEncoderConfig;
   };
 
+#ifndef DISABLE_H265
+  class H265EncoderSpecificSettings : public EncoderSpecificSettings {
+   public:
+    explicit H265EncoderSpecificSettings(const VideoCodecH265& specifics);
+    void FillVideoCodecH265(VideoCodecH265* h265_settings) const override;
+
+   private:
+    VideoCodecH265 specifics_;
+  };
+#endif
   class Vp8EncoderSpecificSettings : public EncoderSpecificSettings {
    public:
     explicit Vp8EncoderSpecificSettings(const VideoCodecVP8& specifics);
