@@ -291,26 +291,8 @@ DataRate CalculateOverheadRate(DataRate data_rate,
 }
 
 absl::optional<VideoCodecType> GetVideoCodecType(const RtpConfig& config) {
-<<<<<<< HEAD
   if (config.raw_payload) {
     return absl::nullopt;
-=======
-  absl::optional<VideoCodecType> video_type;
-  if (!config.raw_payload) {
-    if (absl::EqualsIgnoreCase(config.payload_name, "VP8")) {
-      video_type = kVideoCodecVP8;
-    } else if (absl::EqualsIgnoreCase(config.payload_name, "VP9")) {
-      video_type = kVideoCodecVP9;
-    } else if (absl::EqualsIgnoreCase(config.payload_name, "H264")) {
-      video_type = kVideoCodecH264;
-#ifndef DISABLE_H265
-    } else if (absl::EqualsIgnoreCase(config.payload_name, "H265")) {
-      video_type = kVideoCodecH265;
-#endif
-    } else {
-      video_type = kVideoCodecGeneric;
-    }
->>>>>>> d307a29255... Add HEVC support for iOS/Android
   }
   return PayloadStringToCodecType(config.payload_name);
 }

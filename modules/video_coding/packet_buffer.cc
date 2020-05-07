@@ -419,10 +419,11 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
       if (is_h265) {
         // Warn if this is an unsafe frame.
         if (has_h265_idr && (!has_h265_sps || !has_h265_pps)) {
-          ss << "Received H.265-IDR frame "
-             << "(SPS: " << has_h265_sps << ", PPS: " << has_h265_pps << "). ";
-          ss << "Treating as delta frame since "
-                "WebRTC-SpsPpsIdrIsH265Keyframe is always enabled.";
+          RTC_LOG(LS_WARNING)
+              << "Received H.265-IDR frame "
+              << "(SPS: " << has_h265_sps << ", PPS: " << has_h265_pps << "). "
+              << "Treating as delta frame since "
+              << "WebRTC-SpsPpsIdrIsH265Keyframe is always enabled.";
         }
 
         // Now that we have decided whether to treat this frame as a key frame

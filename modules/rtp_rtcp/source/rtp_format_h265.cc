@@ -4,6 +4,9 @@
 
 #include <string.h>
 
+#include "absl/types/optional.h"
+#include "absl/types/variant.h"
+
 #include "common_video/h264/h264_common.h"
 #include "common_video/h265/h265_common.h"
 #include "common_video/h265/h265_pps_parser.h"
@@ -14,7 +17,7 @@
 #include "modules/rtp_rtcp/source/rtp_format_h265.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/system/fallthrough.h"
+
 using namespace rtc;
 
 namespace webrtc {

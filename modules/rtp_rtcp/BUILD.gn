@@ -241,8 +241,8 @@ rtc_library("rtp_rtcp") {
     sources += [
       "source/rtp_format_h265.cc",
       "source/rtp_format_h265.h",
-	  "source/video_rtp_depacketizer_h265.cc",
-	  "source/video_rtp_depacketizer_h265.h",
+      "source/video_rtp_depacketizer_h265.cc",
+      "source/video_rtp_depacketizer_h265.h",
     ]
   }
 

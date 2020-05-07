@@ -154,7 +154,7 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ProcessApOrSingleNalu(
     size_t end_offset = nalu_start_offsets[i + 1] - kHevcLengthFieldSize;
     if (end_offset - start_offset < kHevcNalHeaderSize) {  // Same as H.264.
       RTC_LOG(LS_ERROR) << "AP packet too short";
-      return false;
+      return absl::nullopt;
     }
 
     H265NaluInfo nalu;
@@ -262,7 +262,7 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ProcessApOrSingleNalu(
   return parsed_payload;
 }
 
-absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuaNalu(
+absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuNalu(
     rtc::CopyOnWriteBuffer rtp_payload) {
   if (rtp_payload.size() < kHevcFuHeaderSize + kHevcNalHeaderSize) {
     RTC_LOG(LS_ERROR) << "FU-A NAL units truncated.";
@@ -304,20 +304,20 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuaNalu(
   } else {
 	 parsed_payload->video_payload =
         rtp_payload.Slice(kHevcNalHeaderSize + kHevcFuHeaderSize,
-		rtp_payload.size() - kHevcNalHeaderSize - kFuAHeaderSize);
+		rtp_payload.size() - kHevcNalHeaderSize - kHevcFuHeaderSize);
   }
 
   if (original_nal_type == H265::NaluType::kIdrWRadl
       || original_nal_type == H265::NaluType::kIdrNLp
       || original_nal_type == H265::NaluType::kCra) {
-    parsed_payload->video_header().frame_type = VideoFrameType::kVideoFrameKey;
+    parsed_payload->video_header.frame_type = VideoFrameType::kVideoFrameKey;
   } else {
-    parsed_payload->video_header().frame_type = VideoFrameType::kVideoFrameDelta;
+    parsed_payload->video_header.frame_type = VideoFrameType::kVideoFrameDelta;
   }
-  parsed_payload->video_header().width = 0;
-  parsed_payload->video_header().height = 0;
-  parsed_payload->video_header().codec = kVideoCodecH265;
-  parsed_payload->video_header().is_first_packet_in_frame = first_fragment;
+  parsed_payload->video_header.width = 0;
+  parsed_payload->video_header.height = 0;
+  parsed_payload->video_header.codec = kVideoCodecH265;
+  parsed_payload->video_header.is_first_packet_in_frame = first_fragment;
   auto& h265_header = parsed_payload->video_header.video_type_header
                           .emplace<RTPVideoHeaderH265>();
   h265_header.packetization_type = kH265FU;
@@ -332,7 +332,7 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuaNalu(
 } // namespace
 
 absl::optional<VideoRtpDepacketizer::ParsedRtpPayload>
-RtpDepacketizerH265::Parse(rtc::CopyOnWriteBuffer rtp_payload) {
+VideoRtpDepacketizerH265::Parse(rtc::CopyOnWriteBuffer rtp_payload) {
   if (rtp_payload.size() == 0) {
     RTC_LOG(LS_ERROR) << "Empty payload.";
     return absl::nullopt;

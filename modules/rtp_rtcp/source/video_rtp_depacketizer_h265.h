@@ -25,4 +25,4 @@ class VideoRtpDepacketizerH265 : public VideoRtpDepacketizer {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_VIDEO_RTP_DEPACKETIZER_H264_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_VIDEO_RTP_DEPACKETIZER_H265_H_

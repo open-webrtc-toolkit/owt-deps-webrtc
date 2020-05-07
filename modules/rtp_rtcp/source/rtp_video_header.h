@@ -52,6 +52,7 @@ using RTPVideoTypeHeader = absl::variant<absl::monostate,
                                          RTPVideoHeaderVP9,
                                          RTPVideoHeaderH264,
 										 RTPVideoHeaderLegacyGeneric>;
+#endif
 
 struct RTPVideoHeader {
   struct GenericDescriptorInfo {
