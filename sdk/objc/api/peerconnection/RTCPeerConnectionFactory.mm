@@ -240,6 +240,13 @@
   }
   return self;
 }
+- (instancetype)initWithNativePeerConnectionFactory:
+    (rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory {
+  if (self = [self initNative]) {
+    _nativeFactory = factory;
+  }
+  return self;
+}
 
 - (RTCAudioSource *)audioSourceWithConstraints:(nullable RTCMediaConstraints *)constraints {
   std::unique_ptr<webrtc::MediaConstraints> nativeConstraints;

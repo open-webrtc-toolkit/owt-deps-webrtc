@@ -89,6 +89,7 @@ NS_ASSUME_NONNULL_BEGIN
                  mediaTransportFactory:
                      (std::unique_ptr<webrtc::MediaTransportFactory>)mediaTransportFactory;
 
+
 /** Initialize an RTCPeerConnection with a configuration, constraints, and
  *  dependencies.
  */
@@ -98,6 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
                       dependencies:(std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies
                           delegate:(nullable id<RTCPeerConnectionDelegate>)delegate;
 
-@end
+
+- (instancetype)initWithNativePeerConnectionFactory:(
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory;
+
 
 NS_ASSUME_NONNULL_END
