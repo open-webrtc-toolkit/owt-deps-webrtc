@@ -710,8 +710,9 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         packet->video_payload = std::move(fixed.bitstream);
         break;
     }
+  }
 #endif
-  } else {
+  else {
     packet->video_payload = std::move(codec_payload);
   }
 

@@ -116,7 +116,6 @@ const char kH264FmtpSpropParameterSets[] = "sprop-parameter-sets";
 const char kH264FmtpSpsPpsIdrInKeyframe[] = "sps-pps-idr-in-keyframe";
 const char kH264ProfileLevelConstrainedBaseline[] = "42e01f";
 const char kH264ProfileLevelConstrainedHigh[] = "640c1f";
-#ifdef WEBRTC_USE_H265
 // RFC 7798 RTP Payload Format for H.265 video
 const char kH265FmtpProfileSpace[] = "profile-space";
 const char kH265FmtpProfileId[] = "profile-id";

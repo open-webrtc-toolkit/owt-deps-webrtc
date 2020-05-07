@@ -112,6 +112,23 @@ struct VideoCodecH265 {
   size_t ppsLen;
 };
 
+#ifndef DISABLE_H265
+struct VideoCodecH265 {
+  bool operator==(const VideoCodecH265& other) const;
+  bool operator!=(const VideoCodecH265& other) const {
+    return !(*this == other);
+  }
+  bool frameDroppingOn;
+  int keyFrameInterval;
+  const uint8_t* vpsData;
+  size_t vpsLen;
+  const uint8_t* spsData;
+  size_t spsLen;
+  const uint8_t* ppsData;
+  size_t ppsLen;
+};
+#endif
+
 // Translates from name of codec to codec type and vice versa.
 RTC_EXPORT const char* CodecTypeToPayloadString(VideoCodecType type);
 RTC_EXPORT VideoCodecType PayloadStringToCodecType(const std::string& name);
@@ -120,7 +137,9 @@ union VideoCodecUnion {
   VideoCodecVP8 VP8;
   VideoCodecVP9 VP9;
   VideoCodecH264 H264;
+#ifndef DISABLE_H265
   VideoCodecH265 H265;
+#endif
 };
 
 enum class VideoCodecMode { kRealtimeVideo, kScreensharing };

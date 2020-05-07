@@ -37,12 +37,20 @@ struct RTPVideoHeaderLegacyGeneric {
   uint16_t picture_id;
 };
 
+#ifndef DISABLE_H265
 using RTPVideoTypeHeader = absl::variant<absl::monostate,
                                          RTPVideoHeaderVP8,
                                          RTPVideoHeaderVP9,
                                          RTPVideoHeaderH264,
                                          RTPVideoHeaderH265,
-                                         RTPVideoHeaderLegacyGeneric>;
+										 RTPVideoHeaderLegacyGeneric>;
+#else
+using RTPVideoTypeHeader = absl::variant<absl::monostate,
+                                         RTPVideoHeaderVP8,
+                                         RTPVideoHeaderVP9,
+                                         RTPVideoHeaderH264,
+										 RTPVideoHeaderLegacyGeneric>;
+#endif
 
 struct RTPVideoHeader {
   struct GenericDescriptorInfo {
