@@ -349,7 +349,9 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                       is_keyframe, rtp_video_header);
       }
       return;
+#ifndef DISABLE_H265
     case VideoCodecType::kVideoCodecH265:
+#endif
     case VideoCodecType::kVideoCodecMultiplex:
       return;
   }

@@ -26,9 +26,7 @@ constexpr char kPayloadNameAv1[] = "AV1";
 // needed.
 constexpr char kPayloadNameAv1x[] = "AV1X";
 constexpr char kPayloadNameH264[] = "H264";
-#ifdef WEBRTC_USE_H265
 constexpr char kPayloadNameH265[] = "H265";
-#endif
 constexpr char kPayloadNameGeneric[] = "Generic";
 constexpr char kPayloadNameMultiplex[] = "Multiplex";
 }  // namespace
@@ -54,6 +52,17 @@ bool VideoCodecH264::operator==(const VideoCodecH264& other) const {
   return (keyFrameInterval == other.keyFrameInterval &&
           numberOfTemporalLayers == other.numberOfTemporalLayers);
 }
+
+#ifndef DISABLE_H265
+bool VideoCodecH265::operator==(const VideoCodecH265& other) const {
+  return (frameDroppingOn == other.frameDroppingOn &&
+          keyFrameInterval == other.keyFrameInterval &&
+          vpsLen == other.vpsLen && spsLen == other.spsLen &&
+          ppsLen == other.ppsLen &&
+          (spsLen == 0 || memcmp(spsData, other.spsData, spsLen) == 0) &&
+          (ppsLen == 0 || memcmp(ppsData, other.ppsData, ppsLen) == 0));
+}
+#endif
 
 #ifdef WEBRTC_USE_H265
 bool VideoCodecH265::operator==(const VideoCodecH265& other) const {
@@ -116,7 +125,6 @@ const VideoCodecH264& VideoCodec::H264() const {
   return codec_specific_.H264;
 }
 
-#ifdef WEBRTC_USE_H265
 VideoCodecH265* VideoCodec::H265() {
   RTC_DCHECK_EQ(codecType, kVideoCodecH265);
   return &codec_specific_.H265;
@@ -138,7 +146,6 @@ const char* CodecTypeToPayloadString(VideoCodecType type) {
       return kPayloadNameAv1;
     case kVideoCodecH264:
       return kPayloadNameH264;
-#ifdef WEBRTC_USE_H265
     case kVideoCodecH265:
       return kPayloadNameH265;
 #endif
@@ -163,7 +170,6 @@ VideoCodecType PayloadStringToCodecType(const std::string& name) {
     return kVideoCodecH264;
   if (absl::EqualsIgnoreCase(name, kPayloadNameMultiplex))
     return kVideoCodecMultiplex;
-#ifdef WEBRTC_USE_H265
   if (absl::EqualsIgnoreCase(name, kPayloadNameH265))
     return kVideoCodecH265;
 #endif
