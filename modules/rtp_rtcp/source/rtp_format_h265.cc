@@ -60,8 +60,6 @@ static const size_t kHevcNalHeaderSize = 2;
 // H.265's FU is constructed of 2-byte payload header, and 1-byte FU header
 static const size_t kHevcFuHeaderSize = 1;
 static const size_t kHevcLengthFieldSize = 2;
-static const size_t kHevcApHeaderSize =
-    kHevcNalHeaderSize + kHevcLengthFieldSize;
 
 enum HevcNalHdrMasks {
   kHevcFBit = 0x80,
@@ -75,29 +73,6 @@ enum HevcNalHdrMasks {
 
 // Bit masks for FU headers.
 enum HevcFuDefs { kHevcSBit = 0x80, kHevcEBit = 0x40, kHevcFuTypeBit = 0x3F };
-
-// TODO(pbos): Avoid parsing this here as well as inside the jitter buffer.
-bool ParseApStartOffsets(const uint8_t* nalu_ptr,
-                         size_t length_remaining,
-                         std::vector<size_t>* offsets) {
-  size_t offset = 0;
-  while (length_remaining > 0) {
-    // Buffer doesn't contain room for additional nalu length.
-    if (length_remaining < sizeof(uint16_t))
-      return false;
-    uint16_t nalu_size = ByteReader<uint16_t>::ReadBigEndian(nalu_ptr);
-    nalu_ptr += sizeof(uint16_t);
-    length_remaining -= sizeof(uint16_t);
-    if (nalu_size > length_remaining)
-      return false;
-    nalu_ptr += nalu_size;
-    length_remaining -= nalu_size;
-
-    offsets->push_back(offset + kHevcApHeaderSize);
-    offset += kHevcLengthFieldSize + nalu_size;
-  }
-  return true;
-}
 
 }  // namespace
 
