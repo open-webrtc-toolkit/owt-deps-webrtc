@@ -113,7 +113,7 @@ rtc_library("cross_traffic_unittest") {
     "../../rtc_base",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_event",
-    "//test/time_controller:time_controller",
+    "../../test/time_controller:time_controller",
     "//third_party/abseil-cpp/absl/memory",
   ]
 }
