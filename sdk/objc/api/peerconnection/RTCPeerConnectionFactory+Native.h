@@ -11,6 +11,7 @@
 #import "RTCPeerConnectionFactory.h"
 
 #include "api/scoped_refptr.h"
+#include "api/peer_connection_interface.h"
 
 namespace webrtc {
 
@@ -84,6 +85,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithNativePeerConnectionFactory:(
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory;
+
+@end
 
 
 NS_ASSUME_NONNULL_END
