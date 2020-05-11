@@ -57,7 +57,7 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   static TaskQueueBase* Current();
   bool IsCurrent() const { return Current() == this; }
 
- protected:
+ public:
   class CurrentTaskQueueSetter {
    public:
     explicit CurrentTaskQueueSetter(TaskQueueBase* task_queue);
@@ -69,6 +69,7 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
     TaskQueueBase* const previous_;
   };
 
+ protected:
   // Users of the TaskQueue should call Delete instead of directly deleting
   // this object.
   virtual ~TaskQueueBase() = default;

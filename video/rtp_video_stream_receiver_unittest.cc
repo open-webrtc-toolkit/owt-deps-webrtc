@@ -458,10 +458,10 @@ TEST_F(RtpVideoStreamReceiverTest,
 TEST_F(RtpVideoStreamReceiverTest, NoInfiniteRecursionOnEncapsulatedRedPacket) {
   const std::vector<uint8_t> data({
       0x80,              // RTP version.
-      kRedPayloadType,   // Payload type.
+      static_cast<uint8_t>(kRedPayloadType),   // Payload type.
       0, 0, 0, 0, 0, 0,  // Don't care.
       0, 0, 0x4, 0x57,   // SSRC
-      kRedPayloadType,   // RED header.
+      static_cast<uint8_t>(kRedPayloadType),   // RED header.
       0, 0, 0, 0, 0      // Don't care.
   });
   RtpPacketReceived packet;
