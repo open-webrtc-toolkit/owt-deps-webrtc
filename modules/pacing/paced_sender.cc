@@ -224,9 +224,9 @@ void PacedSender::SetQueueTimeLimit(TimeDelta limit) {
 void PacedSender::SendRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
                                 const PacedPacketInfo& cluster_info) {
   // Since we don't generate padding for realtime mode, no lock required.
-  //critsect_.Leave();
+  critsect_.Leave();
   packet_router_->SendPacket(std::move(packet), cluster_info);
-  //critsect_.Enter();
+  critsect_.Enter();
 }
 
 std::vector<std::unique_ptr<RtpPacketToSend>> PacedSender::GeneratePadding(
