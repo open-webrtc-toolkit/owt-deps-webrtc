@@ -518,9 +518,15 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   }
   absl::optional<DataRate> probe_bitrate =
       probe_bitrate_estimator_->FetchAndResetLastEstimatedBitrate();
+#ifdef INTEL_GPRA
+
+  if (ignore_probes_lower_than_network_estimate_ && probe_bitrate &&
+      estimate_ && *probe_bitrate < estimate_->link_capacity_lower) {
+#else
   if (ignore_probes_lower_than_network_estimate_ && probe_bitrate &&
       estimate_ && *probe_bitrate < delay_based_bwe_->last_estimate() &&
       *probe_bitrate < estimate_->link_capacity_lower) {
+#endif
     probe_bitrate.reset();
   }
   if (limit_probes_lower_than_throughput_estimate_ && probe_bitrate &&

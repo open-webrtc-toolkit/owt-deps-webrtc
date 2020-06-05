@@ -52,10 +52,6 @@ rtc_library("transport_feedback") {
     "transport_feedback_demuxer.h",
   ]
 
-  if (owt_use_gpra) {
-    defines += [ "INTEL_GPRA" ]
-  }
-
   deps = [
     "../..:module_api_public",
     "../../../api:sequence_checker",
