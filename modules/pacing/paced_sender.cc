@@ -40,10 +40,8 @@ PacedSender::PacedSender(Clock* clock,
                          ProcessThread* process_thread)
     : low_latency_mode_(field_trial::IsEnabled("OWT-LowLatencyMode")),
       process_mode_(
-          (field_trials != nullptr &&
-           absl::StartsWith(field_trials->Lookup("OWT-LowLatencyMode"),
-                            "Enabled"))
-              ? PacingController::ProcessMode::kRealtime
+          low_latency_mode_?
+                PacingController::ProcessMode::kRealtime
               : PacingController::ProcessMode::kPeriodic),
       pacing_controller_(clock,
                          static_cast<PacingController::PacketSender*>(this),
@@ -207,8 +205,7 @@ void PacedSender::MaybeWakupProcessThread() {
   // Tell the process thread to call our TimeUntilNextProcess() method to get
   // a new time for when to call Process().
   if (process_thread_ &&
-      (process_mode_ == PacingController::ProcessMode::kDynamic||
-       process_mode_ == PacingController::ProcessMode::kRealtime)) {
+      (process_mode_ == PacingController::ProcessMode::kDynamic)) {
     process_thread_->WakeUp(&module_proxy_);
   }
 }
