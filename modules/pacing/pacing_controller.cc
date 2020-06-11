@@ -202,11 +202,6 @@ Timestamp PacingController::CurrentTime() const {
 }
 
 void PacingController::SetProbingEnabled(bool enabled) {
-  // For low latency mode we will always disable prober.
-  if (mode_ == ProcessMode::kRealtime) {
-    prober_.SetEnabled(false);
-    return;
-  }
   RTC_CHECK_EQ(0, packet_counter_);
   prober_.SetEnabled(enabled);
 }
@@ -333,11 +328,6 @@ bool PacingController::ShouldSendKeepalive(Timestamp now) const {
 Timestamp PacingController::NextSendTime() const {
   Timestamp now = CurrentTime();
 
-  // Realtime pacer works at RT mode.
-  if (mode_ == ProcessMode::kRealtime) {
-    return now;
-  }
-
   if (paused_) {
     return last_send_time_ + kPausedProcessInterval;
   }
@@ -351,7 +341,7 @@ Timestamp PacingController::NextSendTime() const {
     }
   }
 
-  if (mode_ == ProcessMode::kPeriodic) {
+  if (mode_ == ProcessMode::kPeriodic || mode_ == ProcessMode::kRealtime) {
     // In periodic non-probing mode, we just have a fixed interval.
     return last_process_time_ + min_packet_limit_;
   }
@@ -416,19 +406,12 @@ void PacingController::ProcessPackets() {
       UpdateBudgetWithElapsedTime(last_process_time_ - target_send_time);
       target_send_time = last_process_time_;
     }
-  } else if (mode_ == ProcessMode::kRealtime) {
-    target_send_time = NextSendTime();
-    if (target_send_time < last_process_time_) {
-      UpdateBudgetWithElapsedTime(last_process_time_ - target_send_time);
-      target_send_time = last_process_time_;
-    }
   }
 
   Timestamp previous_process_time = last_process_time_;
   TimeDelta elapsed_time = UpdateTimeAndGetElapsed(now);
 
-  // Disable padding for realtime mode
-  if (ShouldSendKeepalive(now) && mode_ != ProcessMode::kRealtime) {
+  if (ShouldSendKeepalive(now)) {
     // We can not send padding unless a normal packet has first been sent. If
     // we do, timestamps get messed up.
     if (packet_counter_ == 0) {
@@ -446,7 +429,7 @@ void PacingController::ProcessPackets() {
     }
   }
 
-  if (paused_ && mode_ != ProcessMode::kRealtime) {
+  if (paused_) {
     return;
   }
 
@@ -471,7 +454,7 @@ void PacingController::ProcessPackets() {
       }
     }
 
-    if (mode_ == ProcessMode::kPeriodic) {
+    if (mode_ == ProcessMode::kPeriodic || mode_ == ProcessMode::kRealtime) {
       // In periodic processing mode, the IntevalBudget allows positive budget
       // up to (process interval duration) * (target rate), so we only need to
       // update it once before the packet sending loop.
@@ -497,9 +480,7 @@ void PacingController::ProcessPackets() {
   // The paused state is checked in the loop since it leaves the critical
   // section allowing the paused state to be changed from other code.
   while (!paused_) {
-    // No padding for realtime mode
-    if (small_first_probe_packet_ && first_packet_in_probe &&
-        mode_ != ProcessMode::kRealtime) {
+    if (small_first_probe_packet_ && first_packet_in_probe) {
       // If first packet in probe, insert a small padding packet so we have a
       // more reliable start window for the rate estimation.
       auto padding = packet_sender_->GeneratePadding(DataSize::Bytes(1));
@@ -515,7 +496,7 @@ void PacingController::ProcessPackets() {
       first_packet_in_probe = false;
     }
 
-    if ((mode_ == ProcessMode::kDynamic || mode_ == ProcessMode::kRealtime) &&
+    if ((mode_ == ProcessMode::kDynamic) &&
         previous_process_time < target_send_time) {
       // Reduce buffer levels with amount corresponding to time between last
       // process and target send time for the next packet.
@@ -532,22 +513,20 @@ void PacingController::ProcessPackets() {
 
     if (rtp_packet == nullptr) {
       // No packet available to send, check if we should send padding.
-      if (mode_ != ProcessMode::kRealtime) {
-        DataSize padding_to_add =
-            PaddingToAdd(recommended_probe_size, data_sent);
-        if (padding_to_add > DataSize::Zero()) {
-          std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
-              packet_sender_->GeneratePadding(padding_to_add);
-          if (padding_packets.empty()) {
-            // No padding packets were generated, quite send loop.
-            break;
-          }
-          for (auto& packet : padding_packets) {
-            EnqueuePacket(std::move(packet));
-          }
-          // Continue loop to send the padding that was just added.
-          continue;
+      DataSize padding_to_add =
+          PaddingToAdd(recommended_probe_size, data_sent);
+      if (padding_to_add > DataSize::Zero()) {
+        std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
+            packet_sender_->GeneratePadding(padding_to_add);
+        if (padding_packets.empty()) {
+          // No padding packets were generated, quite send loop.
+          break;
         }
+        for (auto& packet : padding_packets) {
+          EnqueuePacket(std::move(packet));
+        }
+        // Continue loop to send the padding that was just added.
+        continue;
       }
 
       // Can't fetch new packet and no padding to send, exit send loop.
@@ -573,7 +552,7 @@ void PacingController::ProcessPackets() {
     if (recommended_probe_size && data_sent > *recommended_probe_size)
       break;
 
-    if (mode_ == ProcessMode::kDynamic || mode_ == ProcessMode::kRealtime) {
+    if (mode_ == ProcessMode::kDynamic) {
       // Update target send time in case that are more packets that we are late
       // in processing.
       Timestamp next_send_time = NextSendTime();
@@ -585,7 +564,7 @@ void PacingController::ProcessPackets() {
     }
   }
 
-  if (is_probing && mode_ != ProcessMode::kRealtime) {
+  if (is_probing) {
     probing_send_failure_ = data_sent == DataSize::Zero();
     if (!probing_send_failure_) {
       prober_.ProbeSent(CurrentTime(), data_sent.bytes());
@@ -619,7 +598,7 @@ DataSize PacingController::PaddingToAdd(
     return DataSize::Zero();
   }
 
-  if (mode_ == ProcessMode::kPeriodic) {
+  if (mode_ == ProcessMode::kPeriodic || mode_ == ProcessMode::kDynamic) {
     return DataSize::Bytes(padding_budget_.bytes_remaining());
   } else if (padding_rate_ > DataRate::Zero() &&
              padding_debt_ == DataSize::Zero()) {
@@ -695,7 +674,7 @@ void PacingController::OnPaddingSent(DataSize data_sent) {
 }
 
 void PacingController::UpdateBudgetWithElapsedTime(TimeDelta delta) {
-  if (mode_ == ProcessMode::kPeriodic) {
+  if (mode_ == ProcessMode::kPeriodic || mode_ == ProcessMode::kRealtime) {
     delta = std::min(kMaxProcessingInterval, delta);
     media_budget_.IncreaseBudget(delta.ms());
     padding_budget_.IncreaseBudget(delta.ms());
@@ -707,7 +686,7 @@ void PacingController::UpdateBudgetWithElapsedTime(TimeDelta delta) {
 
 void PacingController::UpdateBudgetWithSentData(DataSize size) {
   outstanding_data_ += size;
-  if (mode_ == ProcessMode::kPeriodic) {
+  if (mode_ == ProcessMode::kPeriodic || mode_ == ProcessMode::kRealtime) {
     media_budget_.UseBudget(size.bytes());
     padding_budget_.UseBudget(size.bytes());
   } else {
