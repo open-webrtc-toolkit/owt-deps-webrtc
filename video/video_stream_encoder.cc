@@ -863,6 +863,9 @@ bool VideoStreamEncoder::EncoderPaused() const {
   // pacer queue has grown too large in buffered mode.
   // If the pacer queue has grown too large or the network is down,
   // |last_encoder_rate_settings_->encoder_target| will be 0.
+  // For low latency mode we always disable encoder pausing.
+  if (field_trial::IsEnabled("OWT-LowLatencyMode"))
+    return false;
   return !last_encoder_rate_settings_ ||
          last_encoder_rate_settings_->encoder_target == DataRate::Zero();
 }
@@ -1645,7 +1648,8 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
 
 bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
   if (!resource_adaptation_processor_->DropInitialFrames() ||
-      !encoder_target_bitrate_bps_.has_value()) {
+      !encoder_target_bitrate_bps_.has_value() ||
+      field_trial::IsEnabled("OWT-LowLatencyMode")) {
     return false;
   }
 

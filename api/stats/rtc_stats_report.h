@@ -21,6 +21,7 @@
 
 #include "api/scoped_refptr.h"
 #include "api/stats/rtc_stats.h"
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/system/rtc_export.h"
@@ -53,6 +54,7 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
     // Reference report to make sure it is kept alive.
     rtc::scoped_refptr<const RTCStatsReport> report_;
     StatsMap::const_iterator it_;
+    RTC_DISALLOW_COPY_AND_ASSIGN(ConstIterator);
   };
 
   // TODO(hbos): Remove "= 0" once Chromium unittest has been updated to call
@@ -60,7 +62,7 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
   static rtc::scoped_refptr<RTCStatsReport> Create(int64_t timestamp_us = 0);
 
   explicit RTCStatsReport(int64_t timestamp_us);
-  RTCStatsReport(const RTCStatsReport& other) = delete;
+  //RTCStatsReport(const RTCStatsReport& other) = delete;
   rtc::scoped_refptr<RTCStatsReport> Copy() const;
 
   int64_t timestamp_us() const { return timestamp_us_; }
@@ -114,6 +116,7 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
 
   int64_t timestamp_us_;
   StatsMap stats_;
+  RTC_DISALLOW_COPY_AND_ASSIGN(RTCStatsReport);
 };
 
 }  // namespace webrtc
