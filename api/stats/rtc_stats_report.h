@@ -23,6 +23,7 @@
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "api/stats/rtc_stats.h"
+#include "rtc_base/constructor_magic.h"
 // TODO(tommi): Remove this include after fixing iwyu issue in chromium.
 // See: third_party/blink/renderer/platform/peerconnection/rtc_stats.cc
 #include "rtc_base/ref_counted_object.h"
@@ -57,6 +58,7 @@ class RTC_EXPORT RTCStatsReport final
     // Reference report to make sure it is kept alive.
     rtc::scoped_refptr<const RTCStatsReport> report_;
     StatsMap::const_iterator it_;
+    RTC_DISALLOW_COPY_AND_ASSIGN(ConstIterator);
   };
 
   // TODO(hbos): Remove "= 0" once Chromium unittest has been updated to call
@@ -64,7 +66,7 @@ class RTC_EXPORT RTCStatsReport final
   static rtc::scoped_refptr<RTCStatsReport> Create(int64_t timestamp_us = 0);
 
   explicit RTCStatsReport(int64_t timestamp_us);
-  RTCStatsReport(const RTCStatsReport& other) = delete;
+  //RTCStatsReport(const RTCStatsReport& other) = delete;
   rtc::scoped_refptr<RTCStatsReport> Copy() const;
 
   int64_t timestamp_us() const { return timestamp_us_; }
@@ -130,6 +132,7 @@ class RTC_EXPORT RTCStatsReport final
  private:
   int64_t timestamp_us_;
   StatsMap stats_;
+  RTC_DISALLOW_COPY_AND_ASSIGN(RTCStatsReport);
 };
 
 }  // namespace webrtc
