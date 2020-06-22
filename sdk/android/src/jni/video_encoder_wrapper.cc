@@ -13,6 +13,9 @@
 #include <utility>
 
 #include "common_video/h264/h264_common.h"
+#ifndef DISABLE_H265
+#include "common_video/h265/h265_common.h"
+#endif
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
@@ -322,19 +325,8 @@ int32_t VideoEncoderWrapper::HandleReturnCode(JNIEnv* jni,
 RTPFragmentationHeader VideoEncoderWrapper::ParseFragmentationHeader(
     rtc::ArrayView<const uint8_t> buffer) {
   RTPFragmentationHeader header;
-#ifndef DISABLE_H265
-  if (codec_settings_.codecType == kVideoCodecH264
-    || codec_settings_.codecType == kVideoCodecH265) {
-    if (codec_settings_.codecType == kVideoCodecH264) {
-      h264_bitstream_parser_.ParseBitstream(buffer.data(), buffer.size());
-    } else if (codec_settings_.codecType == kVideoCodecH265) {
-      h265_bitstream_parser_.ParseBitstream(buffer.data(), buffer.size());
-    }
-#else
   if (codec_settings_.codecType == kVideoCodecH264) {
-    h264_bitstream_parser_.ParseBitstream(buffer.data(), buffer.size());
-#endif
-
+      h264_bitstream_parser_.ParseBitstream(buffer.data(), buffer.size());
     // For H.264 search for start codes.
     const std::vector<H264::NaluIndex> nalu_idxs =
         H264::FindNaluIndices(buffer.data(), buffer.size());
@@ -349,7 +341,27 @@ RTPFragmentationHeader VideoEncoderWrapper::ParseFragmentationHeader(
       header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
       header.fragmentationLength[i] = nalu_idxs[i].payload_size;
     }
-  } else {
+  }
+#ifndef DISABLE_H265
+  else if (codec_settings_.codecType == kVideoCodecH265) {
+    h265_bitstream_parser_.ParseBitstream(buffer.data(), buffer.size());
+    // For H.265 search for start codes.
+    const std::vector<H265::NaluIndex> nalu_idxs =
+        H265::FindNaluIndices(buffer.data(), buffer.size());
+    if (nalu_idxs.empty()) {
+      RTC_LOG(LS_ERROR) << "Start code is not found!";
+      RTC_LOG(LS_ERROR) << "Data:" << buffer[0] << " " << buffer[1] << " "
+                        << buffer[2] << " " << buffer[3] << " " << buffer[4]
+                        << " " << buffer[5];
+    }
+    header.VerifyAndAllocateFragmentationHeader(nalu_idxs.size());
+    for (size_t i = 0; i < nalu_idxs.size(); i++) {
+      header.fragmentationOffset[i] = nalu_idxs[i].payload_start_offset;
+      header.fragmentationLength[i] = nalu_idxs[i].payload_size;
+    }
+  }
+#endif
+  else {
     // Generate a header describing a single fragment.
     header.VerifyAndAllocateFragmentationHeader(1);
     header.fragmentationOffset[0] = 0;
