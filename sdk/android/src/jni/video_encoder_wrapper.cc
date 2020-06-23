@@ -13,6 +13,9 @@
 #include <utility>
 
 #include "common_video/h264/h264_common.h"
+#ifndef DISABLE_H265
+#include "common_video/h265/h265_common.h"
+#endif
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
