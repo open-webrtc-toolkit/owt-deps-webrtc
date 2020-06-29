@@ -32,7 +32,8 @@ class RtpPacketizerH265 : public RtpPacketizer {
   RtpPacketizerH265(rtc::ArrayView<const uint8_t> payload,
                     PayloadSizeLimits limits,
                     H265PacketizationMode packetization_mode,
-                    const RTPFragmentationHeader& fragmentation);
+                    const RTPFragmentationHeader& fragmentation,
+                    bool end_of_frame = true);
 
    ~RtpPacketizerH265() override;
 
@@ -109,7 +110,7 @@ class RtpPacketizerH265 : public RtpPacketizer {
   const PayloadSizeLimits limits_;
   size_t num_packets_left_;
   RTPFragmentationHeader fragmentation_;
-
+  bool end_of_frame_ = true;
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH265);
 };
 }  // namespace webrtc
