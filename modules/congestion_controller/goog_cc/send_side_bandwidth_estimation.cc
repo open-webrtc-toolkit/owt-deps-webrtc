@@ -227,7 +227,9 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(RtcEventLog* event_log)
       bitrate_threshold_ = DataRate::KilobitsPerSec(bitrate_threshold_kbps);
     }
   }
-  is_low_latency_mode_ = field_trial::IsEnabled("OWT-LowLatencyMode");
+#ifdef INTEL_GPRA
+  is_using_external_bwe_ = field_trial::IsEnabled("OWT-ExternalBwe");
+#endif
 }
 
 SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
@@ -310,8 +312,8 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
                                                          DataRate bandwidth) {
   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
   // limitation.
-  if (field_trial::IsEnabled("OWT-LowLatencyMode")) {
-    // For low latency mode, we will always ignore REMB result.
+  if (is_using_external_bwe_) {
+    // Ignore remb if using GPRA.
     return;
   }
   receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
@@ -422,9 +424,9 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
   if (rtt_backoff_.CorrectedRtt(at_time) > rtt_backoff_.rtt_limit_) {
-    // If last decrease happens before 1 second, and current target is larger than
-    // 5kbps, and we decided an RTT backoff is neccessary, we drop current target by
-    // 0.8 and use that as estimation result.
+    // If last decrease happens before 1 second, and current target is larger
+    // than 5kbps, and we decided an RTT backoff is neccessary, we drop current
+    // target by 0.8 and use that as estimation result.
     if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
         current_target_ > rtt_backoff_.bandwidth_floor_) {
       time_last_decrease_ = at_time;
@@ -588,24 +590,23 @@ DataRate SendSideBandwidthEstimation::MaybeRampupOrBackoff(DataRate new_bitrate,
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  std::string experiment_string =
-      webrtc::field_trial::FindFullName("OWT-DelayBweWeight");
-  double delay_weight = ::strtod(experiment_string.c_str(), nullptr);
-  double delay_fraction = delay_weight / 100.0;
-  double lost_fraction = 1 - delay_fraction;
-
   // Calculate new weighted BWE using delay/loss limit.
-  DataRate weighted_limit = delay_based_limit_;
-  if (delay_weight < 100 && delay_weight >= 0) {
+  if (is_using_external_bwe_) {
+    DataRate upper_limit = delay_based_limit_;
+    // Even if we're using GPRA, we will still honor bitrate configured
+    // on RtpSender.
+    upper_limit = std::min(upper_limit, max_bitrate_configured_);
+    return upper_limit;
+  } else {
+    DataRate upper_limit = std::min(delay_based_limit_, receiver_limit_);
+    upper_limit = std::min(upper_limit, max_bitrate_configured_);
     if (loss_based_bandwidth_estimation_.Enabled() &&
         loss_based_bandwidth_estimation_.GetEstimate() > DataRate::Zero()) {
-      weighted_limit.BitsPerSec(delay_based_limit_.bps_or(0) * delay_fraction +
-                       loss_based_bandwidth_estimation_.GetEstimate().bps_or(0) * lost_fraction);
+      upper_limit =
+          std::min(upper_limit, loss_based_bandwidth_estimation_.GetEstimate());
     }
+    return upper_limit;
   }
-  DataRate upper_limit = std::min(weighted_limit, receiver_limit_);
-  upper_limit = std::min(upper_limit, max_bitrate_configured_);
-  return upper_limit;
 }
 
 void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
@@ -633,11 +634,11 @@ void SendSideBandwidthEstimation::MaybeLogLossBasedEvent(Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateTargetBitrate(DataRate new_bitrate,
                                                       Timestamp at_time) {
-  if (is_low_latency_mode_)
+  if (is_using_external_bwe_)
     new_bitrate = GetUpperLimit();
   else
     new_bitrate = std::min(new_bitrate, GetUpperLimit());
-  if (new_bitrate < min_bitrate_configured_) {
+  if (!is_using_external_bwe_ && new_bitrate < min_bitrate_configured_) {
     MaybeLogLowBitrateWarning(new_bitrate, at_time);
     new_bitrate = min_bitrate_configured_;
   }

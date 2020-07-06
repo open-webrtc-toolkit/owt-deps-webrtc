@@ -188,7 +188,7 @@ class SendSideBandwidthEstimation {
   float high_loss_threshold_;
   DataRate bitrate_threshold_;
   LossBasedBandwidthEstimation loss_based_bandwidth_estimation_;
-  bool is_low_latency_mode_;
+  bool is_using_external_bwe_ = false;
 };
 }  // namespace webrtc
 #endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
