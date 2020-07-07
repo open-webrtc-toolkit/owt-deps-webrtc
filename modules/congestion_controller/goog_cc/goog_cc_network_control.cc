@@ -32,6 +32,7 @@
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 #ifdef INTEL_GPRA
 #include "gpra_bwe.h"
 #endif
@@ -54,6 +55,39 @@ constexpr float kDefaultPaceMultiplier = 2.5f;
 // However, if we actually are overusing, we want to drop to something slightly
 // below the current throughput estimate to drain the network queues.
 constexpr double kProbeDropThroughputFraction = 0.85;
+}
+
+bool AllowExternalBwe() {
+#ifdef INTEL_GPRA
+  if (field_trial::IsEnabled("OWT-ExternalBwe")) {
+    return true;
+  } else {
+    return false;
+  }
+#else
+  return false;
+#endif
+}
+
+bool GetExternalBweRateLimits(int* start_bitrate_kbps,
+                              int* min_bitrate_kbps,
+                              int* max_bitrate_kbps) {
+  std::string expr_str = webrtc::field_trial::FindFullName("OWT-BweRateLimits");
+  if (expr_str.empty())
+    return false;
+  int parsed_values =
+      sscanf_s(expr_str.c_str(), "Enabled-%u,%u,%u", start_bitrate_kbps,
+               min_bitrate_kbps, max_bitrate_kbps);
+  if (parsed_values == 3) {
+    RTC_CHECK_GE(*start_bitrate_kbps, 0)
+        << "start_bitrate_kbps must not be smaller than 0.";
+    RTC_CHECK_GE(*min_bitrate_kbps, 0)
+        << " min_bitrate_kbps must not be smaller than 0.";
+    RTC_CHECK_GE(*max_bitrate_kbps, 0)
+        << "max_bitrate_kbps must not be smaller than 0";
+    return true;
+  }
+  return false;
 
 bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
   return absl::StartsWith(config->Lookup(key), "Enabled");
@@ -106,7 +140,13 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       network_state_predictor_(
           std::move(goog_cc_config.network_state_predictor)),
 #ifdef INTEL_GPRA
-      delay_based_bwe_(new GPRABwe()),
+      delay_based_bwe_(AllowExternalBwe() ? new GPRABwe() : nullptr),
+      delay_based_bwe_gcc_(
+          AllowExternalBwe()
+              ? nullptr
+              : new DelayBasedBwe(key_value_config_,
+                                  event_log_,
+                                  network_state_predictor_.get())),
 #else
       delay_based_bwe_(new DelayBasedBwe(key_value_config_,
                                          event_log_,
@@ -132,6 +172,25 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       key_value_config_->Lookup("WebRTC-Bwe-SafeResetOnRouteChange"));
   if (delay_based_bwe_)
     delay_based_bwe_->SetMinBitrate(kCongestionControllerMinBitrate);
+  if (delay_based_bwe_gcc_)
+    delay_based_bwe_gcc_->SetMinBitrate(congestion_controller::GetMinBitrate());
+  if (AllowExternalBwe()) {
+    if (GetExternalBweRateLimits(&external_start_bitrate_kbps_,
+                                 &external_min_bitrate_kbps_,
+                                 &external_max_bitrate_kbps_)) {
+      if (external_start_bitrate_kbps_ > 0)
+        delay_based_bwe_->SetStartBitrate(
+            webrtc::DataRate::BitsPerSec(external_start_bitrate_kbps_ * 1024));
+      if (external_min_bitrate_kbps_ > 0)
+        delay_based_bwe_->SetMinBitrate(
+            webrtc::DataRate::BitsPerSec(external_min_bitrate_kbps_ * 1024));
+#ifdef INTEL_GPRA
+      // Only intel_gpra module allows setting maxbitrate.
+      if (external_max_bitrate_kbps_ > 0)
+        delay_based_bwe_->SetMaxBitrate(external_max_bitrate_kbps_ * 1024);
+#endif
+    }
+  }
 }
 
 GoogCcNetworkController::~GoogCcNetworkController() {}
@@ -250,6 +309,10 @@ NetworkControlUpdate GoogCcNetworkController::OnRoundTripTimeUpdate(
   RTC_DCHECK(!msg.round_trip_time.IsZero());
   if (delay_based_bwe_)
     delay_based_bwe_->OnRttUpdate(msg.round_trip_time);
+#ifdef INTEL_GPRA
+  if (delay_based_bwe_gcc_)
+    delay_based_bwe_gcc_->OnRttUpdate(msg.round_trip_time);
+#endif
   bandwidth_estimation_->UpdateRtt(msg.round_trip_time, msg.receive_time);
   return NetworkControlUpdate();
 }
@@ -316,7 +379,12 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
 
     if (use_min_allocatable_as_lower_bound_) {
       ClampConstraints();
-      delay_based_bwe_->SetMinBitrate(min_data_rate_);
+      if (delay_based_bwe_)
+        delay_based_bwe_->SetMinBitrate(min_data_rate_);
+#ifdef INTEL_GPRA
+      if (delay_based_bwe_gcc_)
+        delay_based_bwe_gcc_->SetMinBitrate(min_data_rate_);
+#endif
       bandwidth_estimation_->SetMinMaxBitrate(min_data_rate_, max_data_rate_);
     }
   }
@@ -408,7 +476,8 @@ void GoogCcNetworkController::UpdateCongestionWindowSize() {
 }
 
 NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
-    TransportPacketsFeedback report, int64_t current_offset_ms) {
+    TransportPacketsFeedback report,
+    int64_t current_offset_ms) {
   if (report.packet_feedbacks.empty()) {
     // TODO(bugs.webrtc.org/10125): Design a better mechanism to safe-guard
     // against building very large network queues.
@@ -453,6 +522,12 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
       int64_t mean_rtt_ms = sum_rtt_ms / feedback_max_rtts_.size();
       if (delay_based_bwe_)
         delay_based_bwe_->OnRttUpdate(TimeDelta::Millis(mean_rtt_ms));
+      else {
+#ifdef INTEL_GPRA
+        if (delay_based_bwe_gcc_)
+          delay_based_bwe_gcc_->OnRttUpdate(TimeDelta::Millis(mean_rtt_ms));
+#endif
+      }
     }
 
     TimeDelta feedback_min_rtt = TimeDelta::PlusInfinity();
@@ -519,7 +594,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   absl::optional<DataRate> probe_bitrate =
       probe_bitrate_estimator_->FetchAndResetLastEstimatedBitrate();
 #ifdef INTEL_GPRA
-
   if (ignore_probes_lower_than_network_estimate_ && probe_bitrate &&
       estimate_ && *probe_bitrate < estimate_->link_capacity_lower) {
 #else
@@ -549,10 +623,18 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
 
   DelayBasedBwe::Result result;
 #ifdef INTEL_GPRA
-  delay_based_bwe_->SetCurrentOffsetMs(current_offset_ms);
-  result = delay_based_bwe_->IncomingPacketFeedbackVector(
-      report, acknowledged_bitrate, probe_bitrate, estimate_,
-      alr_start_time.has_value());
+  if (delay_based_bwe_) {
+    delay_based_bwe_->SetCurrentOffsetMs(current_offset_ms);
+    result = delay_based_bwe_->IncomingPacketFeedbackVector(
+        report, acknowledged_bitrate, probe_bitrate, estimate_,
+        alr_start_time.has_value());
+  } else {
+    if (delay_based_bwe_gcc_) {
+      result = delay_based_bwe_gcc_->IncomingPacketFeedbackVector(
+          report, acknowledged_bitrate, probe_bitrate, estimate_,
+          alr_start_time.has_value());
+    }
+  }
 #else
   result = delay_based_bwe_->IncomingPacketFeedbackVector(
       report, acknowledged_bitrate, probe_bitrate, estimate_,
@@ -616,8 +698,16 @@ NetworkControlUpdate GoogCcNetworkController::GetNetworkState(
       last_estimated_fraction_loss_.value_or(0) / 255.0;
   update.target_rate->network_estimate.round_trip_time =
       last_estimated_round_trip_time_;
-  update.target_rate->network_estimate.bwe_period =
-      delay_based_bwe_->GetExpectedBwePeriod();
+  if (delay_based_bwe_)
+    update.target_rate->network_estimate.bwe_period =
+        delay_based_bwe_->GetExpectedBwePeriod();
+  else {
+#ifdef INTEL_GPRA
+    if (delay_based_bwe_gcc_)
+      update.target_rate->network_estimate.bwe_period =
+          delay_based_bwe_gcc_->GetExpectedBwePeriod();
+#endif
+  }
 
   update.target_rate->at_time = at_time;
   update.target_rate->target_rate = last_pushback_target_rate_;
@@ -681,10 +771,14 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     alr_detector_->SetEstimatedBitrate(loss_based_target_rate.bps());
 
+#ifndef INTEL_GPRA
     TimeDelta bwe_period = delay_based_bwe_->GetExpectedBwePeriod();
-
-#ifdef INTEL_GPRA
-    delay_based_bwe_->SetCurrentPacketLossRate(fraction_loss);
+#else
+    TimeDelta bwe_period = delay_based_bwe_.get()
+                               ? delay_based_bwe_->GetExpectedBwePeriod()
+                               : delay_based_bwe_gcc_->GetExpectedBwePeriod();
+    if (delay_based_bwe_)
+      delay_based_bwe_->SetCurrentPacketLossRate(fraction_loss);
 #endif
 
     TargetTransferRate target_rate_msg;

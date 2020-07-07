@@ -333,8 +333,8 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
                                                          DataRate bandwidth) {
   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
   // limitation.
-  if (field_trial::IsEnabled("OWT-LowLatencyMode")) {
-    // For low latency mode, we will always ignore REMB result.
+  if (is_using_external_bwe_) {
+    // Ignore remb if using GPRA.
     return;
   }
   receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
@@ -463,9 +463,9 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
   if (rtt_backoff_.CorrectedRtt(at_time) > rtt_backoff_.rtt_limit_) {
-    // If last decrease happens before 1 second, and current target is larger than
-    // 5kbps, and we decided an RTT backoff is neccessary, we drop current target by
-    // 0.8 and use that as estimation result.
+    // If last decrease happens before 1 second, and current target is larger
+    // than 5kbps, and we decided an RTT backoff is neccessary, we drop current
+    // target by 0.8 and use that as estimation result.
     if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
         current_target_ > rtt_backoff_.bandwidth_floor_) {
       time_last_decrease_ = at_time;
@@ -667,11 +667,11 @@ void SendSideBandwidthEstimation::MaybeLogLossBasedEvent(Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateTargetBitrate(DataRate new_bitrate,
                                                       Timestamp at_time) {
-  if (is_low_latency_mode_)
+  if (is_using_external_bwe_)
     new_bitrate = GetUpperLimit();
   else
     new_bitrate = std::min(new_bitrate, GetUpperLimit());
-  if (new_bitrate < min_bitrate_configured_) {
+  if (!is_using_external_bwe_ && new_bitrate < min_bitrate_configured_) {
     MaybeLogLowBitrateWarning(new_bitrate, at_time);
     new_bitrate = min_bitrate_configured_;
   }

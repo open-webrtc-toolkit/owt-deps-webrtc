@@ -114,6 +114,7 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   std::unique_ptr<NetworkStatePredictor> network_state_predictor_;
 #ifdef INTEL_GPRA
   std::unique_ptr<GPRABwe> delay_based_bwe_;
+  std::unique_ptr<DelayBasedBwe> delay_based_bwe_gcc_;
 #else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_;
 #endif
