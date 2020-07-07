@@ -107,6 +107,7 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   std::unique_ptr<NetworkStatePredictor> network_state_predictor_;
 #ifdef INTEL_GPRA
   std::unique_ptr<GPRABwe> delay_based_bwe_;
+  std::unique_ptr<DelayBasedBwe> delay_based_bwe_gcc_;
 #else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_;
 #endif
@@ -146,7 +147,9 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   bool previously_in_alr_ = false;
 
   absl::optional<DataSize> current_data_window_;
-
+  int external_start_bitrate_kbps_ = 0;
+  int external_min_bitrate_kbps_ = 0;
+  int external_max_bitrate_kbps_ = 0;
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(GoogCcNetworkController);
 };
 
