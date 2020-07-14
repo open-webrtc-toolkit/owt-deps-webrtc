@@ -165,7 +165,10 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
               DataRate::Zero())),
       max_padding_rate_(config.stream_based_config.max_padding_rate.value_or(
           DataRate::Zero())),
-      max_total_allocated_bitrate_(DataRate::Zero()) {
+      max_total_allocated_bitrate_(DataRate::Zero()),
+      external_start_bitrate_kbps_("start", 0),
+      external_min_bitrate_kbps_("min", 0),
+      external_max_bitrate_kbps_("max", 0) {
   RTC_DCHECK(config.constraints.at_time.IsFinite());
   ParseFieldTrial(
       {&safe_reset_on_route_change_, &safe_reset_acknowledged_rate_},
@@ -175,21 +178,26 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
   if (delay_based_bwe_gcc_)
     delay_based_bwe_gcc_->SetMinBitrate(congestion_controller::GetMinBitrate());
   if (AllowExternalBwe()) {
-    if (GetExternalBweRateLimits(&external_start_bitrate_kbps_,
-                                 &external_min_bitrate_kbps_,
-                                 &external_max_bitrate_kbps_)) {
-      if (external_start_bitrate_kbps_ > 0)
-        delay_based_bwe_->SetStartBitrate(
-            webrtc::DataRate::BitsPerSec(external_start_bitrate_kbps_ * 1024));
-      if (external_min_bitrate_kbps_ > 0)
-        delay_based_bwe_->SetMinBitrate(
-            webrtc::DataRate::BitsPerSec(external_min_bitrate_kbps_ * 1024));
+    ParseFieldTrial({&external_start_bitrate_kbps_, &external_min_bitrate_kbps_,
+                     &external_max_bitrate_kbps_},
+                    field_trial::FindFullName("OWT-Bwe-RateLimits"));
+    RTC_CHECK_GE(external_start_bitrate_kbps_.Get(), 0)
+        << "start_bitrate_kbps must not be smaller than 0.";
+    RTC_CHECK_GE(external_min_bitrate_kbps_.Get(), 0)
+        << " min_bitrate_kbps must not be smaller than 0.";
+    RTC_CHECK_GE(external_max_bitrate_kbps_.Get(), 0)
+        << "max_bitrate_kbps must not be smaller than 0";
+    if (external_start_bitrate_kbps_.Get() > 0)
+      delay_based_bwe_->SetStartBitrate(
+          webrtc::DataRate::BitsPerSec(external_start_bitrate_kbps_ * 1024));
+    if (external_min_bitrate_kbps_.Get() > 0)
+      delay_based_bwe_->SetMinBitrate(
+          webrtc::DataRate::BitsPerSec(external_min_bitrate_kbps_ * 1024));
 #ifdef INTEL_GPRA
-      // Only intel_gpra module allows setting maxbitrate.
-      if (external_max_bitrate_kbps_ > 0)
-        delay_based_bwe_->SetMaxBitrate(external_max_bitrate_kbps_ * 1024);
+    // Only intel_gpra module allows setting maxbitrate.
+    if (external_max_bitrate_kbps_.Get() > 0)
+      delay_based_bwe_->SetMaxBitrate(external_max_bitrate_kbps_ * 1024);
 #endif
-    }
   }
 }
 
