@@ -147,9 +147,9 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   bool previously_in_alr_ = false;
 
   absl::optional<DataSize> current_data_window_;
-  int external_start_bitrate_kbps_ = 0;
-  int external_min_bitrate_kbps_ = 0;
-  int external_max_bitrate_kbps_ = 0;
+  FieldTrialParameter<int> external_start_bitrate_kbps_;
+  FieldTrialParameter<int> external_min_bitrate_kbps_;
+  FieldTrialParameter<int> external_max_bitrate_kbps_;
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(GoogCcNetworkController);
 };
 
