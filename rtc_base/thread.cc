@@ -82,8 +82,8 @@ Thread* Thread::Current() {
 #ifndef NO_MAIN_THREAD_WRAPPING
   // Only autowrap the thread which instantiated the ThreadManager.
   if (!thread && manager->IsMainThread()) {
-    thread = new Thread(SocketServer::CreateDefault());
-    thread->WrapCurrentWithThreadManager(manager, true);
+    //thread = new Thread(SocketServer::CreateDefault());
+    //thread->WrapCurrentWithThreadManager(manager, true);
   }
 #endif
 

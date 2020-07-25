@@ -419,7 +419,7 @@ if (!build_with_chromium) {
       visibility += [ "//talk/owt" ]
     }
     sources = []
-    complete_static_lib = true
+    # complete_static_lib = true
     suppressed_configs += [ "//build/config/compiler:thin_archive" ]
     defines = []
 
