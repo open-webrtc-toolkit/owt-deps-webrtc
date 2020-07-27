@@ -1268,6 +1268,7 @@ if (is_ios || is_mac) {
           "objc/components/renderer/opengl/RTCEAGLVideoView.h",
           "objc/components/renderer/opengl/RTCVideoViewShading.h",
           "objc/components/video_codec/RTCCodecSpecificInfoH264.h",
+          "objc/components/video_codec/RTCCodecSpecificInfoH265.h",
           "objc/components/video_codec/RTCDefaultVideoDecoderFactory.h",
           "objc/components/video_codec/RTCDefaultVideoEncoderFactory.h",
           "objc/components/video_codec/RTCH264ProfileLevelId.h",
