@@ -609,11 +609,14 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   }
   RTPVideoHeader rtp_video_header = params_[stream_index].GetRtpVideoHeader(
       encoded_image, codec_specific_info, shared_frame_id_);
-  if (codec_specific_info->codecSpecific.H264.last_fragment_in_frame)
+  if (codec_specific_info->codecType == kVideoCodecH264 &&
+      codec_specific_info->codecSpecific.H264.last_fragment_in_frame)
     absl::get<RTPVideoHeaderH264>(rtp_video_header.video_type_header)
         .has_last_fragement = true;
 #ifndef DISABLE_H265
-  else if (codec_specific_info->codecSpecific.H265.last_fragment_in_frame)
+  else if (codec_specific_info->codecType ==
+           kVideoCodecH265 && codec_specific_info->codecSpecific.H265
+               .last_fragment_in_frame)
     absl::get<RTPVideoHeaderH265>(rtp_video_header.video_type_header)
         .has_last_fragement = true;
 #endif
