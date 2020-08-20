@@ -100,6 +100,9 @@ struct CodecSpecificInfoH265 {
   bool idr_frame;
   bool last_fragment_in_frame;
   int16_t picture_id;
+  int dependencies[5];
+  int dtis[10];
+  bool discardable;
 };
 #endif
 
