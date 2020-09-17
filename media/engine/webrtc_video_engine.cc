@@ -101,8 +101,13 @@ void AddDefaultFeedbackParams(VideoCodec* codec,
   codec->AddFeedbackParam(FeedbackParam(kRtcpFbParamCcm, kRtcpFbCcmParamFir));
   codec->AddFeedbackParam(FeedbackParam(kRtcpFbParamNack, kParamValueEmpty));
   codec->AddFeedbackParam(FeedbackParam(kRtcpFbParamNack, kRtcpFbNackParamPli));
-  if (codec->name == kVp8CodecName &&
-      IsEnabled(trials, "WebRTC-RtcpLossNotification")) {
+  codec->AddFeedbackParam(
+      FeedbackParam(kRtcpFbParamNack, kRtcpFbNackParamRpsi));
+  if ((codec->name == kVp8CodecName || codec->name == kH264CodecName
+       || codec->name == kH265CodecName
+      ) &&
+      (webrtc::field_trial::IsEnabled("WebRTC-RtcpLossNotification") ||
+      (webrtc::field_trial::IsEnabled("OWT-LowLatencyMode")))) {
     codec->AddFeedbackParam(FeedbackParam(kRtcpFbParamLntf, kParamValueEmpty));
   }
 }
