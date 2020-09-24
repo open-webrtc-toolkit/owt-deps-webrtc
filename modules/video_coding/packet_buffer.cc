@@ -342,9 +342,9 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
               has_h265_idr = true;
             }
           }
-          if ((has_h265_sps && has_h265_pps) || has_h265_idr) {
+          if (has_h265_sps && has_h265_pps && has_h265_idr) {
             is_h265_keyframe = true;
-			if (buffer_[start_index]->width() > 0 &&
+            if (buffer_[start_index]->width() > 0 &&
                 buffer_[start_index]->height() > 0) {
               idr_width = buffer_[start_index]->width();
               idr_height = buffer_[start_index]->height();
