@@ -57,6 +57,17 @@ class RTCPReceiver {
                TransportFeedbackObserver* transport_feedback_observer,
                VideoBitrateAllocationObserver* bitrate_allocation_observer,
                ModuleRtpRtcp* owner);
+
+  RTCPReceiver(Clock* clock,
+               bool receiver_only,
+               RtcpPacketTypeCounterObserver* packet_type_counter_observer,
+               RtcpBandwidthObserver* rtcp_bandwidth_observer,
+               RtcpIntraFrameObserver* rtcp_intra_frame_observer,
+               TransportFeedbackObserver* transport_feedback_observer,
+               VideoBitrateAllocationObserver* bitrate_allocation_observer,
+               RtcpFOVObserver* rtcp_fov_observer,
+               ModuleRtpRtcp* owner);
+
   virtual ~RTCPReceiver();
 
   bool IncomingPacket(const uint8_t* packet, size_t packet_size);
@@ -206,6 +217,10 @@ class RTCPReceiver {
                                PacketInformation* packet_information)
       EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
+  void HandleFOVFeedback(const rtcp::CommonHeader& rtcp_block,
+                               PacketInformation* packet_information)
+      EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
+
   Clock* const clock_;
   const bool receiver_only_;
   ModuleRtpRtcp* const rtp_rtcp_;
@@ -215,6 +230,7 @@ class RTCPReceiver {
   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
   TransportFeedbackObserver* const transport_feedback_observer_;
   VideoBitrateAllocationObserver* const bitrate_allocation_observer_;
+  RtcpFOVObserver* const rtcp_fov_observer_;
 
   rtc::CriticalSection rtcp_receiver_lock_;
   uint32_t main_ssrc_ GUARDED_BY(rtcp_receiver_lock_);

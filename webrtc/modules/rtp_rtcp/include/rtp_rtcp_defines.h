@@ -101,7 +101,8 @@ enum RTCPPacketType : uint32_t {
   kRtcpXrReceiverReferenceTime = 0x40000,
   kRtcpXrDlrrReportBlock = 0x80000,
   kRtcpTransportFeedback = 0x100000,
-  kRtcpXrTargetBitrate = 0x200000
+  kRtcpXrTargetBitrate = 0x200000,
+  kRtcpFOVFeedback = 0x400000
 };
 
 enum KeyFrameRequestMethod { kKeyFrameReqPliRtcp, kKeyFrameReqFirRtcp };
@@ -359,6 +360,19 @@ class PacketFeedbackObserver {
   virtual void OnPacketAdded(uint32_t ssrc, uint16_t seq_num) = 0;
   virtual void OnPacketFeedbackVector(
       const std::vector<PacketFeedback>& packet_feedback_vector) = 0;
+};
+
+struct RtcpFOVInfo {
+    uint16_t seqnr;
+    uint16_t yaw;
+    uint16_t pitch;
+};
+
+class RtcpFOVObserver {
+ public:
+  virtual void OnReceivedFOVFeedback(RtcpFOVInfo &rtcp_fov_info) = 0;
+
+  virtual ~RtcpFOVObserver() {}
 };
 
 class RtcpRttStats {

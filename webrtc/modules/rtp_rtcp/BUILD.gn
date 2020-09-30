@@ -60,6 +60,8 @@ rtc_static_library("rtp_rtcp") {
     "source/rtcp_packet/extended_reports.h",
     "source/rtcp_packet/fir.cc",
     "source/rtcp_packet/fir.h",
+    "source/rtcp_packet/fov_feedback.cc",
+    "source/rtcp_packet/fov_feedback.h",
     "source/rtcp_packet/nack.cc",
     "source/rtcp_packet/nack.h",
     "source/rtcp_packet/pli.cc",

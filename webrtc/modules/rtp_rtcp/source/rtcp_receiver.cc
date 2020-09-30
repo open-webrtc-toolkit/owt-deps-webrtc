@@ -28,6 +28,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/fir.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/fov_feedback.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/nack.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/pli.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rapid_resync_request.h"
@@ -67,6 +68,7 @@ struct RTCPReceiver::PacketInformation {
   uint32_t receiver_estimated_max_bitrate_bps = 0;
   std::unique_ptr<rtcp::TransportFeedback> transport_feedback;
   rtc::Optional<BitrateAllocation> target_bitrate_allocation;
+  std::unique_ptr<rtcp::FOVFeedback> fov_feedback;
 };
 
 // Structure for handing TMMBR and TMMBN rtcp messages (RFC5104, section 3.5.4).
@@ -117,6 +119,39 @@ RTCPReceiver::RTCPReceiver(
       rtcp_intra_frame_observer_(rtcp_intra_frame_observer),
       transport_feedback_observer_(transport_feedback_observer),
       bitrate_allocation_observer_(bitrate_allocation_observer),
+      rtcp_fov_observer_(nullptr),
+      main_ssrc_(0),
+      remote_ssrc_(0),
+      xr_rrtr_status_(false),
+      xr_rr_rtt_ms_(0),
+      last_received_rr_ms_(0),
+      last_increased_sequence_number_ms_(0),
+      stats_callback_(nullptr),
+      packet_type_counter_observer_(packet_type_counter_observer),
+      num_skipped_packets_(0),
+      last_skipped_packets_warning_ms_(clock->TimeInMilliseconds()) {
+  RTC_DCHECK(owner);
+  memset(&remote_sender_info_, 0, sizeof(remote_sender_info_));
+}
+
+RTCPReceiver::RTCPReceiver(
+    Clock* clock,
+    bool receiver_only,
+    RtcpPacketTypeCounterObserver* packet_type_counter_observer,
+    RtcpBandwidthObserver* rtcp_bandwidth_observer,
+    RtcpIntraFrameObserver* rtcp_intra_frame_observer,
+    TransportFeedbackObserver* transport_feedback_observer,
+    VideoBitrateAllocationObserver* bitrate_allocation_observer,
+    RtcpFOVObserver* rtcp_fov_observer,
+    ModuleRtpRtcp* owner)
+    : clock_(clock),
+      receiver_only_(receiver_only),
+      rtp_rtcp_(owner),
+      rtcp_bandwidth_observer_(rtcp_bandwidth_observer),
+      rtcp_intra_frame_observer_(rtcp_intra_frame_observer),
+      transport_feedback_observer_(transport_feedback_observer),
+      bitrate_allocation_observer_(bitrate_allocation_observer),
+      rtcp_fov_observer_(rtcp_fov_observer),
       main_ssrc_(0),
       remote_ssrc_(0),
       xr_rrtr_status_(false),
@@ -357,6 +392,9 @@ bool RTCPReceiver::ParseCompoundPacket(const uint8_t* packet_begin,
             break;
           case rtcp::Fir::kFeedbackMessageType:
             HandleFir(rtcp_block, packet_information);
+            break;
+          case rtcp::FOVFeedback::kFeedbackMessageType:
+            HandleFOVFeedback(rtcp_block, packet_information);
             break;
           case rtcp::Remb::kFeedbackMessageType:
             HandlePsfbApp(rtcp_block, packet_information);
@@ -892,6 +930,22 @@ void RTCPReceiver::HandleTransportFeedback(
   packet_information->transport_feedback = std::move(transport_feedback);
 }
 
+void RTCPReceiver::HandleFOVFeedback(const CommonHeader& rtcp_block,
+                             PacketInformation* packet_information) {
+  std::unique_ptr<rtcp::FOVFeedback> fov_feedback(
+      new rtcp::FOVFeedback());
+
+  if (!fov_feedback->Parse(rtcp_block)) {
+    ++num_skipped_packets_;
+    return;
+  }
+
+  if (main_ssrc_ == fov_feedback->media_ssrc()) {
+    packet_information->packet_type_flags |= kRtcpFOVFeedback ;
+    packet_information->fov_feedback = std::move(fov_feedback);
+  }
+}
+
 void RTCPReceiver::NotifyTmmbrUpdated() {
   // Find bounding set.
   std::vector<rtcp::TmmbItem> bounding =
@@ -1000,6 +1054,17 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
       packet_information.target_bitrate_allocation) {
     bitrate_allocation_observer_->OnBitrateAllocationUpdated(
         *packet_information.target_bitrate_allocation);
+  }
+
+  if (rtcp_fov_observer_ &&
+      packet_information.fov_feedback) {
+    RtcpFOVInfo rtcp_fov_info = {
+        packet_information.fov_feedback->seq_nr_,
+        packet_information.fov_feedback->yaw_,
+        packet_information.fov_feedback->pitch_,
+    };
+    rtcp_fov_observer_->OnReceivedFOVFeedback(
+        rtcp_fov_info);
   }
 
   if (!receiver_only_) {
