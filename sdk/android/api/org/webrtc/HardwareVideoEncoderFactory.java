@@ -251,7 +251,7 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
         || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
         || (name.startsWith(IMG_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-        || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));;
+        || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
   }
 
   private boolean isHardwareSupportedInCurrentSdkH265(MediaCodecInfo info) {
