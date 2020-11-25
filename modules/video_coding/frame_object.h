@@ -34,6 +34,7 @@ class RtpFrameObject : public EncodedFrame {
                  VideoContentType content_type,
                  const RTPVideoHeader& video_header,
                  const absl::optional<webrtc::ColorSpace>& color_space,
+                 const absl::optional<webrtc::FrameSync> frame_sync,
                  RtpPacketInfos packet_infos,
                  rtc::scoped_refptr<EncodedImageBuffer> image_buffer);
 

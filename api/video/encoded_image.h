@@ -23,6 +23,7 @@
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_content_type.h"
+#include "api/video/video_frame_sync.h"
 #include "api/video/video_frame_type.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
@@ -113,6 +114,14 @@ class RTC_EXPORT EncodedImage {
   }
   void SetColorSpace(const absl::optional<webrtc::ColorSpace>& color_space) {
     color_space_ = color_space;
+  }
+
+  absl::optional<webrtc::FrameSync> FrameSync() const {
+      return frame_sync_;
+  }
+
+  void SetFrameSync(const absl::optional<webrtc::FrameSync> sync_point) {
+    frame_sync_ = sync_point;
   }
 
   const RtpPacketInfos& PacketInfos() const { return packet_infos_; }
@@ -231,6 +240,7 @@ class RTC_EXPORT EncodedImage {
   // https://w3c.github.io/webrtc-pc/#dom-rtcrtpreceiver-getcontributingsources
   RtpPacketInfos packet_infos_;
   bool retransmission_allowed_ = true;
+  absl::optional<webrtc::FrameSync> frame_sync_;
 };
 
 }  // namespace webrtc

@@ -18,6 +18,7 @@
 #include "api/array_view.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame_marking.h"
+#include "api/video/video_frame_sync.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
@@ -450,6 +451,20 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           RTC_LOG(WARNING) << "TransportSequenceNumberV2 unsupported by rtp "
                               "header parser.";
           break;
+        case kRtpExtensionVideoFrameSync: {
+          if (len != 2) {
+            RTC_LOG(LS_WARNING)
+                << "Invalid video frame sync point len: " << len;
+            return;
+          }
+          uint16_t sync_point = ptr[0] << 8;
+          sync_point += ptr[1];
+          absl::optional<webrtc::FrameSync> frame_sync =
+              absl::make_optional<webrtc::FrameSync>();
+          frame_sync->set_sync_point(sync_point);
+          header->extension.frame_sync = frame_sync;
+          break;
+        }
         case kRtpExtensionPlayoutDelay: {
           if (len != 2) {
             RTC_LOG(LS_WARNING) << "Incorrect playout delay len: " << len;

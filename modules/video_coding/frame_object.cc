@@ -37,6 +37,7 @@ RtpFrameObject::RtpFrameObject(
     VideoContentType content_type,
     const RTPVideoHeader& video_header,
     const absl::optional<webrtc::ColorSpace>& color_space,
+    const absl::optional<webrtc::FrameSync> frame_sync,
     RtpPacketInfos packet_infos,
     rtc::scoped_refptr<EncodedImageBuffer> image_buffer)
     : first_seq_num_(first_seq_num),
@@ -70,6 +71,7 @@ RtpFrameObject::RtpFrameObject(
 
   rotation_ = rotation;
   SetColorSpace(color_space);
+  SetFrameSync(frame_sync);
   content_type_ = content_type;
   if (timing.flags != VideoSendTiming::kInvalid) {
     // ntp_time_ms_ may be -1 if not estimated yet. This is not a problem,

@@ -591,7 +591,8 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
         webrtc::RtpExtension::kVideoTimingUri,
         webrtc::RtpExtension::kFrameMarkingUri,
         webrtc::RtpExtension::kColorSpaceUri, webrtc::RtpExtension::kMidUri,
-        webrtc::RtpExtension::kRidUri, webrtc::RtpExtension::kRepairedRidUri}) {
+        webrtc::RtpExtension::kRidUri, webrtc::RtpExtension::kRepairedRidUri,
+        webrtc::RtpExtension::kVideoFrameSyncUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   result.emplace_back(

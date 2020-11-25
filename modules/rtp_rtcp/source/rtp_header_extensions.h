@@ -20,6 +20,7 @@
 #include "api/video/color_space.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame_marking.h"
+#include "api/video/video_frame_sync.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -232,6 +233,21 @@ class FrameMarkingExtension {
 
  private:
   static bool IsScalable(uint8_t temporal_id, uint8_t layer_id);
+};
+
+class FrameSyncExtension {
+ public:
+  using value_type = FrameSync;
+  static constexpr RTPExtensionType kId = kRtpExtensionVideoFrameSync;
+  static constexpr uint8_t kValueSizeBytes = 3;
+  static constexpr const char kUri[] =
+      "https://github.com/open-webrtc-toolkit/owt-client-native/wiki/video-frame-sync";
+
+  static size_t ValueSize(const FrameSync& frame_sync) {
+    return kValueSizeBytes;
+  }
+  static bool Parse(rtc::ArrayView<const uint8_t> data, FrameSync* frame_sync);
+  static bool Write(rtc::ArrayView<uint8_t> data, const FrameSync& frame_sync);
 };
 
 class ColorSpaceExtension {

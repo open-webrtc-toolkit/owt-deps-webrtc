@@ -70,6 +70,8 @@ class RTC_EXPORT VCMEncodedFrame : protected EncodedImage {
   using EncodedImage::SpatialIndex;
   using EncodedImage::SpatialLayerFrameSize;
   using EncodedImage::Timestamp;
+  using EncodedImage::FrameSync;
+  using EncodedImage::SetFrameSync;
 
   /**
    *   Get render time in milliseconds

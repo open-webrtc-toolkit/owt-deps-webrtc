@@ -295,6 +295,9 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
   if (last_packet && set_color_space && video_header.color_space)
     packet->SetExtension<ColorSpaceExtension>(video_header.color_space.value());
 
+  if (last_packet && video_header.frame_sync)
+    packet->SetExtension<FrameSyncExtension>(video_header.frame_sync.value());
+
   // According to
   // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
   // ts_126114v120700p.pdf Section 7.4.5:

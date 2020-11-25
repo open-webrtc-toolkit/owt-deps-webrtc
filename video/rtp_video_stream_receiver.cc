@@ -515,6 +515,8 @@ void RtpVideoStreamReceiver::OnReceivedPayloadData(
     } else if (last_color_space_) {
       video_header.color_space = last_color_space_;
     }
+    // Also populate the frame sync extension.
+    video_header.frame_sync = rtp_packet.GetExtension<FrameSyncExtension>();
   }
 
   if (loss_notification_controller_) {
@@ -793,6 +795,7 @@ void RtpVideoStreamReceiver::OnInsertedPacket(
           last_packet.video_header.content_type,    //
           first_packet->video_header,               //
           last_packet.video_header.color_space,     //
+          last_packet.video_header.frame_sync,      //
           RtpPacketInfos(std::move(packet_infos)),  //
           std::move(bitstream)));
     }
