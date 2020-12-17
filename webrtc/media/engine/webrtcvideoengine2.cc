@@ -347,7 +347,7 @@ class EncoderStreamFactory
 const int kMinVideoBitrateKbps = 30;
 
 const int kVideoMtu = 1200;
-const int kVideoRtpBufferSize = 65536;
+const int kVideoRtpBufferSize = 65536 * 128;
 
 // This constant is really an on/off, lower-level configurable NACK history
 // duration hasn't been implemented.
