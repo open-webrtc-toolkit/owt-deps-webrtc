@@ -358,6 +358,7 @@ void RtpPacketizerH265::NextFragmentPacket(RtpPacketToSend* rtp_packet) {
   const Fragment& fragment = packet->source_fragment;
   uint8_t* buffer = rtp_packet->AllocatePayload(
       kHevcFuHeaderSize + kHevcNalHeaderSize + fragment.length);
+  RTC_CHECK(buffer);
   buffer[0] = payload_hdr_h;
   buffer[1] = payload_hdr_l;
   buffer[2] = fu_header;
