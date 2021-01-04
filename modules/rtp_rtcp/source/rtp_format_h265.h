@@ -31,8 +31,7 @@ class RtpPacketizerH265 : public RtpPacketizer {
   // The payload_data must be exactly one encoded H.265 frame.
   RtpPacketizerH265(rtc::ArrayView<const uint8_t> payload,
                     PayloadSizeLimits limits,
-                    H265PacketizationMode packetization_mode,
-                    const RTPFragmentationHeader& fragmentation);
+                    H265PacketizationMode packetization_mode);
 
    ~RtpPacketizerH265() override;
 
@@ -69,15 +68,8 @@ class RtpPacketizerH265 : public RtpPacketizer {
     bool aggregated;
     uint16_t header;  // Different from H264
   };
-  struct Fragment {
-    Fragment(const uint8_t* buffer, size_t length);
-    explicit Fragment(const Fragment& fragment);
-    const uint8_t* buffer = nullptr;
-    size_t length = 0;
-    std::unique_ptr<rtc::Buffer> tmp_buffer;
-  };
   struct PacketUnit {
-    PacketUnit(const Fragment& source_fragment,
+    PacketUnit(rtc::ArrayView<const uint8_t> source_fragment,
                bool first_fragment,
                bool last_fragment,
                bool aggregated,
@@ -88,14 +80,14 @@ class RtpPacketizerH265 : public RtpPacketizer {
           aggregated(aggregated),
           header(header) {}
 
-    const Fragment source_fragment;
+    rtc::ArrayView<const uint8_t> source_fragment;
     bool first_fragment;
     bool last_fragment;
     bool aggregated;
     uint16_t header;
   };
   typedef std::queue<Packet> PacketQueue;
-  std::deque<Fragment> input_fragments_;
+  std::deque<rtc::ArrayView<const uint8_t>> input_fragments_;
   std::queue<PacketUnit> packets_;
 
   bool GeneratePackets(H265PacketizationMode packetization_mode);
@@ -108,7 +100,6 @@ class RtpPacketizerH265 : public RtpPacketizer {
 
   const PayloadSizeLimits limits_;
   size_t num_packets_left_;
-  RTPFragmentationHeader fragmentation_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH265);
 };

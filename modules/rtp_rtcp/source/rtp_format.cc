@@ -51,11 +51,10 @@ std::unique_ptr<RtpPacketizer> RtpPacketizer::Create(
     }
 #ifndef DISABLE_H265
     case kVideoCodecH265: {
-      RTC_CHECK(fragmentation);
       const auto& h265 =
           absl::get<RTPVideoHeaderH265>(rtp_video_header.video_type_header);
       return absl::make_unique<RtpPacketizerH265>(
-          payload, limits, h265.packetization_mode, *fragmentation);
+          payload, limits, h265.packetization_mode);
     }
 #endif
     case kVideoCodecVP8: {
