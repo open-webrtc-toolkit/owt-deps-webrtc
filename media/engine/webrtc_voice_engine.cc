@@ -33,6 +33,7 @@
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/async_audio_processing/async_audio_processing.h"
 #include "modules/audio_device/audio_device_impl.h"
+#include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -358,6 +359,9 @@ void WebRtcVoiceEngine::Init() {
         webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_);
   }
 #endif  // WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE
+  if (!adm_) {
+    adm_ = new rtc::RefCountedObject<webrtc::FakeAudioDeviceModule>();
+  }
   RTC_CHECK(adm());
   webrtc::adm_helpers::Init(adm());
 
