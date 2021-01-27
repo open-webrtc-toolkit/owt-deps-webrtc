@@ -226,14 +226,14 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
         // Intel Vp8 encoder is supported in LOLLIPOP or later, with the intel encoder enabled.
         || (name.startsWith(INTEL_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                && enableIntelVp8Encoder)
-        || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp8", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
+        || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp8", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Encoders"));
   }
 
   private boolean isHardwareSupportedInCurrentSdkVp9(MediaCodecInfo info) {
     String name = info.getName();
     return (name.startsWith(QCOM_PREFIX) || name.startsWith(EXYNOS_PREFIX) || name.startsWith(HISI_PREFIX)
         || name.startsWith(IMG_PREFIX)
-        || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp9", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders")))
+        || vcp.isExtraHardwareSupported(name, "video/x-vnd.on2.vp9", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Encoders")))
         // Both QCOM and Exynos VP9 encoders are supported in N or later.
         && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
   }
@@ -251,7 +251,7 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
         || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
         || (name.startsWith(IMG_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-        || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
+        || vcp.isExtraHardwareSupported(name, "video/avc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Encoders"));
   }
 
   private boolean isHardwareSupportedInCurrentSdkH265(MediaCodecInfo info) {
@@ -264,7 +264,7 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
            // Hisi VP8 encoder seems to be supported. Needs more testing.
            || (name.startsWith(HISI_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
            || (name.startsWith(IMG_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-           || vcp.isExtraHardwareSupported(name, "video/hevc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Decoders"));
+           || vcp.isExtraHardwareSupported(name, "video/hevc", vcp.parseWithTag(vcp.loadWithDom(extraMediaCodecFile), "Encoders"));
   }
 
   private boolean isMediaCodecAllowed(MediaCodecInfo info) {
