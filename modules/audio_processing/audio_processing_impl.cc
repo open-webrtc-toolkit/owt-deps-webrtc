@@ -1790,6 +1790,9 @@ void AudioProcessingImpl::InitializeHighPassFilter(bool forced_reset) {
 }
 
 void AudioProcessingImpl::InitializeEchoController() {
+#if defined(WEBRTC_LINUX)
+  return;
+#else
   bool use_echo_controller =
       echo_control_factory_ ||
       (config_.echo_canceller.enabled && !config_.echo_canceller.mobile_mode);
@@ -1866,6 +1869,7 @@ void AudioProcessingImpl::InitializeEchoController() {
 
   submodules_.echo_control_mobile.reset();
   aecm_render_signal_queue_.reset();
+#endif
 }
 
 void AudioProcessingImpl::InitializeGainController1() {
