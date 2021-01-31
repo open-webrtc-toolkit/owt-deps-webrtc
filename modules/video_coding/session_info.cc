@@ -521,9 +521,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
          IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
       last_packet_seq_num_ = packet.seqNum;
     }
-#else
-  } else {
 #endif
+  } else {
     // Only insert media packets between first and last packets (when
     // available).
     // Placing check here, as to properly account for duplicate packets.

@@ -63,7 +63,6 @@ class ObjCVideoEncoder : public VideoEncoder {
               [(RTC_OBJC_TYPE(RTCCodecSpecificInfoH264) *)info nativeCodecSpecificInfo];
 #ifndef DISABLE_H265
       } else if ([info isKindOfClass:[RTC_OBJC_TYPE(RTCCodecSpecificInfoH265) class]]) {
-        // if ([info isKindOfClass:[RTCCodecSpecificInfoH265 class]]) {
         codecSpecificInfo = [(RTCCodecSpecificInfoH265 *)info nativeCodecSpecificInfo];
 #endif
         }
