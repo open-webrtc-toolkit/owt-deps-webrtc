@@ -897,7 +897,7 @@ if (is_ios) {
         "$target_gen_dir/$output_name.framework/WebRTC/$output_name.h"
 
     action_foreach("create_bracket_include_headers_$target_name") {
-      script = "//tools_webrtc/apple/copy_framework_header.py"
+      script = "../tools_webrtc/apple/copy_framework_header.py"
       sources = invoker.sources
       output_name = invoker.output_name
       outputs = [
@@ -988,7 +988,7 @@ if (is_mac) {
     }
 
     action_foreach("create_bracket_include_headers_$this_target_name") {
-      script = "//tools_webrtc/apple/copy_framework_header.py"
+      script = "../tools_webrtc/apple/copy_framework_header.py"
       sources = invoker.sources
       output_name = invoker.output_name
       outputs = [
