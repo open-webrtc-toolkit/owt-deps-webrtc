@@ -228,11 +228,8 @@ bool H264AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
 bool H265CMSampleBufferToAnnexBBuffer(
     CMSampleBufferRef hvcc_sample_buffer,
     bool is_keyframe,
-    rtc::Buffer* annexb_buffer,
-    std::unique_ptr<RTPFragmentationHeader> *out_header) {
+    rtc::Buffer* annexb_buffer) {
   RTC_DCHECK(hvcc_sample_buffer);
-  RTC_DCHECK(out_header);
-  out_header->reset(nullptr);
 
   // Get format description from the sample buffer.
   CMVideoFormatDescriptionRef description =
@@ -339,14 +336,6 @@ bool H265CMSampleBufferToAnnexBBuffer(
   }
   RTC_DCHECK_EQ(bytes_remaining, (size_t)0);
 
-  std::unique_ptr<RTPFragmentationHeader> header(new RTPFragmentationHeader());
-  header->VerifyAndAllocateFragmentationHeader(frag_offsets.size());
-  RTC_DCHECK_EQ(frag_lengths.size(), frag_offsets.size());
-  for (size_t i = 0; i < frag_offsets.size(); ++i) {
-    header->fragmentationOffset[i] = frag_offsets[i];
-    header->fragmentationLength[i] = frag_lengths[i];
-  }
-  *out_header = std::move(header);
   CFRelease(contiguous_buffer);
   return true;
 }
