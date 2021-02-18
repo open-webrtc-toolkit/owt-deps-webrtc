@@ -15,7 +15,6 @@
 #include <vector>
 
 #import "RTCCodecSpecificInfoH265.h"
-#import "api/peerconnection/RTCRtpFragmentationHeader+Private.h"
 #import "api/peerconnection/RTCVideoCodecInfo+Private.h"
 #import "base/RTCI420Buffer.h"
 #import "base/RTCVideoFrame.h"
@@ -38,16 +37,14 @@
 #include "sdk/objc/Framework/Classes/VideoToolbox/nalu_rewriter.h"
 #include "system_wrappers/include/clock.h"
 
-@interface RTCVideoEncoderH265 ()
+@interface RTC_OBJC_TYPE (RTCVideoEncoderH265)
+()
 
-- (void)frameWasEncoded:(OSStatus)status
-                  flags:(VTEncodeInfoFlags)infoFlags
-           sampleBuffer:(CMSampleBufferRef)sampleBuffer
-                  width:(int32_t)width
-                 height:(int32_t)height
-           renderTimeMs:(int64_t)renderTimeMs
-              timestamp:(uint32_t)timestamp
-               rotation:(RTCVideoRotation)rotation;
+    - (void)frameWasEncoded : (OSStatus)status flags : (VTEncodeInfoFlags)infoFlags sampleBuffer
+    : (CMSampleBufferRef)sampleBuffer codecSpecificInfo
+    : (id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)>)codecSpecificInfo width : (int32_t)width height
+    : (int32_t)height renderTimeMs : (int64_t)renderTimeMs timestamp : (uint32_t)timestamp rotation
+    : (RTCVideoRotation)rotation;
 
 @end
 
@@ -65,7 +62,8 @@ const int kHighh265QpThreshold = 39;
 // Struct that we pass to the encoder per frame to encode. We receive it again
 // in the encoder callback.
 struct API_AVAILABLE(ios(11.0)) RTCFrameEncodeParams {
-  RTCFrameEncodeParams(RTCVideoEncoderH265* e,
+  RTCFrameEncodeParams(RTC_OBJC_TYPE(RTCVideoEncoderH265) * e,
+                       RTC_OBJC_TYPE(RTCCodecSpecificInfoH265) * csi,
                        int32_t w,
                        int32_t h,
                        int64_t rtms,
@@ -76,9 +74,16 @@ struct API_AVAILABLE(ios(11.0)) RTCFrameEncodeParams {
         height(h),
         render_time_ms(rtms),
         timestamp(ts),
-        rotation(r) {}
+        rotation(r) {
+    if (csi) {
+      codecSpecificInfo = csi;
+    } else {
+      codecSpecificInfo = [[RTC_OBJC_TYPE(RTCCodecSpecificInfoH265) alloc] init];
+    }
+  }
 
-  RTCVideoEncoderH265* encoder;
+  RTC_OBJC_TYPE(RTCVideoEncoderH265) * encoder;
+  RTC_OBJC_TYPE(RTCCodecSpecificInfoH265) * codecSpecificInfo;
   int32_t width;
   int32_t height;
   int64_t render_time_ms;
@@ -149,13 +154,17 @@ void compressionOutputCallback(void* encoder,
                                VTEncodeInfoFlags infoFlags,
                                CMSampleBufferRef sampleBuffer)
     API_AVAILABLE(ios(11.0)) {
-  RTC_CHECK(params);
+  if (!params) {
+    // If there are pending callbacks when the encoder is destroyed, this can happen.
+    return;
+  }
   std::unique_ptr<RTCFrameEncodeParams> encodeParams(
       reinterpret_cast<RTCFrameEncodeParams*>(params));
   RTC_CHECK(encodeParams->encoder);
   [encodeParams->encoder frameWasEncoded:status
                                    flags:infoFlags
                             sampleBuffer:sampleBuffer
+                       codecSpecificInfo:encodeParams->codecSpecificInfo
                                    width:encodeParams->width
                                   height:encodeParams->height
                             renderTimeMs:encodeParams->render_time_ms
@@ -319,8 +328,9 @@ void compressionOutputCallback(void* encoder,
 
   std::unique_ptr<RTCFrameEncodeParams> encodeParams;
   encodeParams.reset(new RTCFrameEncodeParams(
-      self, _width, _height, frame.timeStampNs / rtc::kNumNanosecsPerMillisec,
-      frame.timeStamp, frame.rotation));
+      self, codecSpecificInfo,_width, _height,
+      frame.timeStampNs / rtc::kNumNanosecsPerMillisec, frame.timeStamp,
+      frame.rotation));
 
   // Update the bitrate if needed.
   [self setBitrateBps:_bitrateAdjuster->GetAdjustedBitrateBps()];
@@ -530,6 +540,7 @@ void compressionOutputCallback(void* encoder,
 - (void)frameWasEncoded:(OSStatus)status
                   flags:(VTEncodeInfoFlags)infoFlags
            sampleBuffer:(CMSampleBufferRef)sampleBuffer
+      codecSpecificInfo:(id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)>)codecSpecificInfo
                   width:(int32_t)width
                  height:(int32_t)height
            renderTimeMs:(int64_t)renderTimeMs
@@ -558,20 +569,9 @@ void compressionOutputCallback(void* encoder,
     RTC_LOG(LS_INFO) << "Generated keyframe";
   }
 
-  // Convert the sample buffer into a buffer suitable for RTP packetization.
-  // TODO(tkchin): Allocate buffers through a pool.
-  std::unique_ptr<rtc::Buffer> buffer(new rtc::Buffer());
-  RTCRtpFragmentationHeader* header;
-  {
-    std::unique_ptr<webrtc::RTPFragmentationHeader> header_cpp;
-    bool result = H265CMSampleBufferToAnnexBBuffer(sampleBuffer, isKeyframe,
-                                                   buffer.get(), &header_cpp);
-    header = [[RTCRtpFragmentationHeader alloc]
-        initWithNativeFragmentationHeader:header_cpp.get()];
-    if (!result) {
-      RTC_LOG(LS_ERROR) << "Failed to convert sample buffer.";
-      return;
-    }
+  __block std::unique_ptr<rtc::Buffer> buffer = std::make_unique<rtc::Buffer>();
+  if (!webrtc::H265CMSampleBufferToAnnexBBuffer(sampleBuffer, isKeyframe, buffer.get())) {
+    return;
   }
 
   RTCEncodedImage* frame = [[RTCEncodedImage alloc] init];
@@ -580,7 +580,6 @@ void compressionOutputCallback(void* encoder,
                                 freeWhenDone:NO];
   frame.encodedWidth = width;
   frame.encodedHeight = height;
-  frame.completeFrame = YES;
   frame.frameType =
       isKeyframe ? RTCFrameTypeVideoFrameKey : RTCFrameTypeVideoFrameDelta;
   frame.captureTimeMs = renderTimeMs;
@@ -596,7 +595,9 @@ void compressionOutputCallback(void* encoder,
   _h265BitstreamParser.GetLastSliceQp(&qp);
   frame.qp = @(qp);
 
-  BOOL res = _callback(frame, [[RTCCodecSpecificInfoH265 alloc] init], header);
+  RTC_OBJC_TYPE(RTCRtpFragmentationHeader) *header =
+      [[RTC_OBJC_TYPE(RTCRtpFragmentationHeader) alloc] init];
+  BOOL res = _callback(frame, codecSpecificInfo, header);
   if (!res) {
     RTC_LOG(LS_ERROR) << "Encode callback failed.";
     return;
