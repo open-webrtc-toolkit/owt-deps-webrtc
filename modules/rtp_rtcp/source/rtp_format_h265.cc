@@ -296,7 +296,7 @@ void RtpPacketizerH265::NextAggregatePacket(RtpPacketToSend* rtp_packet,
   size_t payload_capacity = rtp_packet->FreeCapacity();
   RTC_CHECK_GE(payload_capacity, kHevcNalHeaderSize);
   uint8_t* buffer = rtp_packet->AllocatePayload(payload_capacity);
-
+  RTC_CHECK(buffer);
   PacketUnit* packet = &packets_.front();
   RTC_CHECK(packet->first_fragment);
   uint8_t payload_hdr_h = packet->header >> 8;
