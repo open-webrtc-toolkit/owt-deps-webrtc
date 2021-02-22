@@ -195,7 +195,9 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
   if (generic_descriptor_experiment_)
     SetGeneric(codec_specific_info, shared_frame_id, is_keyframe,
                &rtp_video_header);
-
+  rtp_video_header.frame_sync = image.FrameSync()
+                                    ? absl::make_optional(*image.FrameSync())
+                                    : absl::nullopt;
   return rtp_video_header;
 }
 

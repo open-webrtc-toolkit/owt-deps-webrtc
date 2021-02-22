@@ -22,6 +22,7 @@
 #include "api/video/color_space.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame_marking.h"
+#include "api/video/video_frame_sync.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
 #include "common_types.h"  // NOLINT(build/include)
@@ -159,6 +160,9 @@ struct RTPHeaderExtension {
   std::string mid;
 
   absl::optional<ColorSpace> color_space;
+
+  // Used for multi-stream sync.
+  absl::optional<FrameSync> frame_sync;
 };
 
 enum { kRtpCsrcSize = 15 };  // RFC 3550 page 13

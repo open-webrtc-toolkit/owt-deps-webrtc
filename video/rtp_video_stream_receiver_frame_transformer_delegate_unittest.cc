@@ -34,7 +34,7 @@ std::unique_ptr<video_coding::RtpFrameObject> CreateRtpFrameObject() {
   return std::make_unique<video_coding::RtpFrameObject>(
       0, 0, true, 0, 0, 0, 0, 0, VideoSendTiming(), 0, kVideoCodecGeneric,
       kVideoRotation_0, VideoContentType::UNSPECIFIED, RTPVideoHeader(),
-      absl::nullopt, RtpPacketInfos(), EncodedImageBuffer::Create(0));
+      absl::nullopt, absl::nullopt, RtpPacketInfos(), EncodedImageBuffer::Create(0));
 }
 
 class FakeTransport : public Transport {

@@ -360,6 +360,12 @@ struct RTC_EXPORT RtpExtension {
   static constexpr char kRepairedRidUri[] =
       "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
 
+  // Header extension for video frame sync
+  // https://github.com/open-webrtc-toolkit/owt-client-native/wiki/video-frame-sync
+  static constexpr char kVideoFrameSyncUri[] =
+      "https://github.com/open-webrtc-toolkit/owt-client-native/wiki/"
+      "video-frame-sync";
+
   // Inclusive min and max IDs for two-byte header extensions and one-byte
   // header extensions, per RFC8285 Section 4.2-4.3.
   static constexpr int kMinId = 1;

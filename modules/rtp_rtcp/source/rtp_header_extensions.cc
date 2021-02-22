@@ -399,6 +399,38 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
   return true;
 }
 
+// Video Frame Sync.
+//
+// E.g. Frame sync point: the monolic increasing index of sync point.
+// might wrap around when reaching maximum values.
+//
+//   0                   1                   2                   3
+//   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |  ID   | len=3 |         Frame sync point      |  Reserved     |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+constexpr RTPExtensionType FrameSyncExtension::kId;
+constexpr uint8_t FrameSyncExtension::kValueSizeBytes;
+constexpr const char FrameSyncExtension::kUri[];
+
+bool FrameSyncExtension::Parse(rtc::ArrayView<const uint8_t> data,
+    FrameSync* frame_sync) {
+  RTC_DCHECK_EQ(data.size(), kValueSizeBytes);
+  if (data.size() != kValueSizeBytes)
+    return false;
+  uint16_t raw = ByteReader<uint16_t, 2>::ReadBigEndian(data.data());
+  frame_sync->set_sync_point(raw);
+  return true;
+}
+
+bool FrameSyncExtension::Write(rtc::ArrayView<uint8_t> data,
+    const FrameSync& frame_sync) {
+  RTC_DCHECK_EQ(data.size(), kValueSizeBytes);
+  ByteWriter<uint16_t, 2>::WriteBigEndian(data.data(), frame_sync.SyncPoint());
+  data[2] = 0;
+  return true;
+}
+
 // Video Content Type.
 //
 // E.g. default video or screenshare.

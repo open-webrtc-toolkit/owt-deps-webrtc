@@ -76,6 +76,7 @@ void RtpPacketReceived::GetHeader(RTPHeader* header) const {
   GetExtension<RtpMid>(&header->extension.mid);
   GetExtension<PlayoutDelayLimits>(&header->extension.playout_delay);
   header->extension.color_space = GetExtension<ColorSpaceExtension>();
+  header->extension.frame_sync = GetExtension<FrameSyncExtension>();
 }
 
 }  // namespace webrtc

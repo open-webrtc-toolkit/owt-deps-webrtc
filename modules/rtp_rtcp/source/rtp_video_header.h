@@ -20,6 +20,7 @@
 #include "api/video/video_codec_type.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame_marking.h"
+#include "api/video/video_frame_sync.h"
 #include "api/video/video_frame_type.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
@@ -89,6 +90,7 @@ struct RTPVideoHeader {
   VideoSendTiming video_timing;
   FrameMarking frame_marking = {false, false, false, false, false, 0xFF, 0, 0};
   absl::optional<ColorSpace> color_space;
+  absl::optional<FrameSync> frame_sync;
   RTPVideoTypeHeader video_type_header;
 };
 
