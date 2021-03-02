@@ -75,8 +75,7 @@ const char* StreamTypeToString(
 // MediaSession and added as "a=ssrc:" and "a=ssrc-group:" lines in the local
 // SDP.
 bool IsFlexfecAdvertisedFieldTrialEnabled() {
-  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
-  return true;
+  return webrtc::field_trial::IsEnabled("OWT-FlexFEC");
 }
 
 bool IsEnabled(const webrtc::FieldTrialsView& trials, absl::string_view name) {
