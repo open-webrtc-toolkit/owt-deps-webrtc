@@ -54,8 +54,7 @@ const int kMinLayerSize = 16;
 // If this field trial is enabled, we will enable sending FlexFEC and disable
 // sending ULPFEC whenever the former has been negotiated in the SDPs.
 bool IsFlexfecFieldTrialEnabled() {
-  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03");
-  return true;
+  return webrtc::field_trial::IsEnabled("OWT-FlexFEC");
 }
 
 // If this field trial is enabled, the "flexfec-03" codec will be advertised
@@ -65,8 +64,7 @@ bool IsFlexfecFieldTrialEnabled() {
 // MediaSession and added as "a=ssrc:" and "a=ssrc-group:" lines in the local
 // SDP.
 bool IsFlexfecAdvertisedFieldTrialEnabled() {
-  //return webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03-Advertised");
-  return true;
+  return webrtc::field_trial::IsEnabled("OWT-FlexFEC");
 }
 
 void AddDefaultFeedbackParams(VideoCodec* codec) {
