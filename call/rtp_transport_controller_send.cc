@@ -144,7 +144,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
-  if (!use_task_queue_pacer_) {
+  if (!use_task_queue_pacer_ && process_thread_) {
     process_thread_->Stop();
   }
 }
