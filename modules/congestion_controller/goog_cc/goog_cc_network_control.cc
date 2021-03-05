@@ -318,6 +318,7 @@ NetworkControlUpdate GoogCcNetworkController::OnRoundTripTimeUpdate(
   if (delay_based_bwe_)
     delay_based_bwe_->OnRttUpdate(msg.round_trip_time);
 #ifdef INTEL_GPRA
+  // If gpra is working, gcc_ will not be set.
   if (delay_based_bwe_gcc_)
     delay_based_bwe_gcc_->OnRttUpdate(msg.round_trip_time);
 #endif
@@ -390,6 +391,7 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
       if (delay_based_bwe_)
         delay_based_bwe_->SetMinBitrate(min_data_rate_);
 #ifdef INTEL_GPRA
+      // if GPRA is built but not enabled, we will use gcc.
       if (delay_based_bwe_gcc_)
         delay_based_bwe_gcc_->SetMinBitrate(min_data_rate_);
 #endif
