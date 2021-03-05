@@ -293,6 +293,10 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
   }
 
+  if (owt_use_gpra) {
+    defines += [ "INTEL_GPRA" ]
+  }
+
   if (rtc_include_internal_audio_device) {
     defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   }
