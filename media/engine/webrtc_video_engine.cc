@@ -1822,7 +1822,7 @@ void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
   }
 
   MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_SNDBUF,
-                          kVideoRtpBufferSizeIncreased);
+                          send_buffer_size);
 }
 
 void WebRtcVideoChannel::SetFrameDecryptor(
