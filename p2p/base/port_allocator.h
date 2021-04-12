@@ -495,6 +495,26 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
     return true;
   }
 
+  bool SetAudioPortRange(int min_port, int max_port) {
+    CheckRunOnValidThreadIfInitialized();
+    if (min_port > max_port) {
+      return false;
+    }
+
+    min_audio_port_ = min_port;
+    max_audio_port_ = max_port;
+  }
+
+    bool SetVideoPortRange(int min_port, int max_port) {
+    CheckRunOnValidThreadIfInitialized();
+    if (min_port > max_port) {
+      return false;
+    }
+
+    min_video_port_ = min_port;
+    max_video_port_ = max_port;
+  }
+
   // Can be used to change the default numer of IPv6 network interfaces used
   // (5). Can set to INT_MAX to effectively disable the limit.
   //
@@ -633,6 +653,10 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   rtc::ProxyInfo proxy_;
   int min_port_;
   int max_port_;
+  int min_audio_port_;
+  int max_audio_port_;
+  int min_video_port_;
+  int max_video_port_;
   int max_ipv6_networks_;
   uint32_t step_delay_;
   bool allow_tcp_listen_;
