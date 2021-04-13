@@ -432,7 +432,7 @@ int32_t LibaomAv1Encoder::Encode(
   bool keyframe_required =
       frame_types != nullptr &&
       absl::c_linear_search(*frame_types, VideoFrameType::kVideoFrameKey);
-  keyframe_required_ |= (aom_frame_count++ % 60 == 0)? true : false;
+  keyframe_required |= (aom_frame_count++ % 60 == 0)? true : false;
 
   std::vector<ScalableVideoController::LayerFrameConfig> layer_frames =
       svc_controller_->NextFrameConfig(keyframe_required);

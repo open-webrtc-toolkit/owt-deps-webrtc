@@ -66,6 +66,8 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
 
   virtual DtlsTransportState dtls_state() const = 0;
 
+  virtual cricket::MediaType media_type() const = 0;
+
   virtual int component() const = 0;
 
   virtual bool IsDtlsActive() const = 0;
