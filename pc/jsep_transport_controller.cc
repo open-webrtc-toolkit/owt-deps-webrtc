@@ -419,6 +419,7 @@ void JsepTransportController::RollbackTransports() {
 
 rtc::scoped_refptr<webrtc::IceTransportInterface>
 JsepTransportController::CreateIceTransport(const std::string& transport_name,
+                                            cricket::MediaType media_type,
                                             bool rtcp) {
   int component = rtcp ? cricket::ICE_CANDIDATE_COMPONENT_RTCP
                        : cricket::ICE_CANDIDATE_COMPONENT_RTP;
@@ -428,7 +429,7 @@ JsepTransportController::CreateIceTransport(const std::string& transport_name,
   init.set_async_resolver_factory(async_resolver_factory_);
   init.set_event_log(config_.event_log);
   return config_.ice_transport_factory->CreateIceTransport(
-      transport_name, component, std::move(init));
+      transport_name, media_type, component, std::move(init));
 }
 
 std::unique_ptr<cricket::DtlsTransportInternal>
@@ -970,8 +971,8 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
                     "SDES and DTLS-SRTP cannot be enabled at the same time.");
   }
 
-  rtc::scoped_refptr<webrtc::IceTransportInterface> ice =
-      CreateIceTransport(content_info.name, /*rtcp=*/false);
+  rtc::scoped_refptr<webrtc::IceTransportInterface> ice = CreateIceTransport(
+      content_info.name, content_desc->type(), /*rtcp=*/false);
   RTC_DCHECK(ice);
 
   std::unique_ptr<cricket::DtlsTransportInternal> rtp_dtls_transport =
@@ -987,7 +988,7 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   if (config_.rtcp_mux_policy !=
           PeerConnectionInterface::kRtcpMuxPolicyRequire &&
       content_info.type == cricket::MediaProtocolType::kRtp) {
-    rtcp_ice = CreateIceTransport(content_info.name, /*rtcp=*/true);
+    rtcp_ice = CreateIceTransport(content_info.name, content_desc->type(), /*rtcp=*/true);
     rtcp_dtls_transport =
         CreateDtlsTransport(content_info, rtcp_ice->internal());
   }
