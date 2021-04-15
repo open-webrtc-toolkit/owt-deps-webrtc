@@ -13,9 +13,9 @@ jobs:
         repository: open-webrtc-toolkit/owt-client-native
         ref: refs/heads/master
         fetch-depth: 0
-        token: ${{ secrets.OWTBOT_TOKEN }}
+        token: ${{ secrets.OWT_BOT_TOKEN }}
     - uses: actions/setup-python@v2
     - run: pip install requests
-    - run: python scripts/roll_webrtc.py --base_branch master --revision $GITHUB_SHA --token $OWTBOT_TOKEN
+    - run: python scripts/roll_webrtc.py --base_branch master --revision $GITHUB_SHA --token $OWT_BOT_TOKEN
       env:
-        OWTBOT_TOKEN: ${{ secrets.OWTBOT_TOKEN }}
+        OWT_BOT_TOKEN: ${{ secrets.OWT_BOT_TOKEN }}
