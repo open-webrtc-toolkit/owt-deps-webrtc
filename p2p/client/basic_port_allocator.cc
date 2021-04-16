@@ -1250,6 +1250,10 @@ void AllocationSequence::Init() {
     case cricket::MediaType::MEDIA_TYPE_DATA:
       min_port = session_->allocator_->min_data_port();
       max_port = session_->allocator_->max_data_port();
+    case cricket::MediaType::MEDIA_TYPE_SCREEN:
+      min_port = session_->allocator_->min_screen_port();
+      max_port = session_->allocator_->max_screen_port();
+      break;
     default:
       break;
   }
@@ -1444,6 +1448,10 @@ void AllocationSequence::CreateUDPPorts() {
       case cricket::MediaType::MEDIA_TYPE_DATA:
         min_port = session_->allocator_->min_data_port();
         max_port = session_->allocator_->max_data_port();
+      case cricket::MediaType::MEDIA_TYPE_SCREEN:
+        min_port = session_->allocator_->min_screen_port();
+        max_port = session_->allocator_->max_screen_port();
+        break;
       default:
         break;
     }
@@ -1496,6 +1504,10 @@ void AllocationSequence::CreateTCPPorts() {
     case cricket::MediaType::MEDIA_TYPE_DATA:
       min_port = session_->allocator_->min_data_port();
       max_port = session_->allocator_->max_data_port();
+    case cricket::MediaType::MEDIA_TYPE_SCREEN:
+      min_port = session_->allocator_->min_screen_port();
+      max_port = session_->allocator_->max_screen_port();
+      break;
     default:
       break;
   }
@@ -1540,6 +1552,10 @@ void AllocationSequence::CreateStunPorts() {
     case cricket::MediaType::MEDIA_TYPE_DATA:
       min_port = session_->allocator_->min_data_port();
       max_port = session_->allocator_->max_data_port();
+    case cricket::MediaType::MEDIA_TYPE_SCREEN:
+      min_port = session_->allocator_->min_screen_port();
+      max_port = session_->allocator_->max_screen_port();
+      break;
     default:
       break;
   }
@@ -1647,6 +1663,10 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
         case cricket::MediaType::MEDIA_TYPE_DATA:
           min_port = session_->allocator_->min_data_port();
           max_port = session_->allocator_->max_data_port();
+        case cricket::MediaType::MEDIA_TYPE_SCREEN:
+          min_port = session_->allocator_->min_screen_port();
+          max_port = session_->allocator_->max_screen_port();
+          break;
         default:
           break;
       }
