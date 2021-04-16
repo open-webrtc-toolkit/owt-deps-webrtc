@@ -971,8 +971,13 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
                     "SDES and DTLS-SRTP cannot be enabled at the same time.");
   }
 
+  // jianlin: force MEDIA_TYPE_SCREEN if priority is high(10).
+  cricket::MediaType media_type = content_desc->type();
+  if (media_type == cricket::MEDIA_TYPE_VIDEO && content_desc->quality() == 10)
+    media_type = cricket::MEDIA_TYPE_SCREEN;
+
   rtc::scoped_refptr<webrtc::IceTransportInterface> ice = CreateIceTransport(
-      content_info.name, content_desc->type(), /*rtcp=*/false);
+      content_info.name, media_type, /*rtcp=*/false);
   RTC_DCHECK(ice);
 
   std::unique_ptr<cricket::DtlsTransportInternal> rtp_dtls_transport =
