@@ -26,6 +26,8 @@ std::string MediaTypeToString(MediaType type) {
       return kMediaTypeVideo;
     case MEDIA_TYPE_DATA:
       return kMediaTypeData;
+    case MEDIA_TYPE_SCREEN:
+      return kMediaTypeScreen;
     case MEDIA_TYPE_UNSUPPORTED:
       // Unsupported media stores the m=<mediatype> differently.
       RTC_DCHECK_NOTREACHED();
