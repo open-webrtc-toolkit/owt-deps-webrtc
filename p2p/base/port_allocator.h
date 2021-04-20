@@ -539,6 +539,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
 
     min_audio_port_ = min_port;
     max_audio_port_ = max_port;
+
+    return true;
   }
 
   bool SetVideoPortRange(int min_port, int max_port) {
@@ -549,6 +551,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
 
     min_video_port_ = min_port;
     max_video_port_ = max_port;
+
+    return true;
   }
 
   bool SetScreenPortRange(int min_port, int max_port) {
@@ -559,6 +563,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
 
     min_screen_port_ = min_port;
     max_screen_port_ = max_port;
+
+    return true;
   }
 
   bool SetDataPortRange(int min_port, int max_port) {
@@ -569,6 +575,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
 
     min_data_port_ = min_port;
     max_data_port_ = max_port;
+
+    return true;
   }
   // Can be used to change the default numer of IPv6 network interfaces used
   // (5). Can set to INT_MAX to effectively disable the limit.
