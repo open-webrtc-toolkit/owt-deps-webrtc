@@ -17,6 +17,7 @@ namespace cricket {
 const char kMediaTypeVideo[] = "video";
 const char kMediaTypeAudio[] = "audio";
 const char kMediaTypeData[] = "data";
+const char kMediaTypeScreen[] = "screen";
 
 std::string MediaTypeToString(MediaType type) {
   switch (type) {
