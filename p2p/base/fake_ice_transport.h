@@ -27,10 +27,11 @@ namespace cricket {
 
 class FakeIceTransport : public IceTransportInternal {
  public:
-  explicit FakeIceTransport(const std::string& name,
-                            cricket::MediaType media_type,
-                            int component,
-                            rtc::Thread* network_thread = nullptr)
+  explicit FakeIceTransport(
+      const std::string& name,
+      int component,
+      cricket::MediaType media_type = cricket::MediaType::MEDIA_TYPE_AUDIO,
+      rtc::Thread* network_thread = nullptr)
       : name_(name),
         media_type_(media_type),
         component_(component),
