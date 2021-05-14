@@ -990,6 +990,10 @@ rtc_library("rtc_base") {
     configs += [ ":external_ssl_library" ]
   }
 
+  if (owt_use_openssl) {
+    configs += [ "//build_overrides/ssl:external_openssl" ]
+  }
+
   if (is_android) {
     sources += [
       "ifaddrs_android.cc",
