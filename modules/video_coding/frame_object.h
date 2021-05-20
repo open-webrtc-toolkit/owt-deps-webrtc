@@ -48,7 +48,15 @@ class RtpFrameObject : public EncodedFrame {
   bool delayed_by_retransmission() const override;
   const RTPVideoHeader& GetRtpVideoHeader() const;
   const FrameMarking& GetFrameMarking() const;
-
+#if defined(WEBRTC_WIN)
+  void SetBWETiming(double start_duration,
+      double last_duration,
+      int32_t packets_lost) {
+    bwe_stats_.start_duration_ = start_duration;
+    bwe_stats_.last_duration_ = last_duration;
+    bwe_stats_.packets_lost_ = packets_lost;
+  }
+#endif
  private:
   RTPVideoHeader rtp_video_header_;
   VideoCodecType codec_type_;

@@ -17,5 +17,8 @@ rtc_library("timestamp_extrapolator") {
     "timestamp_extrapolator.cc",
     "timestamp_extrapolator.h",
   ]
+  if(is_win) {
+    sources += [ "ptp_clock_sync.h" ]
+  }
   deps = [ "../synchronization:rw_lock_wrapper" ]
 }
