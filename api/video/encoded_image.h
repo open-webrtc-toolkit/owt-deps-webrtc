@@ -212,6 +212,14 @@ class RTC_EXPORT EncodedImage {
     int64_t receive_finish_ms = 0;
   } timing_;
 
+#if defined(WEBRTC_WIN)
+  struct BWEStats {
+    double start_duration_ = 0;
+    double last_duration_ = 0;
+    int32_t packets_lost_ = 0;
+  }bwe_stats_;
+#endif
+
  private:
   // TODO(bugs.webrtc.org/9378): We're transitioning to always owning the
   // encoded data.
