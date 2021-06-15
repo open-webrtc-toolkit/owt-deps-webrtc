@@ -76,7 +76,7 @@ name=buildtools
 dst=buildtools
 download_project ${repo} ${commit} ${download_dir} ${name} ${SOURCE}/${dst}
 
-wget --no-check-certificate http://storage.googleapis.com/chromium-gn/a452edf26a551fef8a884496d143b7e56cbe2ad9 -O ${SOURCE}/${dst}/linux64/gn
+wget https://storage.googleapis.com/chromium-gn/a452edf26a551fef8a884496d143b7e56cbe2ad9 -O ${SOURCE}/${dst}/linux64/gn
 chmod +x ${SOURCE}/${dst}/linux64/gn
 
 # base
