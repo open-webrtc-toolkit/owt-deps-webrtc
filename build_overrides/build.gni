@@ -38,7 +38,7 @@ ignore_elf32_limitations = true
 if (is_win || is_ios || is_android) {
   rtc_use_h265 = true
 } else {
-  rtc_use_h265 = false
+  #rtc_use_h265 = false
 }
 
 # Use bundled hermetic Xcode installation maintainted by Chromium,
