@@ -70,6 +70,9 @@ class PacketBuffer {
     RTPVideoHeader video_header;
 
     RtpPacketInfo packet_info;
+#if defined(WEBRTC_WIN)
+    int64_t time_ticks;
+#endif
   };
   struct InsertResult {
     std::vector<std::unique_ptr<Packet>> packets;
