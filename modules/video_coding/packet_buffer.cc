@@ -86,6 +86,10 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
     first_seq_num_ = seq_num;
   }
 
+#if defined(WEBRTC_WIN)
+  QueryPerformanceCounter((LARGE_INTEGER*)&packet->time_ticks);
+#endif
+
   if (buffer_[index] != nullptr) {
     // Duplicate packet, just delete the payload.
     if (buffer_[index]->seq_num == packet->seq_num) {
