@@ -47,6 +47,9 @@
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/critical_section.h"
 #include "rtc_base/numerics/sequence_number_util.h"
+#if defined(WEBRTC_WIN)
+#include "rtc_base/time/ptp_clock_sync.h"
+#endif
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
@@ -272,6 +275,9 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
   void OnAssembledFrame(std::unique_ptr<video_coding::RtpFrameObject> frame);
 
   Clock* const clock_;
+#if defined(WEBRTC_WIN)
+  PTPClockSync clock_sync_;
+#endif
   // Ownership of this object lies with VideoReceiveStream, which owns |this|.
   const VideoReceiveStream::Config& config_;
   PacketRouter* const packet_router_;
