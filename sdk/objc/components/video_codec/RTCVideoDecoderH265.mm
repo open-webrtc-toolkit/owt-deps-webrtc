@@ -101,7 +101,7 @@ void h265DecompressionOutputCallback(void* decoder,
   }
 
   rtc::ScopedCFTypeRef<CMVideoFormatDescriptionRef> inputFormat =
-      rtc::ScopedCF(webrtc::CreateH265VideoFormatDescription(
+      rtc::ScopedCF(webrtc::CreateVideoFormatDescription(
           (uint8_t*)inputImage.buffer.bytes, inputImage.buffer.length));
   if (inputFormat) {
     CMVideoDimensions dimensions =

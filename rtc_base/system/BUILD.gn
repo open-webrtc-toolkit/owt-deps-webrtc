@@ -39,9 +39,9 @@ if (rtc_include_tests) {
     sources = [ "file_wrapper_unittest.cc" ]
     deps = [
       ":file_wrapper",
-      "//rtc_base:checks",
-      "//test:fileutils",
-      "//test:test_support",
+      "../:checks",
+      "../../test:fileutils",
+      "../../test:test_support",
     ]
   }
 }
