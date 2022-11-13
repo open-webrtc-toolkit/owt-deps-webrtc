@@ -81,11 +81,12 @@
   } else if ([info.name isEqualToString:kRTCVideoCodecVp9Name] &&
              [RTC_OBJC_TYPE(RTCVideoEncoderVP9) isSupported]) {
     return [RTC_OBJC_TYPE(RTCVideoEncoderVP9) vp9Encoder];
-#endif
 #if !defined(DISABLE_H265)
   } else if (@available(iOS 11, *)) {
     if ([info.name isEqualToString:kRTCVideoCodecH265Name]) {
       return [[RTCVideoEncoderH265 alloc] initWithCodecInfo:info];
+    }
+#endif
   }
 
 #if defined(RTC_USE_LIBAOM_AV1_ENCODER)

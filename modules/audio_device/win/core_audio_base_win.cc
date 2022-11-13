@@ -183,7 +183,7 @@ CoreAudioBase::CoreAudioBase(Direction direction,
 
   enumerator_ = core_audio_utility::CreateDeviceEnumerator();
   enumerator_->RegisterEndpointNotificationCallback(this);
-  RTC_LOG(INFO) << __FUNCTION__
+  RTC_LOG(LS_INFO) << __FUNCTION__
                     << ":Registered endpoint notification callback.";
 }
 
