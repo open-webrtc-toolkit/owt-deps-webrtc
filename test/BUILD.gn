@@ -940,7 +940,7 @@ rtc_library("rtc_expect_death") {
 rtc_library("run_loop") {
   visibility = [
     "../*",
-    "//talk/owt/*",
+    "//talk/owt/sdk/p2p/tests/*",
   ]
   testonly = true
   sources = [
