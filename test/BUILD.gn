@@ -938,6 +938,10 @@ rtc_library("rtc_expect_death") {
 }
 
 rtc_library("run_loop") {
+  visibility = [
+    "../*",
+    "//talk/owt/*",
+  ]
   testonly = true
   sources = [
     "run_loop.cc",
@@ -952,6 +956,10 @@ rtc_library("run_loop") {
 }
 
 rtc_library("test_common") {
+  visibility = [
+    "../*",
+    "//talk/owt/*",
+  ]
   testonly = true
   sources = [
     "call_test.cc",
