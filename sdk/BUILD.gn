@@ -1363,16 +1363,6 @@ if (is_ios || is_mac) {
           "objc/api/video_frame_buffer/RTCNativeMutableI420Buffer.h",
         ]
 
-        if (!build_with_chromium) {
-          common_objc_headers += [
-            "objc/api/logging/RTCCallbackLogger.h",
-            "objc/api/peerconnection/RTCFileLogger.h",
-          ]
-        }
-
-        sources = common_objc_headers
-        public_headers = common_objc_headers
-
         if (rtc_use_h265) {
           sources += [
             "objc/components/video_codec/RTCH265ProfileLevelId.h",
@@ -1382,6 +1372,16 @@ if (is_ios || is_mac) {
             "objc/components/video_codec/RTCVideoEncoderH265.h",
           ]
         }
+
+        if (!build_with_chromium) {
+          common_objc_headers += [
+            "objc/api/logging/RTCCallbackLogger.h",
+            "objc/api/peerconnection/RTCFileLogger.h",
+          ]
+        }
+
+        sources = common_objc_headers
+        public_headers = common_objc_headers
 
         ldflags = [
           "-all_load",
@@ -1735,7 +1735,6 @@ if (is_ios || is_mac) {
     rtc_library("videotoolbox_objc") {
       visibility = [ "*" ]
       allow_poison = [ "audio_codecs" ]  # TODO(bugs.webrtc.org/8396): Remove.
-      defines = []
       sources = [
         "objc/components/video_codec/RTCVideoDecoderFactoryH264.h",
         "objc/components/video_codec/RTCVideoDecoderFactoryH264.m",
