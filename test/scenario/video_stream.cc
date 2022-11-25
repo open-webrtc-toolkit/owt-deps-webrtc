@@ -204,7 +204,7 @@ CreateH264SpecificSettings(VideoStreamConfig config) {
   return nullptr;
 }
 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 rtc::scoped_refptr<VideoEncoderConfig::EncoderSpecificSettings>
 CreateH265SpecificSettings(VideoStreamConfig config) {
   RTC_DCHECK_EQ(config.encoder.layers.temporal, 1);
@@ -223,7 +223,7 @@ rtc::scoped_refptr<VideoEncoderConfig::EncoderSpecificSettings>
 CreateEncoderSpecificSettings(VideoStreamConfig config) {
   using Codec = VideoStreamConfig::Encoder::Codec;
   switch (config.encoder.codec) {
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     case Codec::kVideoCodecH265:
       return CreateH265SpecificSettings(config);
 #endif

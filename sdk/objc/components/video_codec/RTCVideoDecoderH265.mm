@@ -128,9 +128,10 @@ void h265DecompressionOutputCallback(void* decoder,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   CMSampleBufferRef sampleBuffer = nullptr;
-  if (!webrtc::H265AnnexBBufferToCMSampleBuffer(
-          (uint8_t*)inputImage.buffer.bytes, inputImage.buffer.length,
-          _videoFormat, &sampleBuffer)) {
+  if (!webrtc::H265AnnexBBufferToCMSampleBuffer((uint8_t*)inputImage.buffer.bytes,
+                                                inputImage.buffer.length,
+                                                _videoFormat,
+                                                &sampleBuffer)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   RTC_DCHECK(sampleBuffer);

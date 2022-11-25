@@ -708,7 +708,6 @@ if (is_ios || is_mac) {
       ]
 
       if (rtc_use_h265) {
-        assert(false)
         sources += [
           "objc/components/video_codec/RTCCodecSpecificInfoH265.h",
           "objc/components/video_codec/RTCCodecSpecificInfoH265.mm",
@@ -1364,16 +1363,6 @@ if (is_ios || is_mac) {
           "objc/api/video_frame_buffer/RTCNativeMutableI420Buffer.h",
         ]
 
-        if (rtc_use_h265) {
-          sources += [
-            "objc/components/video_codec/RTCH265ProfileLevelId.h",
-            "objc/components/video_codec/RTCVideoDecoderFactoryH265.h",
-            "objc/components/video_codec/RTCVideoDecoderH265.h",
-            "objc/components/video_codec/RTCVideoEncoderFactoryH265.h",
-            "objc/components/video_codec/RTCVideoEncoderH265.h",
-          ]
-        }
-
         if (!build_with_chromium) {
           common_objc_headers += [
             "objc/api/logging/RTCCallbackLogger.h",
@@ -1383,6 +1372,16 @@ if (is_ios || is_mac) {
 
         sources = common_objc_headers
         public_headers = common_objc_headers
+
+        if (rtc_use_h265) {
+          sources += [
+            "objc/components/video_codec/RTCH265ProfileLevelId.h",
+            "objc/components/video_codec/RTCVideoDecoderFactoryH265.h",
+            "objc/components/video_codec/RTCVideoDecoderH265.h",
+            "objc/components/video_codec/RTCVideoEncoderFactoryH265.h",
+            "objc/components/video_codec/RTCVideoEncoderH265.h",
+          ]
+        }
 
         ldflags = [
           "-all_load",
@@ -1736,6 +1735,7 @@ if (is_ios || is_mac) {
     rtc_library("videotoolbox_objc") {
       visibility = [ "*" ]
       allow_poison = [ "audio_codecs" ]  # TODO(bugs.webrtc.org/8396): Remove.
+      defines = []
       sources = [
         "objc/components/video_codec/RTCVideoDecoderFactoryH264.h",
         "objc/components/video_codec/RTCVideoDecoderFactoryH264.m",
@@ -1758,6 +1758,7 @@ if (is_ios || is_mac) {
           "objc/components/video_codec/RTCVideoEncoderH265.h",
           "objc/components/video_codec/RTCVideoEncoderH265.mm",
         ]
+        defines += ["WEBRTC_USE_H265"]
       }
 
       configs += [
@@ -1766,7 +1767,7 @@ if (is_ios || is_mac) {
       ]
 
       if (is_ios && rtc_apprtcmobile_broadcast_extension) {
-        defines = [ "RTC_APPRTCMOBILE_BROADCAST_EXTENSION" ]
+        defines += [ "RTC_APPRTCMOBILE_BROADCAST_EXTENSION" ]
       }
 
       deps = [

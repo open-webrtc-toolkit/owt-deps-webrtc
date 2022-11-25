@@ -97,7 +97,6 @@ struct VideoCodecH264 {
   uint8_t numberOfTemporalLayers;
 };
 
-#ifndef DISABLE_H265
 struct VideoCodecH265 {
   bool operator==(const VideoCodecH265& other) const;
   bool operator!=(const VideoCodecH265& other) const {
@@ -112,7 +111,6 @@ struct VideoCodecH265 {
   const uint8_t* ppsData;
   size_t ppsLen;
 };
-#endif
 
 // Translates from name of codec to codec type and vice versa.
 RTC_EXPORT const char* CodecTypeToPayloadString(VideoCodecType type);
@@ -122,9 +120,7 @@ union VideoCodecUnion {
   VideoCodecVP8 VP8;
   VideoCodecVP9 VP9;
   VideoCodecH264 H264;
-#ifndef DISABLE_H265
   VideoCodecH265 H265;
-#endif
 };
 
 enum class VideoCodecMode { kRealtimeVideo, kScreensharing };
@@ -204,10 +200,8 @@ class RTC_EXPORT VideoCodec {
   const VideoCodecVP9& VP9() const;
   VideoCodecH264* H264();
   const VideoCodecH264& H264() const;
-#ifndef DISABLE_H265
   VideoCodecH265* H265();
   const VideoCodecH265& H265() const;
-#endif
 
  private:
   // TODO(hta): Consider replacing the union with a pointer type.

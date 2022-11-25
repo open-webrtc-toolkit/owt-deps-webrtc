@@ -50,13 +50,14 @@ class H265BitstreamParser : public BitstreamParser {
                                   size_t source_length,
                                   uint8_t nalu_type);
 
-  uint32_t CalcNumPocTotalCurr(uint32_t num_long_term_sps,
-                               uint32_t num_long_term_pics,
-                               const std::vector<uint32_t> lt_idx_sps,
-                               const std::vector<uint32_t> used_by_curr_pic_lt_flag,
-                               uint32_t short_term_ref_pic_set_sps_flag,
-                               uint32_t short_term_ref_pic_set_idx,
-                               const H265SpsParser::ShortTermRefPicSet& short_term_ref_pic_set);
+  uint32_t CalcNumPocTotalCurr(
+      uint32_t num_long_term_sps,
+      uint32_t num_long_term_pics,
+      const std::vector<uint32_t> lt_idx_sps,
+      const std::vector<bool> used_by_curr_pic_lt_flag,
+      bool short_term_ref_pic_set_sps_flag,
+      uint32_t short_term_ref_pic_set_idx,
+      const H265SpsParser::ShortTermRefPicSet& short_term_ref_pic_set);
 
   // SPS/PPS state, updated when parsing new SPS/PPS, used to parse slices.
   absl::optional<H265SpsParser::SpsState> sps_;

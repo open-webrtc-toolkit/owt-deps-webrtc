@@ -420,6 +420,10 @@ rtc_library("fixed_fps_video_frame_writer_adapter") {
 }
 
 rtc_library("video_test_support") {
+  visibility = [
+    "../*",
+    "//talk/owt/sdk/p2p/tests/*",
+  ]
   testonly = true
 
   sources = [

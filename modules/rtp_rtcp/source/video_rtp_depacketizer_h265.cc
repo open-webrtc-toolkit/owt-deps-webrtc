@@ -25,6 +25,7 @@
 #include "common_video/h265/h265_vps_parser.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer.h"
+#include "modules/video_coding/codecs/h265/include/h265_globals.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
@@ -296,15 +297,14 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuNalu(
              "unit with original type: "
           << static_cast<int>(nalu.type);
     }
-	rtp_payload =
-	    rtp_payload.Slice(1, rtp_payload.size() - 1);
-    rtp_payload[0] = f | original_nal_type << 1 | layer_id_h;
-    rtp_payload[1] = layer_id_l_unshifted | tid;
-	parsed_payload->video_payload = std::move(rtp_payload);
+    rtp_payload = rtp_payload.Slice(1, rtp_payload.size() - 1);
+    rtp_payload.MutableData()[0] = f | original_nal_type << 1 | layer_id_h;
+    rtp_payload.MutableData()[1] = layer_id_l_unshifted | tid;
+    parsed_payload->video_payload = std::move(rtp_payload);
   } else {
-	 parsed_payload->video_payload =
-        rtp_payload.Slice(kHevcNalHeaderSize + kHevcFuHeaderSize,
-		rtp_payload.size() - kHevcNalHeaderSize - kHevcFuHeaderSize);
+    parsed_payload->video_payload = rtp_payload.Slice(
+        kHevcNalHeaderSize + kHevcFuHeaderSize,
+        rtp_payload.size() - kHevcNalHeaderSize - kHevcFuHeaderSize);
   }
 
   if (original_nal_type == H265::NaluType::kIdrWRadl

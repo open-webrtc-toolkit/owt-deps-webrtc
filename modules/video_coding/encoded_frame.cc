@@ -140,7 +140,7 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header) {
         _codecSpecificInfo.codecType = kVideoCodecAV1;
         break;
       }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
       case kVideoCodecH265: {
         _codecSpecificInfo.codecType = kVideoCodecH265;
         break;

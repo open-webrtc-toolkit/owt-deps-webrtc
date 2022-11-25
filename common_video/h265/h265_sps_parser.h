@@ -14,6 +14,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/array_view.h"
+#include "rtc_base/bitstream_reader.h"
 
 namespace rtc {
 class BitBuffer;
@@ -69,17 +71,18 @@ class H265SpsParser {
   // Unpack RBSP and parse SPS state from the supplied buffer.
   static absl::optional<SpsState> ParseSps(const uint8_t* data, size_t length);
 
-  static bool ParseScalingListData(rtc::BitBuffer* buffer);
+  static bool ParseScalingListData(BitstreamReader& reader);
 
   static absl::optional<ShortTermRefPicSet> ParseShortTermRefPicSet(
         uint32_t st_rps_idx, uint32_t num_short_term_ref_pic_sets,
         const std::vector<ShortTermRefPicSet>& ref_pic_sets,
-        SpsState& sps, rtc::BitBuffer* buffer);
+        SpsState& sps, BitstreamReader& reader);
 
  protected:
  // Parse the SPS state, for a bit buffer where RBSP decoding has already been
  // performed.
-  static absl::optional<SpsState> ParseSpsInternal(rtc::BitBuffer* buffer);
+  static absl::optional<SpsState> ParseSpsInternal(
+      rtc::ArrayView<const uint8_t> buffer);
 };
 
 }  // namespace webrtc

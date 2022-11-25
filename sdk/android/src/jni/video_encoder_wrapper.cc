@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "common_video/h264/h264_common.h"
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 #include "common_video/h265/h265_common.h"
 #endif
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -353,7 +353,7 @@ int VideoEncoderWrapper::ParseQp(rtc::ArrayView<const uint8_t> buffer) {
       qp = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
       success = (qp >= 0);
       break;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     case kVideoCodecH265:
       success = h265_bitstream_parser_.GetLastSliceQp(&qp);
       break;
