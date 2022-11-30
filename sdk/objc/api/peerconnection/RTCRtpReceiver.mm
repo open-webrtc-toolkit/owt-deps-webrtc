@@ -125,8 +125,6 @@ void RtpReceiverDelegateAdapter::OnFirstPacketReceived(
       return RTCRtpMediaTypeVideo;
     case cricket::MEDIA_TYPE_DATA:
       return RTCRtpMediaTypeData;
-    case cricket::MEDIA_TYPE_SCREEN:
-      return RTCRtpMediaTypeVideo;
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RTCRtpMediaTypeUnsupported;
   }

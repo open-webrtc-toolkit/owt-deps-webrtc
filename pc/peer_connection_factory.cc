@@ -128,8 +128,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
           GetDefaultEnabledRtpHeaderExtensions(media_engine()->voice());
       return ToRtpCapabilities(cricket_codecs, extensions);
     }
-    case cricket::MEDIA_TYPE_VIDEO:
-    case cricket::MEDIA_TYPE_SCREEN: {
+    case cricket::MEDIA_TYPE_VIDEO: {
       cricket::VideoCodecs cricket_codecs;
       cricket_codecs = media_engine()->video().send_codecs();
       auto extensions =
@@ -156,8 +155,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
           GetDefaultEnabledRtpHeaderExtensions(media_engine()->voice());
       return ToRtpCapabilities(cricket_codecs, extensions);
     }
-    case cricket::MEDIA_TYPE_VIDEO:
-    case cricket::MEDIA_TYPE_SCREEN: {
+    case cricket::MEDIA_TYPE_VIDEO: {
       cricket::VideoCodecs cricket_codecs =
           media_engine()->video().recv_codecs(context_->use_rtx());
       auto extensions =
