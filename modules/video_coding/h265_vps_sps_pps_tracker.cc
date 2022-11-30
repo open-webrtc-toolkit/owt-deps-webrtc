@@ -186,7 +186,7 @@ H265VpsSpsPpsTracker::FixedBitstream H265VpsSpsPpsTracker::CopyAndFixBitstream(
     pps_info.vps_id = vps->first;
     pps_info.sps_id = sps->first;
     pps_info.pps_id = pps->first;
-    if (h265_header.nalus_length + 2 <= kMaxNalusPerPacket) {
+    if (h265_header.nalus_length + 3 <= kMaxNalusPerPacket) {
       h265_header.nalus[h265_header.nalus_length++] = vps_info;
       h265_header.nalus[h265_header.nalus_length++] = sps_info;
       h265_header.nalus[h265_header.nalus_length++] = pps_info;
