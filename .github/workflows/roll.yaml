@@ -2,7 +2,7 @@ name: Roll WebRTC revision
 on:
   push:
     branches:
-      - 88-sdk
+      - 108-sdk
 
 jobs:
   roll:
