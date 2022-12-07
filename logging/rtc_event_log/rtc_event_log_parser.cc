@@ -315,7 +315,7 @@ VideoCodecType GetRuntimeCodecType(rtclog2::FrameDecodedEvents::Codec codec) {
       return VideoCodecType::kVideoCodecAV1;
     case rtclog2::FrameDecodedEvents::CODEC_H264:
       return VideoCodecType::kVideoCodecH264;
-#ifndef DISABLE_H265 
+#ifdef WEBRTC_USE_H265 
     case rtclog2::FrameDecodedEvents::CODEC_H265:
       return VideoCodecType::kVideoCodecH265;
 #endif 

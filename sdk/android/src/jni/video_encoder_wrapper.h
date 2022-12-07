@@ -21,7 +21,7 @@
 #include "absl/types/optional.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 #include "common_video/h265/h265_bitstream_parser.h"
 #endif
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -107,7 +107,7 @@ class VideoEncoderWrapper : public VideoEncoder {
   VideoCodec codec_settings_;
   EncoderInfo encoder_info_;
   H264BitstreamParser h264_bitstream_parser_;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   H265BitstreamParser h265_bitstream_parser_;
 #endif
 

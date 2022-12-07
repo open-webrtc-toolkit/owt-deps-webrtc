@@ -44,7 +44,7 @@ VCMPacket::VCMPacket(const uint8_t* ptr,
       markerBit(rtp_header.markerBit),
       timesNacked(-1),
       completeNALU(kNaluIncomplete),
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
       insertStartCode((videoHeader.codec == kVideoCodecH264 || videoHeader.codec == kVideoCodecH265) &&
                       videoHeader.is_first_packet_in_frame),
 #else

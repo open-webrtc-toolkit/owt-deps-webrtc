@@ -47,7 +47,7 @@ enum HistogramCodecType {
   kVideoVp9 = 2,
   kVideoH264 = 3,
   kVideoAv1 = 4,
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   kVideoH265 = 5,
 #endif
   kVideoMax = 64,
@@ -79,7 +79,7 @@ HistogramCodecType PayloadNameToHistogramCodecType(
       return kVideoH264;
     case kVideoCodecAV1:
       return kVideoAv1;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
     case kVideoCodecH265:
       return kVideoH265;
 #endif

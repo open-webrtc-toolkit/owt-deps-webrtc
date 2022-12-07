@@ -224,7 +224,7 @@ bool H264AnnexBBufferToCMSampleBuffer(const uint8_t* annexb_buffer,
   return true;
 }
 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 bool H265CMSampleBufferToAnnexBBuffer(
     CMSampleBufferRef hvcc_sample_buffer,
     bool is_keyframe,
@@ -466,7 +466,7 @@ CMVideoFormatDescriptionRef CreateVideoFormatDescription(
   return description;
 }
 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 CMVideoFormatDescriptionRef CreateH265VideoFormatDescription(
     const uint8_t* annexb_buffer,
     size_t annexb_buffer_size) {
@@ -550,7 +550,7 @@ bool AnnexBBufferReader::SeekToNextNaluOfType(NaluType type) {
   return false;
 }
 
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 bool AnnexBBufferReader::SeekToNextNaluOfType(H265::NaluType type) {
   for (; offset_ != offsets_.end(); ++offset_) {
     if (offset_->payload_size < 1)

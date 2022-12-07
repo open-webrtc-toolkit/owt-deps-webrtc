@@ -25,7 +25,7 @@
 #import "helpers/UIDevice+RTCDevice.h"
 #endif
 
-#include "common_video/h264/profile_level_id.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "common_video/h265/h265_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "libyuv/convert_from.h"
@@ -362,6 +362,18 @@ void compressionOutputCallback(void* encoder,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+- (NSInteger)resolutionAlignment {
+  return 1;
+}
+
+- (BOOL)applyAlignmentToAllSimulcastLayers {
+  return NO;
+}
+
+- (BOOL)supportsNativeHandle {
+  return YES;
+}
+
 #pragma mark - Private
 
 - (NSInteger)releaseEncoder {
@@ -546,6 +558,10 @@ void compressionOutputCallback(void* encoder,
            renderTimeMs:(int64_t)renderTimeMs
               timestamp:(uint32_t)timestamp
                rotation:(RTCVideoRotation)rotation {
+  RTCVideoEncoderCallback callback = _callback;
+  if (!callback) {
+    return;
+  }
   if (status != noErr) {
     RTC_LOG(LS_ERROR) << "h265 encode failed.";
     return;
@@ -595,11 +611,12 @@ void compressionOutputCallback(void* encoder,
   _h265BitstreamParser.GetLastSliceQp(&qp);
   frame.qp = @(qp);
 
-  RTC_OBJC_TYPE(RTCRtpFragmentationHeader) *header =
-      [[RTC_OBJC_TYPE(RTCRtpFragmentationHeader) alloc] init];
-  BOOL res = _callback(frame, codecSpecificInfo, header);
+  _h265BitstreamParser.ParseBitstream(*buffer);
+  frame.qp = @(_h265BitstreamParser.GetLastSliceQp().value_or(-1));
+
+  BOOL res = callback(frame, codecSpecificInfo);
   if (!res) {
-    RTC_LOG(LS_ERROR) << "Encode callback failed.";
+    RTC_LOG(LS_ERROR) << "Encode callback failed";
     return;
   }
   _bitrateAdjuster->Update(frame.buffer.length);

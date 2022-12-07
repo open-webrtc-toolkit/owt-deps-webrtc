@@ -684,7 +684,7 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         packet->video_payload = std::move(fixed.bitstream);
         break;
     }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   } else if (packet->codec() == kVideoCodecH265) {
     // Only when we start to receive packets will we know what payload type
     // that will be used. When we know the payload type insert the correct

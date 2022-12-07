@@ -145,7 +145,7 @@ std::vector<NaluInfo> VCMSessionInfo::GetNaluInfos() const {
   }
   return nalu_infos;
 }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
 std::vector<H265NaluInfo> VCMSessionInfo::GetH265NaluInfos() const {
   if (packets_.empty() || packets_.front().video_header.codec != kVideoCodecH265)
     return std::vector<H265NaluInfo>();
@@ -219,7 +219,7 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
   // TODO(pbos): Remove H264 parsing from this step and use a fragmentation
   // header supplied by the H264 depacketizer.
   const size_t kH264NALHeaderLengthInBytes = 1;
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   const size_t kH265NALHeaderLengthInBytes = 2;
   const auto* h265 =
       absl::get_if<RTPVideoHeaderH265>(&packet.video_header.video_type_header);
@@ -249,7 +249,7 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
     packet.sizeBytes = required_length;
     return packet.sizeBytes;
   }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   else if (h265 && h265->packetization_type == kH265AP) {
     // Similar to H264, for H265 aggregation packets, we rely on jitter buffer
     // to remove the two length bytes between each NAL unit, and potentially add
@@ -508,7 +508,7 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
          IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
       last_packet_seq_num_ = packet.seqNum;
     }
-#ifndef DISABLE_H265
+#ifdef WEBRTC_USE_H265
   } else if (packet.codec() == kVideoCodecH265) {
     frame_type_ = packet.video_header.frame_type;
     if (packet.is_first_packet_in_frame() &&
