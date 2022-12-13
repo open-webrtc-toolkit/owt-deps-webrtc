@@ -357,7 +357,7 @@ rtc_library("rtc_audio_video") {
   public_configs = []
   if (!build_with_chromium) {
     public_configs += [ ":rtc_media_defines_config" ]
-    deps += [ "../modules/video_capture:video_capture" ]
+    deps += [ "../modules/video_capture:video_capture_internal_impl" ]
   }
   if (rtc_enable_protobuf) {
     deps += [

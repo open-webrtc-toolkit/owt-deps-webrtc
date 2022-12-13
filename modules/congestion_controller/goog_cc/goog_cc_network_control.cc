@@ -33,9 +33,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
-#ifdef INTEL_GPRA
-#include "gpra_bwe.h"
-#endif
 
 namespace webrtc {
 
@@ -76,8 +73,13 @@ bool GetExternalBweRateLimits(int* start_bitrate_kbps,
   if (expr_str.empty())
     return false;
   int parsed_values =
+#if defined(WEBRTC_WIN)
       sscanf_s(expr_str.c_str(), "Enabled-%u,%u,%u", start_bitrate_kbps,
                min_bitrate_kbps, max_bitrate_kbps);
+#else
+      sscanf(expr_str.c_str(), "Enabled-%u,%u,%u", start_bitrate_kbps,
+             min_bitrate_kbps, max_bitrate_kbps);
+#endif
   if (parsed_values == 3) {
     RTC_CHECK_GE(*start_bitrate_kbps, 0)
         << "start_bitrate_kbps must not be smaller than 0.";
@@ -88,6 +90,7 @@ bool GetExternalBweRateLimits(int* start_bitrate_kbps,
     return true;
   }
   return false;
+}
 
 bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
   return absl::StartsWith(config->Lookup(key), "Enabled");
@@ -96,7 +99,6 @@ bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
 bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
-}  // namespace
 
 GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
                                                  GoogCcConfig goog_cc_config)
@@ -139,19 +141,9 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       network_estimator_(std::move(goog_cc_config.network_state_estimator)),
       network_state_predictor_(
           std::move(goog_cc_config.network_state_predictor)),
-#ifdef INTEL_GPRA
-      delay_based_bwe_(AllowExternalBwe() ? new GPRABwe() : nullptr),
-      delay_based_bwe_gcc_(
-          AllowExternalBwe()
-              ? nullptr
-              : new DelayBasedBwe(key_value_config_,
-                                  event_log_,
-                                  network_state_predictor_.get())),
-#else
       delay_based_bwe_(new DelayBasedBwe(key_value_config_,
                                          event_log_,
                                          network_state_predictor_.get())),
-#endif
       acknowledged_bitrate_estimator_(
           AcknowledgedBitrateEstimatorInterface::Create(key_value_config_)),
       initial_config_(config),
@@ -175,8 +167,6 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       key_value_config_->Lookup("WebRTC-Bwe-SafeResetOnRouteChange"));
   if (delay_based_bwe_)
     delay_based_bwe_->SetMinBitrate(kCongestionControllerMinBitrate);
-  if (delay_based_bwe_gcc_)
-    delay_based_bwe_gcc_->SetMinBitrate(congestion_controller::GetMinBitrate());
   if (AllowExternalBwe()) {
     ParseFieldTrial({&external_start_bitrate_kbps_, &external_min_bitrate_kbps_,
                      &external_max_bitrate_kbps_},

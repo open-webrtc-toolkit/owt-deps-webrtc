@@ -110,11 +110,6 @@ void UlpfecGenerator::AddPacketAndGenerateFec(const RtpPacketToSend& packet) {
   RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
   RTC_DCHECK(generated_fec_packets_.empty());
 
-  // reset state upon async keyframe request
-  if (keyframe_in_process_ != packet.is_key_frame()) {
-    ResetState();
-  }
-
   {
     MutexLock lock(&mutex_);
     if (pending_params_) {

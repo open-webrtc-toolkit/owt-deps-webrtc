@@ -25,7 +25,6 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -58,7 +57,6 @@ class RTC_EXPORT EncoderSimulcastProxy : public VideoEncoder {
   SdpVideoFormat video_format_;
   std::unique_ptr<VideoEncoder> encoder_;
   EncodedImageCallback* callback_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(EncoderSimulcastProxy);
 };
 
 }  // namespace webrtc

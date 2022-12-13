@@ -28,16 +28,6 @@ rtc_library("congestion_controller") {
     "remb_throttler.h",
   ]
 
-  if (owt_use_gpra) {
-    # use Intel Goodput Rate Adapatation BWE
-      include_dirs = [ owt_gpra_header_root ]
-      if (is_win && owt_gpra_lib_root != "") {
-        libs = [ "gpra_lib.lib" ]
-        lib_dirs = [ owt_gpra_lib_root ]
-      }
-      defines += [ "INTEL_GPRA" ]
-  }
-
   deps = [
     "../../api/transport:field_trial_based_config",
     "../../api/transport:network_control",

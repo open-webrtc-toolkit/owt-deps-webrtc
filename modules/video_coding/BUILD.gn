@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//third_party/ffmpeg/ffmpeg_options.gni")
 import("//third_party/libaom/options.gni")
 import("../../webrtc.gni")
 
@@ -212,6 +213,8 @@ rtc_library("video_coding") {
     "h264_sprop_parameter_sets.h",
     "h264_sps_pps_tracker.cc",
     "h264_sps_pps_tracker.h",
+    "h265_vps_sps_pps_tracker.cc",
+    "h265_vps_sps_pps_tracker.h",
     "include/video_codec_initializer.h",
     "internal_defines.h",
     "loss_notification_controller.cc",
@@ -234,13 +237,6 @@ rtc_library("video_coding") {
     "video_receiver2.cc",
     "video_receiver2.h",
   ]
-
-  if (rtc_use_h265) {
-    sources += [
-      "h265_vps_sps_pps_tracker.cc",
-      "h265_vps_sps_pps_tracker.h",
-    ]
-  }
 
   deps = [
     ":codec_globals_headers",

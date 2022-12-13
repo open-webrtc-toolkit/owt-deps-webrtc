@@ -123,7 +123,7 @@ int GetChannelCount(const SdpAudioFormat& format) {
   if (param == "1") {
     return 2;
   } else {
-    return 2;
+    return 1;
   }
 }
 

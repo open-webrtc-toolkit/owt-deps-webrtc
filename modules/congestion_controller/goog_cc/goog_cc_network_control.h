@@ -42,7 +42,6 @@ struct GoogCcConfig {
   std::unique_ptr<NetworkStatePredictor> network_state_predictor = nullptr;
   bool feedback_only = false;
 };
-class GPRABwe;
 
 class GoogCcNetworkController : public NetworkControllerInterface {
  public:
@@ -112,12 +111,7 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   std::unique_ptr<ProbeBitrateEstimator> probe_bitrate_estimator_;
   std::unique_ptr<NetworkStateEstimator> network_estimator_;
   std::unique_ptr<NetworkStatePredictor> network_state_predictor_;
-#ifdef INTEL_GPRA
-  std::unique_ptr<GPRABwe> delay_based_bwe_;
-  std::unique_ptr<DelayBasedBwe> delay_based_bwe_gcc_;
-#else
   std::unique_ptr<DelayBasedBwe> delay_based_bwe_;
-#endif
   std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
       acknowledged_bitrate_estimator_;
 
@@ -157,7 +151,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   FieldTrialParameter<int> external_start_bitrate_kbps_;
   FieldTrialParameter<int> external_min_bitrate_kbps_;
   FieldTrialParameter<int> external_max_bitrate_kbps_;
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(GoogCcNetworkController);
 };
 
 }  // namespace webrtc

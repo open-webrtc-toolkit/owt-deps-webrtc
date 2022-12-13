@@ -448,18 +448,15 @@ void RTPSenderVideo::AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
       packet->SetExtension<RtpGenericFrameDescriptorExtension00>(
           generic_descriptor);
     }
-      if (video_header.codec == kVideoCodecH264 && last_packet) {
-        packet->SetExtension<PictureId>(
-            absl::get<RTPVideoHeaderH264>(video_header.video_type_header)
-                .picture_id);
-      }
-#ifdef WEBRTC_USE_H265
-      else if (video_header.codec == kVideoCodecH265 && last_packet) {
-        packet->SetExtension<PictureId>(
-            absl::get<RTPVideoHeaderH265>(video_header.video_type_header)
-                .picture_id);
-      }
-#endif
+    if (video_header.codec == kVideoCodecH264 && last_packet) {
+      packet->SetExtension<PictureId>(
+          absl::get<RTPVideoHeaderH264>(video_header.video_type_header)
+              .picture_id);
+    } else if (video_header.codec == kVideoCodecH265 && last_packet) {
+      packet->SetExtension<PictureId>(
+          absl::get<RTPVideoHeaderH265>(video_header.video_type_header)
+              .picture_id);
+    }
   }
 
   if (packet->IsRegistered<RtpVideoLayersAllocationExtension>() &&
@@ -715,8 +712,6 @@ bool RTPSenderVideo::SendVideo(
     packet->set_is_key_frame(video_header.frame_type ==
                              VideoFrameType::kVideoFrameKey);
 
-    packet->set_is_key_frame(video_header.frame_type == VideoFrameType::kVideoFrameKey);
-
     // Put packetization finish timestamp into extension.
     if (packet->HasExtension<VideoTimingExtension>()) {
       packet->set_packetization_finish_time(clock_->CurrentTime());
@@ -843,9 +838,7 @@ uint8_t RTPSenderVideo::GetTemporalId(const RTPVideoHeader& header) {
     uint8_t operator()(const RTPVideoHeaderLegacyGeneric&) {
       return kNoTemporalIdx;
     }
-#ifndef DISABLE_H265
     uint8_t operator()(const RTPVideoHeaderH265&) { return kNoTemporalIdx; }
-#endif
     uint8_t operator()(const absl::monostate&) { return kNoTemporalIdx; }
   };
   return absl::visit(TemporalIdGetter(), header.video_type_header);

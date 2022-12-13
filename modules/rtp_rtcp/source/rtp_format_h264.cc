@@ -42,21 +42,16 @@ static const size_t kLengthFieldSize = 2;
 RtpPacketizerH264::RtpPacketizerH264(rtc::ArrayView<const uint8_t> payload,
                                      PayloadSizeLimits limits,
                                      H264PacketizationMode packetization_mode,
-    const RTPFragmentationHeader& fragmentation)
-    bool end_of_frame)
-    : limits_(limits), num_packets_left_(0) {
+                                     bool end_of_frame)
+    : limits_(limits), num_packets_left_(0), end_of_frame_(end_of_frame) {
   // Guard against uninitialized memory in packetization_mode.
   RTC_CHECK(packetization_mode == H264PacketizationMode::NonInterleaved ||
             packetization_mode == H264PacketizationMode::SingleNalUnit);
 
-  end_of_frame_ = end_of_frame;
-
   for (const auto& nalu :
        H264::FindNaluIndices(payload.data(), payload.size())) {
-	   for (size_t i = 0; i < fragmentation.fragmentationVectorSize; ++i) {
     input_fragments_.push_back(
         payload.subview(nalu.payload_start_offset, nalu.payload_size));
-  }
   }
 
   if (!GeneratePackets(packetization_mode)) {

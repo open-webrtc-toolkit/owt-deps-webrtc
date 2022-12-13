@@ -271,7 +271,7 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
       bool has_h264_pps = false;
       bool has_h264_idr = false;
       bool is_h264_keyframe = false;
-	  
+
       bool is_h265 = false;
 #ifdef WEBRTC_USE_H265
       is_h265 = buffer_[start_index]->codec() == kVideoCodecH265;
@@ -447,6 +447,7 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
         }
       }
 #endif
+      if (is_h264 || full_frame_found) {
         const uint16_t end_seq_num = seq_num + 1;
         // Use uint16_t type to handle sequence number wrap around case.
         uint16_t num_packets = end_seq_num - start_seq_num;

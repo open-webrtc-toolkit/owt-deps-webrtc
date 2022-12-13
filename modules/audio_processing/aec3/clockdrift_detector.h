@@ -14,7 +14,6 @@
 #include <stddef.h>
 
 #include <array>
-#include <cstddef>
 
 namespace webrtc {
 

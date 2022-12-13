@@ -19,9 +19,7 @@
 #include "absl/types/variant.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
-#ifndef DISABLE_H265
 #include "modules/video_coding/codecs/h265/include/h265_globals.h"
-#endif
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -317,16 +315,12 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                                   int64_t frame_id,
                                   bool is_keyframe,
                                   RTPVideoHeader* rtp_video_header) {
-
-#ifdef WEBRTC_USE_H265
   if (codec_specific_info->codecType == webrtc::kVideoCodecH265 &&
       codec_specific_info->codecSpecific.H265.picture_id > 0) {
     // H265ToGeneric implementation. Only set it when picture id is valid.
     rtp_video_header->generic->frame_id =
         codec_specific_info->codecSpecific.H265.picture_id;
-    rtp_video_header->generic->discardable =
-        codec_specific_info->codecSpecific.H265.discardable;
-    rtp_video_header->generic->spatial_index = 0;  // Not enabled at present.
+    rtp_video_header->generic->spatial_index = 0;   // Not enabled at present.
     rtp_video_header->generic->temporal_index = 0;  // Not enabled at present.
     for (int dep_idx = 0; dep_idx < 5; dep_idx++) {
       if (codec_specific_info->codecSpecific.H265.dependencies[dep_idx] <= 0)
@@ -334,15 +328,12 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
       rtp_video_header->generic->dependencies[dep_idx] =
           codec_specific_info->codecSpecific.H265.dependencies[dep_idx];
     }
-    // Not filling DTIs at present.
-    rtp_video_header->generic->discardable =
-        codec_specific_info->codecSpecific.H265.discardable;
     return;
   }
-#else
-   if (codec_specific_info && codec_specific_info->generic_frame_info &&
+  if (codec_specific_info && codec_specific_info->generic_frame_info &&
       !codec_specific_info->generic_frame_info->encoder_buffers.empty()) {
-    // If generic frame info is provided for other codecs, use generic frame info.
+    // If generic frame info is provided for other codecs, use generic frame
+    // info.
     if (is_keyframe) {
       // Key frame resets all chains it is in.
       chains_calculator_.Reset(
@@ -352,8 +343,6 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
         *codec_specific_info->generic_frame_info, frame_id);
     return;
   }
-#endif
-
 
   switch (rtp_video_header->codec) {
     case VideoCodecType::kVideoCodecGeneric:
@@ -380,10 +369,8 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                       is_keyframe, rtp_video_header);
       }
       return;
-#ifndef DISABLE_H265
     // No further special handling for H.265
     case VideoCodecType::kVideoCodecH265:
-#endif
     case VideoCodecType::kVideoCodecMultiplex:
       return;
   }

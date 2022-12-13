@@ -8,8 +8,6 @@
 
 import("../../../webrtc.gni")
 
-defines = []
-
 config("bwe_test_logging") {
   if (rtc_enable_bwe_test_logging) {
     defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
@@ -24,16 +22,6 @@ rtc_library("goog_cc") {
     "goog_cc_network_control.cc",
     "goog_cc_network_control.h",
   ]
-
-  if (owt_use_gpra) {
-    # use Intel Goodput Rate Adapatation BWE
-      include_dirs = [ owt_gpra_header_root ]
-      if (is_win && owt_gpra_lib_root != "") {
-        libs = [ "gpra_lib.lib" ]
-        lib_dirs = [ owt_gpra_lib_root ]
-      }
-      defines += [ "INTEL_GPRA" ]
-  }
 
   deps = [
     ":alr_detector",

@@ -39,6 +39,7 @@
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/h264_sprop_parameter_sets.h"
 #include "modules/video_coding/h264_sps_pps_tracker.h"
+#include "modules/video_coding/h265_vps_sps_pps_tracker.h"
 #include "modules/video_coding/nack_requester.h"
 #include "modules/video_coding/packet_buffer.h"
 #include "rtc_base/checks.h"
@@ -687,7 +688,6 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         packet->video_payload = std::move(fixed.bitstream);
         break;
     }
-#ifdef WEBRTC_USE_H265
   } else if (packet->codec() == kVideoCodecH265) {
     // Only when we start to receive packets will we know what payload type
     // that will be used. When we know the payload type insert the correct
@@ -713,9 +713,7 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         packet->video_payload = std::move(fixed.bitstream);
         break;
     }
-  }
-#endif
-  else {
+  } else {
     packet->video_payload = std::move(codec_payload);
   }
 
@@ -865,8 +863,8 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
       }
 
       const video_coding::PacketBuffer::Packet& last_packet = *packet;
-      std::unique_ptr<video_coding::RtpFrameObject> frame =
-          std::make_unique<video_coding::RtpFrameObject>(
+      std::unique_ptr<RtpFrameObject> frame =
+          std::make_unique<RtpFrameObject>(
           first_packet->seq_num,                    //
           last_packet.seq_num,                      //
           last_packet.marker_bit,                   //
