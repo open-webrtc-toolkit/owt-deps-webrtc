@@ -333,10 +333,6 @@ void SendSideBandwidthEstimation::UpdateReceiverEstimate(Timestamp at_time,
                                                          DataRate bandwidth) {
   // TODO(srte): Ensure caller passes PlusInfinity, not zero, to represent no
   // limitation.
-  if (is_using_external_bwe_) {
-    // Ignore remb if using GPRA.
-    return;
-  }
   receiver_limit_ = bandwidth.IsZero() ? DataRate::PlusInfinity() : bandwidth;
   ApplyTargetLimits(at_time);
 }
@@ -627,19 +623,10 @@ void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  std::string experiment_string =
-      webrtc::field_trial::FindFullName("OWT-DelayBweWeight");
-  DataRate upper_limit = std::min(delay_based_limit_, receiver_limit_);
-  double delay_fraction = delay_weight / 100.0;
-
-  // Calculate new weighted BWE using delay/loss limit.
-  upper_limit = std::min(upper_limit, max_bitrate_configured_);
-  if (delay_weight < 100 && delay_weight >= 0) {
-    upper_limit =
-        std::min(upper_limit, loss_based_bandwidth_estimation_.GetEstimate());
-    }
-  DataRate upper_limit = std::min(weighted_limit, receiver_limit_);
-  upper_limit = std::min(upper_limit, max_bitrate_configured_);
+  DataRate upper_limit = delay_based_limit_;
+  if (disable_receiver_limit_caps_only_)
+    upper_limit = std::min(upper_limit, receiver_limit_);
+  return std::min(upper_limit, max_bitrate_configured_);
 }
 
 void SendSideBandwidthEstimation::MaybeLogLowBitrateWarning(DataRate bitrate,
@@ -667,11 +654,8 @@ void SendSideBandwidthEstimation::MaybeLogLossBasedEvent(Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateTargetBitrate(DataRate new_bitrate,
                                                       Timestamp at_time) {
-  if (is_using_external_bwe_)
-    new_bitrate = GetUpperLimit();
-  else
-    new_bitrate = std::min(new_bitrate, GetUpperLimit());
-  if (!is_using_external_bwe_ && new_bitrate < min_bitrate_configured_) {
+  new_bitrate = std::min(new_bitrate, GetUpperLimit());
+  if (new_bitrate < min_bitrate_configured_) {
     MaybeLogLowBitrateWarning(new_bitrate, at_time);
     new_bitrate = min_bitrate_configured_;
   }

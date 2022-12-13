@@ -42,7 +42,7 @@ struct BitrateConstraints {
   int max_bitrate_bps = -1;
 
  private:
-  static constexpr int kDefaultStartBitrateBps = 5000000;  // Update from 300k to 5MB for low latency mode
+  static constexpr int kDefaultStartBitrateBps = 300000;
 };
 
 }  // namespace webrtc

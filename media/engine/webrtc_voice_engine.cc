@@ -52,6 +52,7 @@
 #include "rtc_base/third_party/base64/base64.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
+#include "system_wrappers/include/field_trial.h"
 
 #if WEBRTC_ENABLE_PROTOBUF
 RTC_PUSH_IGNORING_WUNDEF()
@@ -403,8 +404,6 @@ void WebRtcVoiceEngine::Init() {
       options.auto_gain_control = false;
       options.noise_suppression = false;
       options.highpass_filter = false;
-      options.typing_detection = false;
-      options.residual_echo_detector = false;
     }
     ApplyOptions(options);
   }

@@ -21,7 +21,6 @@
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/h265/include/h265_globals.h"
-#endif
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/system/rtc_export.h"
@@ -102,9 +101,7 @@ struct CodecSpecificInfoH265 {
   int16_t picture_id;
   int dependencies[5];
   int dtis[10];
-  bool discardable;
 };
-#endif
 
 static_assert(std::is_pod<CodecSpecificInfoH264>::value, "");
 
@@ -112,9 +109,7 @@ union CodecSpecificInfoUnion {
   CodecSpecificInfoVP8 VP8;
   CodecSpecificInfoVP9 VP9;
   CodecSpecificInfoH264 H264;
-#ifdef WEBRTC_USE_H265
   CodecSpecificInfoH265 H265;
-#endif
 };
 static_assert(std::is_pod<CodecSpecificInfoUnion>::value, "");
 

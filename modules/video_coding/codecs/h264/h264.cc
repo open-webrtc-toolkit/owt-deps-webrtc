@@ -161,7 +161,7 @@ std::unique_ptr<H264Decoder> H264Decoder::Create() {
   return nullptr;
 #endif
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }

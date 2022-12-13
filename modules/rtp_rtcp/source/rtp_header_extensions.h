@@ -167,6 +167,9 @@ class PictureId {
   static constexpr RTPExtensionType kId = kRtpExtensionPictureId;
   static constexpr uint8_t kValueSizeBytes = 2;
   static constexpr const char kUri[] = "urn:intel:picture-id";
+  static constexpr absl::string_view Uri() {
+    return kUri;
+  }
   static bool Parse(rtc::ArrayView<const uint8_t> data, uint16_t* value);
   static size_t ValueSize(uint16_t value) { return kValueSizeBytes; }
   static bool Write(rtc::ArrayView<uint8_t> data, uint16_t value);

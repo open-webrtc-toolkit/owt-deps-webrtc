@@ -62,7 +62,7 @@ if (!build_with_chromium) {
         "modules/audio_processing:audio_processing_tests",
         "modules/remote_bitrate_estimator:rtp_to_text",
         "modules/rtp_rtcp:test_packet_masks_metrics",
-        "modules/video_capture:video_capture",
+        "modules/video_capture:video_capture_internal_impl",
         "net/dcsctp:dcsctp_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
@@ -293,10 +293,6 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
   }
 
-  if (owt_use_gpra) {
-    defines += [ "INTEL_GPRA" ]
-  }
-
   if (rtc_include_internal_audio_device) {
     defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   }
@@ -517,7 +513,7 @@ if (!build_with_chromium) {
       "logging:rtc_event_log_api",
       "media",
       "modules",
-      "modules/video_capture:video_capture",
+      "modules/video_capture:video_capture_internal_impl",
       "p2p:rtc_p2p",
       "pc:libjingle_peerconnection",
       "pc:rtc_pc",

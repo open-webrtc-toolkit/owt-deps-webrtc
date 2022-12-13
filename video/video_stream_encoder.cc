@@ -50,6 +50,7 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
+#include "system_wrappers/include/field_trial.h"
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
 #include "video/alignment_adjuster.h"
 #include "video/config/encoder_stream_factory.h"
@@ -1454,7 +1455,7 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
   // Jianlin: in case of slice-based encoding, the capturer will not set the
   // ntp_time_ms and render_tim_ms.
   int64_t capture_ntp_time_ms;
-#if 0
+  // TODO: Check latency mode.
   if (video_frame.ntp_time_ms() > 0) {
     capture_ntp_time_ms = video_frame.ntp_time_ms();
   } else if (video_frame.render_time_ms() != 0) {
@@ -1462,8 +1463,6 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
   } else {
     capture_ntp_time_ms = post_time.ms() + delta_ntp_internal_ms_;
   }
-#endif
-  capture_ntp_time_ms = current_time_ms + delta_ntp_internal_ms_;
   incoming_frame.set_ntp_time_ms(capture_ntp_time_ms);
 
   // Convert NTP time, in ms, to RTP timestamp.
@@ -1472,12 +1471,12 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
       kMsToRtpTimestamp * static_cast<uint32_t>(incoming_frame.ntp_time_ms()));
 
   if (incoming_frame.ntp_time_ms() <= last_captured_timestamp_) {
+    // TODO: Check latency mode.
     // We don't allow the same capture time for two frames, drop this one.
     // Jianlin(implementation deviation: For push-mode, dropping frame due
     // to same timestamp is not allowed.
     // So make sure dropping is enabled for pull mode while disabled for
     // push mode.
-#if 0
     RTC_LOG(LS_WARNING) << "Same/old NTP timestamp ("
                         << incoming_frame.ntp_time_ms()
                         << " <= " << last_captured_timestamp_
@@ -1488,7 +1487,6 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
       accumulated_update_rect_is_valid_ &= incoming_frame.has_update_rect();
     });
     return;
-#endif
   }
 
   bool log_stats = false;
@@ -1506,7 +1504,8 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
   bool cwnd_frame_drop =
       cwnd_frame_drop_interval_ &&
       (cwnd_frame_counter_++ % cwnd_frame_drop_interval_.value() == 0);
-        if (field_trial::IsEnabled("OWT-LowLatencyMode") || posted_frames_waiting_for_encode == 1 && !cwnd_frame_drop) {
+  if (webrtc::field_trial::IsEnabled("OWT-LowLatencyMode") ||
+      (frames_scheduled_for_processing == 1 && !cwnd_frame_drop)) {
     MaybeEncodeVideoFrame(incoming_frame, post_time.us());
   } else {
     if (cwnd_frame_drop) {

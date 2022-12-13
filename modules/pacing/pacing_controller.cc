@@ -28,7 +28,6 @@ namespace webrtc {
 namespace {
 // Time limit in milliseconds between packet bursts.
 constexpr TimeDelta kDefaultMinPacketLimit = TimeDelta::Millis(5);
-constexpr TimeDelta kDefaultMinPacketLimitLowLatency = TimeDelta::Millis(1);
 constexpr TimeDelta kCongestedPacketInterval = TimeDelta::Millis(500);
 // TODO(sprang): Consider dropping this limit.
 // The maximum debt level, in terms of time, capped when sending packets.
@@ -97,9 +96,6 @@ PacingController::PacingController(Clock* clock,
   ParseFieldTrial({&min_packet_limit_ms},
                   field_trials_.Lookup("WebRTC-Pacer-MinPacketLimitMs"));
   min_packet_limit_ = TimeDelta::Millis(min_packet_limit_ms.Get());
-  if (mode_ == ProcessMode::kRealtime) {
-    min_packet_limit_ = kDefaultMinPacketLimitLowLatency;
-  }
   UpdateBudgetWithElapsedTime(min_packet_limit_);
 }
 
@@ -163,11 +159,6 @@ Timestamp PacingController::CurrentTime() const {
 }
 
 void PacingController::SetProbingEnabled(bool enabled) {
-  // For low latency mode we will always disable prober.
-  if (mode_ == ProcessMode::kRealtime) {
-    prober_.SetEnabled(false);
-    return;
-  }
   RTC_CHECK(!seen_first_packet_);
   prober_.SetEnabled(enabled);
 }
@@ -311,11 +302,6 @@ Timestamp PacingController::NextSendTime() const {
   const Timestamp now = CurrentTime();
   Timestamp next_send_time = Timestamp::PlusInfinity();
 
-  // Realtime pacer works at RT mode.
-  if (mode_ == ProcessMode::kRealtime) {
-    return now;
-  }
-
   if (paused_) {
     return last_send_time_ + kPausedProcessInterval;
   }
@@ -381,7 +367,7 @@ void PacingController::ProcessPackets() {
   Timestamp target_send_time = now;
 
   // Disable padding for realtime mode
-  if (ShouldSendKeepalive(now) && mode_ != ProcessMode::kRealtime) {
+  if (ShouldSendKeepalive(now)) {
     DataSize keepalive_data_sent = DataSize::Zero();
     // We can not send padding unless a normal packet has first been sent. If
     // we do, timestamps get messed up.
@@ -400,7 +386,7 @@ void PacingController::ProcessPackets() {
     OnPacketSent(RtpPacketMediaType::kPadding, keepalive_data_sent, now);
   }
 
-  if (paused_ && mode_ != ProcessMode::kRealtime) {
+  if (paused_) {
     return;
   }
 
@@ -450,7 +436,6 @@ void PacingController::ProcessPackets() {
         GetPendingPacket(pacing_info, target_send_time, now);
     if (rtp_packet == nullptr) {
       // No packet available to send, check if we should send padding.
-      if (mode_ != ProcessMode::kRealtime) {
         DataSize padding_to_add =
             PaddingToAdd(recommended_probe_size, data_sent);
         if (padding_to_add > DataSize::Zero()) {
@@ -529,7 +514,7 @@ void PacingController::ProcessPackets() {
     return;
   }
 
-  if (is_probing && mode_ != ProcessMode::kRealtime) {
+  if (is_probing) {
     probing_send_failure_ = data_sent == DataSize::Zero();
     if (!probing_send_failure_) {
       prober_.ProbeSent(CurrentTime(), data_sent);
@@ -597,7 +582,6 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
     return nullptr;
   }
 
-  if (mode_ != ProcessMode::kRealtime) {
   // First, check if there is any reason _not_ to send the next queued packet.
   // Unpaced packets and probes are exempted from send checks.
   if (NextUnpacedSendTime().IsInfinite() && !is_probe) {
@@ -617,7 +601,6 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
         return nullptr;
       }
     }
-  }
   }
 
   return packet_queue_.Pop();

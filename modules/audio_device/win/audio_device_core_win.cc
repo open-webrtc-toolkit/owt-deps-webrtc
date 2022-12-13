@@ -184,13 +184,11 @@ HRESULT __stdcall AudioDeviceWindowsCore::OnDefaultDeviceChanged(
 
 ULONG AudioDeviceWindowsCore::AddRef() {
   ULONG new_ref = InterlockedIncrement(&ref_count_);
-  // RTC_DLOG(INFO) << "__AddRef => " << new_ref;
   return new_ref;
 }
 
 ULONG AudioDeviceWindowsCore::Release() {
   ULONG new_ref = InterlockedDecrement(&ref_count_);
-  // RTC_DLOG(INFO) << "__Release => " << new_ref;
   return new_ref;
 }
 

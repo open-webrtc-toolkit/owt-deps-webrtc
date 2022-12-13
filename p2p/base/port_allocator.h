@@ -665,7 +665,6 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   // if ice_credentials is nullptr.
   std::vector<std::unique_ptr<PortAllocatorSession>>::const_iterator
   FindPooledSession(const IceParameters* ice_credentials = nullptr) const;
-  RTC_DISALLOW_COPY_AND_ASSIGN(PortAllocator);
 };
 
 }  // namespace cricket

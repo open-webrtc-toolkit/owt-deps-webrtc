@@ -43,7 +43,6 @@ class RtpPacketizerH264 : public RtpPacketizer {
   RtpPacketizerH264(rtc::ArrayView<const uint8_t> payload,
                     PayloadSizeLimits limits,
                     H264PacketizationMode packetization_mode,
-                    const RTPFragmentationHeader& fragmentation,
                     bool end_of_frame = true);
 
   ~RtpPacketizerH264() override;
