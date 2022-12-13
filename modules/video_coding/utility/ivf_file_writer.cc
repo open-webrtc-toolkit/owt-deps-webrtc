@@ -23,6 +23,8 @@
 namespace webrtc {
 
 const size_t kIvfHeaderSize = 32;
+constexpr int kDefaultWidth = 1280;
+constexpr int kDefaultHeight = 720;
 
 IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
     : codec_type_(kVideoCodecGeneric),
@@ -81,6 +83,18 @@ bool IvfFileWriter::WriteHeader() {
       ivf_header[10] = '6';
       ivf_header[11] = '4';
       break;
+    case kVideoCodecAV1:
+      ivf_header[8] = 'A';
+      ivf_header[9] = 'V';
+      ivf_header[10] = '0';
+      ivf_header[11] = '1';
+      break;
+    case kVideoCodecH265:
+      ivf_header[8] = 'H';
+      ivf_header[9] = '2';
+      ivf_header[10] = '6';
+      ivf_header[11] = '5';
+      break;
     default:
       RTC_LOG(LS_ERROR) << "Unknown CODEC type: " << codec_type_;
       return false;
@@ -111,10 +125,14 @@ bool IvfFileWriter::WriteHeader() {
 
 bool IvfFileWriter::InitFromFirstFrame(const EncodedImage& encoded_image,
                                        VideoCodecType codec_type) {
-  width_ = encoded_image._encodedWidth;
-  height_ = encoded_image._encodedHeight;
-  RTC_CHECK_GT(width_, 0);
-  RTC_CHECK_GT(height_, 0);
+  if (encoded_image._encodedWidth == 0 || encoded_image._encodedHeight == 0) {
+    width_ = kDefaultWidth;
+    height_ = kDefaultHeight;
+  } else {
+    width_ = encoded_image._encodedWidth;
+    height_ = encoded_image._encodedHeight;
+  }
+
   using_capture_timestamps_ = encoded_image.Timestamp() == 0;
 
   codec_type_ = codec_type;
