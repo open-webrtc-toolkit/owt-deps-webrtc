@@ -12,10 +12,7 @@
 #define COMMON_VIDEO_H264_PREFIX_PARSER_H_
 
 #include "absl/types/optional.h"
-
-namespace rtc {
-class BitBuffer;
-}
+#include "rtc_base/bitstream_reader.h"
 
 namespace webrtc {
 
@@ -44,9 +41,10 @@ class PrefixParser {
   static absl::optional<PrefixState> ParsePrefix(const uint8_t* data, size_t length);
 
  protected:
-  // Parse the prefix NAL, up till the SVC extension part, for a bit buffer where RBSP
-  // decoding has already been performed.
-  static absl::optional<PrefixState> ParsePrefixUpToSvcExtension(rtc::BitBuffer* buffer);
+  // Parse the prefix NAL, up till the SVC extension part, for a bit buffer
+  // where RBSP decoding has already been performed.
+  static absl::optional<PrefixState> ParsePrefixUpToSvcExtension(
+      BitstreamReader& reader);
 };
 
 }  // namespace webrtc
