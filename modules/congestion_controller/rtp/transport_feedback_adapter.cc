@@ -61,12 +61,6 @@ DataSize InFlightBytesTracker::GetOutstandingData(
   }
 }
 
-#ifdef INTEL_GPRA
-int64_t TransportFeedbackAdapter::GetCurrentOffsetMs() {
-  return current_offset_ms_;
-}
-#endif
-
 // Comparator for consistent map with NetworkRoute as key.
 bool InFlightBytesTracker::NetworkRouteComparator::operator()(
     const rtc::NetworkRoute& a,
@@ -199,9 +193,6 @@ TransportFeedbackAdapter::ProcessTransportFeedbackInner(
   // time stamps.
   if (last_timestamp_.IsInfinite()) {
     current_offset_ = feedback_receive_time;
- #ifdef INTEL_GPRA
-    current_offset_ms_ = feedback_receive_time.ms();
- #endif
   } else {
     // TODO(srte): We shouldn't need to do rounding here.
     const TimeDelta delta = feedback.GetBaseDelta(last_timestamp_)
@@ -210,14 +201,8 @@ TransportFeedbackAdapter::ProcessTransportFeedbackInner(
     if (delta < Timestamp::Zero() - current_offset_) {
       RTC_LOG(LS_WARNING) << "Unexpected feedback timestamp received.";
       current_offset_ = feedback_receive_time;
-#ifdef INTEL_GPRA
-     current_offset_ms_ = feedback_receive_time.ms();
-#endif
     } else {
       current_offset_ += delta;
-#ifdef INTEL_GPRA
-      current_offset_ms_ += delta.ms();
-#endif
     }
   }
   last_timestamp_ = feedback.BaseTime();
