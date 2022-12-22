@@ -73,10 +73,6 @@ class TransportFeedbackAdapter {
 
   DataSize GetOutstandingData() const;
 
-#ifdef INTEL_GPRA
-  int64_t GetCurrentOffsetMs();
-#endif
-
  private:
   enum class SendTimeHistoryStatus { kNotAdded, kOk, kDuplicate };
 
@@ -93,9 +89,6 @@ class TransportFeedbackAdapter {
   // Sequence numbers are never negative, using -1 as it always < a real
   // sequence number.
   int64_t last_ack_seq_num_ = -1;
-#ifdef INTEL_GPRA
-  int64_t current_offset_ms_ = -1;
-#endif
   InFlightBytesTracker in_flight_;
 
   Timestamp current_offset_ = Timestamp::MinusInfinity();

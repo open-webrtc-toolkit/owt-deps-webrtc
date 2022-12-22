@@ -558,12 +558,7 @@ void RtpTransportControllerSend::OnTransportFeedback(
                                                              feedback_time);
     if (feedback_msg) {
       if (controller_)
-#ifdef INTEL_GPRA
-      PostUpdates(controller_->OnTransportPacketsFeedback(
-          *feedback_msg, transport_feedback_adapter_.GetCurrentOffsetMs()));
-#else
-      PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg, 0));
-#endif
+        PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg, 0));
       // Only update outstanding data if any packet is first time acked.
       UpdateCongestedState();
     }

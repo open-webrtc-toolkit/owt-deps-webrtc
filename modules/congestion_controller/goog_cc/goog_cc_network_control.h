@@ -73,11 +73,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
 
   NetworkControlUpdate GetNetworkState(Timestamp at_time) const;
 
-#if defined(INTEL_GPRA)
-  // Not implemented here?
-  void SetBitrateEstimationWindowSize(int init_window, int rate_window);
-#endif
-
  private:
   friend class GoogCcStatePrinter;
   std::vector<ProbeClusterConfig> ResetConstraints(
