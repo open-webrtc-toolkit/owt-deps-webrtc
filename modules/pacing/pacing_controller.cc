@@ -28,6 +28,7 @@ namespace webrtc {
 namespace {
 // Time limit in milliseconds between packet bursts.
 constexpr TimeDelta kDefaultMinPacketLimit = TimeDelta::Millis(5);
+constexpr TimeDelta kDefaultMinPacketLimitLowLatency = TimeDelta::Millis(1);
 constexpr TimeDelta kCongestedPacketInterval = TimeDelta::Millis(500);
 // TODO(sprang): Consider dropping this limit.
 // The maximum debt level, in terms of time, capped when sending packets.
@@ -87,7 +88,8 @@ PacingController::PacingController(Clock* clock,
       congested_(false),
       queue_time_limit_(kMaxExpectedQueueLength),
       account_for_audio_(false),
-      include_overhead_(false) {
+      include_overhead_(false),
+      low_latency_mode_(IsEnabled(field_trials, "OWT-LowLatencyMode")) {
   if (!drain_large_queues_) {
     RTC_LOG(LS_WARNING) << "Pacer queues will not be drained,"
                            "pushback experiment must be enabled.";
@@ -96,6 +98,9 @@ PacingController::PacingController(Clock* clock,
   ParseFieldTrial({&min_packet_limit_ms},
                   field_trials_.Lookup("WebRTC-Pacer-MinPacketLimitMs"));
   min_packet_limit_ = TimeDelta::Millis(min_packet_limit_ms.Get());
+  if (low_latency_mode_) {
+    min_packet_limit_ = kDefaultMinPacketLimitLowLatency;
+  }
   UpdateBudgetWithElapsedTime(min_packet_limit_);
 }
 
@@ -312,6 +317,10 @@ Timestamp PacingController::NextSendTime() const {
     if (!probe_time.IsPlusInfinity()) {
       return probe_time.IsMinusInfinity() ? now : probe_time;
     }
+  }
+
+  if (low_latency_mode_) {
+    return last_process_time_ + min_packet_limit_;
   }
 
   // If queue contains a packet which should not be paced, its target send time
@@ -584,7 +593,7 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
 
   // First, check if there is any reason _not_ to send the next queued packet.
   // Unpaced packets and probes are exempted from send checks.
-  if (NextUnpacedSendTime().IsInfinite() && !is_probe) {
+  if (NextUnpacedSendTime().IsInfinite() && !is_probe && !low_latency_mode_) {
     if (congested_) {
       // Don't send anything if congested.
       return nullptr;
