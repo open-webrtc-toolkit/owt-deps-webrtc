@@ -14,7 +14,7 @@ import("//build/config/sysroot.gni")
 import("//build_overrides/build.gni")
 import("//build_overrides/ssl/ssl.gni")
 
-if (!build_with_chromium && is_component_build) {
+if (!build_with_chromium && !build_with_owt && is_component_build) {
   print("The Gn argument `is_component_build` is currently " +
         "ignored for WebRTC builds.")
   print("Component builds are supported by Chromium and the argument " +
