@@ -478,6 +478,10 @@ config("common_config") {
       "/U_UNICODE",
     ]
   }
+
+  if (owt_cloud_gaming) {
+    defines += [ "OWT_CLOUD_GAMING" ]
+  }
 }
 
 config("common_objc") {
