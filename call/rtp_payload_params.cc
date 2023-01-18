@@ -315,21 +315,6 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                                   int64_t frame_id,
                                   bool is_keyframe,
                                   RTPVideoHeader* rtp_video_header) {
-  if (codec_specific_info->codecType == webrtc::kVideoCodecH265 &&
-      codec_specific_info->codecSpecific.H265.picture_id > 0) {
-    // H265ToGeneric implementation. Only set it when picture id is valid.
-    rtp_video_header->generic->frame_id =
-        codec_specific_info->codecSpecific.H265.picture_id;
-    rtp_video_header->generic->spatial_index = 0;   // Not enabled at present.
-    rtp_video_header->generic->temporal_index = 0;  // Not enabled at present.
-    for (int dep_idx = 0; dep_idx < 5; dep_idx++) {
-      if (codec_specific_info->codecSpecific.H265.dependencies[dep_idx] <= 0)
-        break;
-      rtp_video_header->generic->dependencies[dep_idx] =
-          codec_specific_info->codecSpecific.H265.dependencies[dep_idx];
-    }
-    return;
-  }
   if (codec_specific_info && codec_specific_info->generic_frame_info &&
       !codec_specific_info->generic_frame_info->encoder_buffers.empty()) {
     // If generic frame info is provided for other codecs, use generic frame
@@ -369,8 +354,12 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
                       is_keyframe, rtp_video_header);
       }
       return;
-    // No further special handling for H.265
     case VideoCodecType::kVideoCodecH265:
+      if (codec_specific_info) {
+        H265ToGeneric(codec_specific_info->codecSpecific.H265, frame_id,
+                      is_keyframe, rtp_video_header);
+      }
+      return;
     case VideoCodecType::kVideoCodecMultiplex:
       return;
   }
@@ -515,6 +504,26 @@ void RtpPayloadParams::H264ToGeneric(const CodecSpecificInfoH264& h264_info,
   }
 
   last_shared_frame_id_[/*spatial_index*/ 0][temporal_index] = shared_frame_id;
+}
+
+void RtpPayloadParams::H265ToGeneric(const CodecSpecificInfoH265& h265_info,
+                                     int64_t shared_frame_id,
+                                     bool is_keyframe,
+                                     RTPVideoHeader* rtp_video_header) {
+  if (h265_info.picture_id <= 0) {
+    RTC_LOG(LS_WARNING) << "Invalid HEVC picture ID.";
+    return;
+  }
+  RTPVideoHeader::GenericDescriptorInfo& generic =
+      rtp_video_header->generic.emplace();
+  generic.frame_id = h265_info.picture_id;
+  generic.spatial_index = 0;   // Not enabled at present.
+  generic.temporal_index = 0;  // Not enabled at present.
+  for (int dep_idx = 0; dep_idx < 5; dep_idx++) {
+    if (h265_info.dependencies[dep_idx] <= 0)
+      break;
+    generic.dependencies[dep_idx] = h265_info.dependencies[dep_idx];
+  }
 }
 
 void RtpPayloadParams::Vp8ToGeneric(const CodecSpecificInfoVP8& vp8_info,
