@@ -511,7 +511,7 @@ void RtpPayloadParams::H265ToGeneric(const CodecSpecificInfoH265& h265_info,
                                      bool is_keyframe,
                                      RTPVideoHeader* rtp_video_header) {
   if (h265_info.picture_id <= 0) {
-    RTC_LOG(LS_WARNING) << "Invalid HEVC picture ID.";
+    // picture_id is only used by cloud gaming.
     return;
   }
   RTPVideoHeader::GenericDescriptorInfo& generic =
