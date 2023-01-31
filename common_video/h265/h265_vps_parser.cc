@@ -43,7 +43,11 @@ absl::optional<H265VpsParser::VpsState> H265VpsParser::ParseInternal(
   VpsState vps;
 
   // vps_video_parameter_set_id: u(4)
-  vps.id = reader.Read<uint32_t>();
+  vps.id = reader.ReadBits(4);
+
+  if (!reader.Ok()) {
+    return absl::nullopt;
+  }
 
   return vps;
 }

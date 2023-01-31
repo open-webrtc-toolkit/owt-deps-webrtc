@@ -202,6 +202,10 @@ absl::optional<H265PpsParser::PpsState> H265PpsParser::ParseInternal(
   // slice_segment_header_extension_present_flag: u(1)
   reader.ConsumeBits(1);
 
+  if (!reader.Ok()) {
+    return absl::nullopt;
+  }
+
   return pps;
 }
 
