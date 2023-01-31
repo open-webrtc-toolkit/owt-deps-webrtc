@@ -395,6 +395,10 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
     sps.height -= sub_height_c * (conf_win_top_offset + conf_win_bottom_offset);
   }
 
+  if (!reader.Ok()) {
+    return absl::nullopt;
+  }
+
   return OptionalSps(sps);
 }
 
