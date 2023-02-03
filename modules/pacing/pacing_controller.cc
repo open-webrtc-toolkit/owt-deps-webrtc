@@ -307,6 +307,10 @@ Timestamp PacingController::NextSendTime() const {
   const Timestamp now = CurrentTime();
   Timestamp next_send_time = Timestamp::PlusInfinity();
 
+  if (low_latency_mode_) {
+    return last_process_time_ + kDefaultMinPacketLimitLowLatency;
+  }
+
   if (paused_) {
     return last_send_time_ + kPausedProcessInterval;
   }
@@ -317,10 +321,6 @@ Timestamp PacingController::NextSendTime() const {
     if (!probe_time.IsPlusInfinity()) {
       return probe_time.IsMinusInfinity() ? now : probe_time;
     }
-  }
-
-  if (low_latency_mode_) {
-    return last_process_time_ + min_packet_limit_;
   }
 
   // If queue contains a packet which should not be paced, its target send time
