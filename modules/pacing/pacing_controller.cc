@@ -501,7 +501,7 @@ void PacingController::ProcessPackets() {
       target_send_time = NextSendTime();
       if (target_send_time > now) {
         // Exit loop if not probing.
-        if (!is_probing) {
+        if (!is_probing && !low_latency_mode_) {
           break;
         }
         target_send_time = now;
