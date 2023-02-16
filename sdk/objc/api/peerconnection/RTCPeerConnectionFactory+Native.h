@@ -91,6 +91,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithNativePeerConnectionFactory:(
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>)factory;
 
-
+@end
 
 NS_ASSUME_NONNULL_END
