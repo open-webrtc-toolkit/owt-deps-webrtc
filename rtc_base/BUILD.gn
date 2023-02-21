@@ -19,6 +19,15 @@ if (!rtc_build_ssl) {
     assert(rtc_ssl_root != "",
            "You must specify rtc_ssl_root when rtc_build_ssl==0.")
     include_dirs = [ rtc_ssl_root ]
+
+    # WebRTC.Framework on iOS is a shared library. It checks symbol during building.
+    if (is_ios) {
+      libs = [
+        "crypto",
+        "ssl",
+      ]
+      lib_dirs = [ rtc_ssl_root + "/../lib" ]
+    }
   }
 }
 
