@@ -44,7 +44,7 @@ absl::optional<AudioDecoderOpus::Config> AudioDecoderOpus::SdpToConfig(
         return absl::nullopt;  // Bad stereo parameter.
       }
     }
-#ifdef OWT_CLOUD_GAMING
+#ifdef OWT_CG_SERVER
     return 2;
 #endif
     return 1;  // Default to mono.

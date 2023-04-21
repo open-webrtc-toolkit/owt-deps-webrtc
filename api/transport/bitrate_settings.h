@@ -42,7 +42,7 @@ struct BitrateConstraints {
   int max_bitrate_bps = -1;
 
  private:
-#ifdef OWT_CLOUD_GAMING
+#ifdef OWT_CG_SERVER
   static constexpr int kDefaultStartBitrateBps = 5000000;
 #else
   static constexpr int kDefaultStartBitrateBps = 300000;
