@@ -392,7 +392,9 @@ int32_t RtpVideoStreamReceiver::OnReceivedPayloadData(
   else if (packet.codec() == kVideoCodecH265) {
     switch (h265_tracker_.CopyAndFixBitstream(&packet)) {
       case video_coding::H265VpsSpsPpsTracker::kRequestKeyframe:
-        keyframe_request_sender_->RequestKeyFrame();
+        if (keyframe_request_sender_) {
+          keyframe_request_sender_->RequestKeyFrame();
+        }
         RTC_FALLTHROUGH();
       case video_coding::H265VpsSpsPpsTracker::kDrop:
         return 0;
