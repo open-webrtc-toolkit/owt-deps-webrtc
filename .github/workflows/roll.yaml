@@ -2,7 +2,7 @@ name: Roll WebRTC revision
 on:
   push:
     branches:
-      - 108-sdk
+      - debug-roller
 
 jobs:
   roll:
@@ -10,12 +10,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
+        ref: refs/heads/debug-roller
+        fetch-depth: 0
+        path: webrtc
+    - uses: actions/checkout@v2
+      with:
         repository: open-webrtc-toolkit/owt-client-native
         ref: refs/heads/main
         fetch-depth: 0
         token: ${{ secrets.OWT_BOT_TOKEN }}
+        path: sdk
     - uses: actions/setup-python@v2
     - run: pip install requests
-    - run: python scripts/roll_webrtc.py --base_branch main --revision $GITHUB_SHA --token $OWT_BOT_TOKEN
+    - run: cp webrtc/roll_webrtc.py sdk/scripts/roll_webrtc.py
+    - run: python sdk/scripts/roll_webrtc.py --base_branch main --revision $GITHUB_SHA --token $OWT_BOT_TOKEN
       env:
         OWT_BOT_TOKEN: ${{ secrets.OWT_BOT_TOKEN }}
