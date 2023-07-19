@@ -86,4 +86,9 @@
   _observer->OnChangedOutputVolume();
 }
 
+- (void)audioSession:(RTCAudioSession *)session 
+    didChangeMicrophoneMute:(BOOL)isMicrophoneMute {
+  _observer->OnMicrophoneMuteChange(isMicrophoneMute);
+}
+
 @end

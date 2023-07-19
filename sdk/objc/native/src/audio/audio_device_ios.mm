@@ -1123,5 +1123,26 @@ int32_t AudioDeviceIOS::RecordingIsAvailable(bool& available) {
   return 0;
 }
 
+void AudioDeviceIOS::OnMicrophoneMuteChange(bool is_microphone_mute) {
+  RTC_DCHECK(thread_);
+  thread_->PostTask(SafeTask(safety_, [this, is_microphone_mute] { HandleMicrophoneMuteChange(is_microphone_mute); }));
+}
+
+void AudioDeviceIOS::HandleMicrophoneMuteChange(bool is_microphone_mute) {
+  RTC_DCHECK_RUN_ON(thread_);
+  RTCLog(@"Handling MicrophoneMute change to %d", is_microphone_mute);
+  if (is_microphone_mute) {
+    StopRecording();
+    StopPlayout();
+    InitPlayout();
+    StartPlayout();
+  } else {
+    StopPlayout();
+    InitRecording();
+    StartRecording();
+    StartPlayout();
+  }
+}
+
 }  // namespace ios_adm
 }  // namespace webrtc
