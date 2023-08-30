@@ -81,6 +81,15 @@ CallSessionFileRotatingLogSink::CallSessionFileRotatingLogSink(
           new CallSessionFileRotatingStream(log_dir_path, max_total_log_size)) {
 }
 
+CallSessionFileRotatingLogSink::CallSessionFileRotatingLogSink(
+    absl::string_view log_dir_path,
+    absl::string_view log_file_prefix,
+    size_t max_total_log_size)
+    : FileRotatingLogSink(
+          new CallSessionFileRotatingStream(log_dir_path, log_file_prefix, max_total_log_size)) {
+}
+
+
 CallSessionFileRotatingLogSink::~CallSessionFileRotatingLogSink() {}
 
 }  // namespace rtc

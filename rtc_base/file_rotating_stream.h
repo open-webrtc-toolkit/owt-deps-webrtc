@@ -129,6 +129,14 @@ class CallSessionFileRotatingStream : public FileRotatingStream {
   // must be at least 4.
   CallSessionFileRotatingStream(absl::string_view dir_path,
                                 size_t max_total_log_size);
+
+  // Use this constructor for writing to a directory. Files in the directory
+  // matching what's used by the stream will be deleted. 'max_totla_log_size'
+  // must be at least 4. file name will be prefixed with 'log_file_prefix'.
+  CallSessionFileRotatingStream(absl::string_view dir_path,
+                                absl::string_view log_file_prefix,
+                                size_t max_total_log_size);
+
   ~CallSessionFileRotatingStream() override {}
 
   CallSessionFileRotatingStream(const CallSessionFileRotatingStream&) = delete;
@@ -166,6 +174,8 @@ class FileRotatingStreamReader {
 class CallSessionFileRotatingStreamReader : public FileRotatingStreamReader {
  public:
   CallSessionFileRotatingStreamReader(absl::string_view dir_path);
+
+  CallSessionFileRotatingStreamReader(absl::string_view dir_path, absl::string_view long_file_prefix);
 };
 
 }  // namespace rtc

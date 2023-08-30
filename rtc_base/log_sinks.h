@@ -67,6 +67,9 @@ class CallSessionFileRotatingLogSink : public FileRotatingLogSink {
  public:
   CallSessionFileRotatingLogSink(absl::string_view log_dir_path,
                                  size_t max_total_log_size);
+  CallSessionFileRotatingLogSink(absl::string_view log_dir_path,
+                                 absl::string_view log_file_prefix,
+                                 size_t max_total_log_size);
   ~CallSessionFileRotatingLogSink() override;
 
   CallSessionFileRotatingLogSink(const CallSessionFileRotatingLogSink&) =
