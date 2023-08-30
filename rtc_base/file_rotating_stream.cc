@@ -351,6 +351,19 @@ CallSessionFileRotatingStream::CallSessionFileRotatingStream(
   RTC_DCHECK_GE(max_total_log_size, 4);
 }
 
+CallSessionFileRotatingStream::CallSessionFileRotatingStream(
+    absl::string_view dir_path,
+    absl::string_view log_file_prefix,
+    size_t max_total_log_size)
+    : FileRotatingStream(dir_path,
+                         log_file_prefix,
+                         max_total_log_size / 2,
+                         GetNumRotatingLogFiles(max_total_log_size) + 1),
+      max_total_log_size_(max_total_log_size),
+      num_rotations_(0) {
+  RTC_DCHECK_GE(max_total_log_size, 4);
+}
+
 const size_t CallSessionFileRotatingStream::kRotatingLogFileDefaultSize =
     1024 * 1024;
 
@@ -424,5 +437,10 @@ size_t FileRotatingStreamReader::ReadAll(void* buffer, size_t size) const {
 CallSessionFileRotatingStreamReader::CallSessionFileRotatingStreamReader(
     absl::string_view dir_path)
     : FileRotatingStreamReader(dir_path, kCallSessionLogPrefix) {}
+
+CallSessionFileRotatingStreamReader::CallSessionFileRotatingStreamReader(
+    absl::string_view dir_path,
+    absl::string_view log_file_prefix)
+    : FileRotatingStreamReader(dir_path, log_file_prefix) {}
 
 }  // namespace rtc
