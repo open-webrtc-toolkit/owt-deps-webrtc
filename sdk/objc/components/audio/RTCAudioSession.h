@@ -102,6 +102,9 @@ RTC_OBJC_EXPORT
 - (void)audioSession:(RTC_OBJC_TYPE(RTCAudioSession) *)audioSession
     audioUnitStartFailedWithError:(NSError *)error;
 
+- (void)audioSession:(RTC_OBJC_TYPE(RTCAudioSession) *)audioSession
+    didChangeMicrophoneMute:(BOOL)isMicrophoneMute;
+
 @end
 
 /** This is a protocol used to inform RTCAudioSession when the audio session
@@ -181,6 +184,7 @@ RTC_OBJC_EXPORT
 @property(readonly) double preferredSampleRate;
 @property(readonly) NSInteger inputNumberOfChannels;
 @property(readonly) NSInteger outputNumberOfChannels;
+@property(readonly) BOOL isMicrophoneMute;
 @property(readonly) float outputVolume;
 @property(readonly) NSTimeInterval inputLatency;
 @property(readonly) NSTimeInterval outputLatency;

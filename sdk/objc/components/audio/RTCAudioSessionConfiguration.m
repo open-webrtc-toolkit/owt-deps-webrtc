@@ -62,6 +62,7 @@ static RTC_OBJC_TYPE(RTCAudioSessionConfiguration) *gWebRTCConfiguration = nil;
 @synthesize ioBufferDuration = _ioBufferDuration;
 @synthesize inputNumberOfChannels = _inputNumberOfChannels;
 @synthesize outputNumberOfChannels = _outputNumberOfChannels;
+@synthesize isMicrophoneMute = _isMicrophoneMute;
 
 - (instancetype)init {
   if (self = [super init]) {
@@ -96,6 +97,7 @@ static RTC_OBJC_TYPE(RTCAudioSessionConfiguration) *gWebRTCConfiguration = nil;
     // TODO(henrika): add support for stereo if needed.
     _inputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
     _outputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
+    _isMicrophoneMute = true; // default set micriphone to mute
   }
   return self;
 }
@@ -115,6 +117,7 @@ static RTC_OBJC_TYPE(RTCAudioSessionConfiguration) *gWebRTCConfiguration = nil;
   config.ioBufferDuration = session.IOBufferDuration;
   config.inputNumberOfChannels = session.inputNumberOfChannels;
   config.outputNumberOfChannels = session.outputNumberOfChannels;
+  config.isMicrophoneMute = session.isMicrophoneMute;
   return config;
 }
 
