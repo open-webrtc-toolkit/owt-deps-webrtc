@@ -21,11 +21,18 @@ if (!rtc_build_ssl) {
     include_dirs = [ rtc_ssl_root ]
 
     # WebRTC.Framework on iOS is a shared library. It checks symbol during building.
-    if (is_ios) {
-      libs = [
-        "crypto",
-        "ssl",
-      ]
+    if (is_ios || is_component_build) {
+      if (is_win) {
+        libs = [
+          "libcrypto.lib",
+          "libssl.lib",
+        ]
+      } else {
+        libs = [
+          "crypto",
+          "ssl",
+        ]
+      }
       lib_dirs = [ rtc_ssl_root + "/../lib" ]
     }
   }
