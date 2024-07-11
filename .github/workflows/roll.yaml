@@ -1,4 +1,6 @@
 name: Roll WebRTC revision
+permissions: read-all
+
 on:
   push:
     branches:
