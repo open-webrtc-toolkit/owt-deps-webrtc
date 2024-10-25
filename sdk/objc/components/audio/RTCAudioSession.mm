@@ -55,6 +55,7 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
   BOOL _isAudioEnabled;
   BOOL _canPlayOrRecord;
   BOOL _isInterrupted;
+  BOOL _isMicrophoneMute;
 }
 
 @synthesize session = _session;
@@ -676,6 +677,31 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
       return;
    }
    _isInterrupted = isInterrupted;
+  }
+}
+
+- (void)setIsMicrophoneMute:(BOOL)isMicrophoneMute {
+  @synchronized(self) {
+    if (_isMicrophoneMute == isMicrophoneMute) {
+      return;
+    }
+    _isMicrophoneMute = isMicrophoneMute;
+  }
+  [self notifyDidChangeMicrophoneMute];
+}
+
+- (BOOL)isMicrophoneMute {
+  @synchronized(self) {
+    return _isMicrophoneMute;
+  }
+}
+
+- (void)notifyDidChangeMicrophoneMute {
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSession:didChangeMicrophoneMute:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSession:self didChangeMicrophoneMute:self.isMicrophoneMute];
+    }
   }
 }
 

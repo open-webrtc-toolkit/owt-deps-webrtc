@@ -32,6 +32,7 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) NSTimeInterval ioBufferDuration;
 @property(nonatomic, assign) NSInteger inputNumberOfChannels;
 @property(nonatomic, assign) NSInteger outputNumberOfChannels;
+@property(nonatomic, assign) BOOL isMicrophoneMute;
 
 /** Initializes configuration to defaults. */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
