@@ -108,6 +108,11 @@ std::vector<SdpVideoFormat> SupportedH264Codecs(bool add_scalability_modes) {
 
 std::vector<SdpVideoFormat> SupportedH264DecoderCodecs() {
   TRACE_EVENT0("webrtc", __func__);
+
+#ifndef OWT_USE_FFMPEG
+  return std::vector<SdpVideoFormat>();
+#endif
+
   if (!IsH264CodecSupported())
     return std::vector<SdpVideoFormat>();
 
